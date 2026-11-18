@@ -1,23 +1,23 @@
 # shared-components-vue: Plan
 
-Written November 5, 2026. This is the kit's own plan. The overall plan and the standards every project follows live in shared-tooling (`PLAN.md` and `standards/`); this file covers only what is specific to the kit, and links there rather than repeating it.
+Written November 5, 2026, and checked again against each app's code on November 18. This is the kit's own plan. The standards every project follows live in shared-tooling's `standards/`; this file covers only what is specific to the kit, and links there rather than repeating it.
 
-Work here starts after shared-tooling's rollout (step 7 of its plan, right after TarotGen.io's Go port and Senpan's move to huma). The token and first-wave decisions below can be settled now.
+Work here starts after the apps' shared-tooling rollouts (`plans/shared-tooling-rollout.md`; Senpan's move to huma, the last step before it, finished on November 10, and TarotGen.io's Go port was dropped on November 6). Those are done, and Home Library and Kindred have since moved their sign-in into huma, so building starts on November 18, 2026.
 
 ## What it is
 
 - Vue 3 components built on Reka UI's headless primitives, which supply the WAI-ARIA roles, keyboard handling and focus management.
 - Styled only through design tokens, written as plain CSS custom properties, so each app keeps its own look.
-- Used by every Vue front end. Family Card Game is React and stays on Mantine. The résumé site loads Vue from a script tag with no build step, so it stays out too.
+- Used by every Vue front end except MirageGO, which is left out for now (see Rollout order). Family Card Game is React and stays on Mantine. The résumé site loads Vue from a script tag with no build step, so it stays out too.
 - Versioned and released on its own, apart from shared-tooling: an app takes a new kit version on purpose, never because a lint rule changed.
 
 ## Why replace what's there
 
-The Vue apps use three approaches today: PrimeVue with Tailwind (Home Library, Kindred), Bulma with Reka UI (the Gallery, TarotGen.io), and hand-written components (Senpan, Fantasy Dossier, Fingerprint Generator).
+The Vue apps use four approaches today: PrimeVue with Tailwind (Home Library, Kindred), Bulma with Reka UI (the Gallery, TarotGen.io), Reka UI with no styled library (MathBot, and Fantasy Dossier's dialog since November 15), and hand-written components (Senpan, Fingerprint Generator and the rest of Fantasy Dossier).
 
 - **Bulma** is maintained, but barely: still on 1.0.4, with about 400K weekly npm downloads against Tailwind's 125M.
 - **PrimeVue** works, but it's styled first, so apps keep overriding its look. Its published roadmap leans toward the paid PrimeVue+ suite and templates, with nothing on accessibility.
-- **Hand-written components** repeat the same work in each app, and each copy has to get keyboard and focus handling right on its own.
+- **Each app's own components**, on Reka UI or hand-written, repeat the same work in every app, and each hand-written copy has to get keyboard and focus handling right on its own.
 
 ## Decisions
 
@@ -28,35 +28,45 @@ Decided for the kit on November 5, 2026:
 - Vue is a peer dependency. Reka UI is a regular dependency at a pinned version, so apps don't manage it.
 - Vapor waits. Reka UI's components are regular (virtual DOM) components, so the kit moves to Vapor only once Reka UI supports it.
 
-From shared-tooling's plan, as for every repo:
+Decided on November 18, 2026, after checking the plan against each app's code:
+
+- Component names take the `Kit` prefix: `KitButton`, `KitDialog`, `KitConfirmDialog`. The shared ESLint refuses one-word names and the names of HTML elements (`vue/multi-word-component-names`, `vue/no-reserved-component-names`), so `Button` or `Dialog` can't pass. The prefix matches the `--kit-` tokens and the classes (`.kit-button__icon`), never collides with an app's own `Base*`, `App*` or `PageHeader` while the app moves over screen by screen, and a search for `Kit` shows where an app uses the kit.
+- Tokens take the `--kit-` prefix (see Design tokens).
+- Each component starts from the cleanest copy the apps already have, renamed and moved onto the kit's tokens, rather than being written fresh. MathBot's is the default: its dashboard, built November 12 to 17, has Reka-based versions of most of the first wave, written to the current standards, with AAA tokens in both color schemes, a contrast test, and a styleguide page that axe checks. Where another app's copy is cleaner, or MathBot has none, that one is the start (see What to build first).
+- MathBot adopts the kit first, as the pilot, and MirageGO is left out for now (see Rollout order).
+- TypeScript stays on the standards' `~6.0` and doesn't hold the kit up. TypeScript 7.1, due in late November, moves Vue's type check onto TypeScript itself, but typescript-eslint doesn't support TypeScript 7 yet (8.73.0 still requires below 6.1) and Vue's support for it is an alpha. The kit moves when shared-tooling does, after the apps, since an app on 7.1 reads declarations built with 6.0 but the reverse isn't certain. No app moves to 7.1 in the same pass as it adopts the kit.
+
+From the shared standards, as for every repo:
 
 - ESLint, Prettier and Stylelint from shared-tooling's `lint/web`. The kit holds shared-tooling as a submodule at `shared/`, like every other repo.
-- Vitest on jsdom with Vue Test Utils for behavior, and Playwright with axe for whole pages.
-- WCAG 2.2 AA.
+- Vitest on jsdom with Vue Test Utils for behavior, its specs in `src/__tests__/` as `*.spec.ts` with the config in `vite.config.ts`, and Playwright with axe for whole pages.
+- WCAG 2.2 AAA as the target, AA as the floor where AAA can't be met (shared-tooling's `standards/accessibility.md`).
 - The repo is public.
 
 ## What to build first
 
-Your apps already contain the same components several times over. The first wave covers those, starting with the ones repeated most.
+Your apps already contain the same components several times over. The first wave covers those, starting with the ones repeated most. "Starts from" names the copy each component begins as; where it names more than one, the cleanest is chosen when the component is built. Counts are files that use a component, as of November 18.
 
-| Component | Built on | Replaces today |
-| --- | --- | --- |
-| Dialog, ConfirmDialog | Reka Dialog, AlertDialog | PrimeVue Dialog and ConfirmDialog (Home Library, Kindred); Senpan's ModalOverlay and ConfirmModal; TarotGen.io's BaseModal and ConfirmDialog; the Gallery's AppDialog; Fantasy Dossier's modal |
-| Toast | Reka Toast | PrimeVue Toast (Home Library, Kindred); Senpan's ToastNotification; the ToastContainers in TarotGen.io and the Gallery |
-| Button, IconButton | Native `<button>` | PrimeVue Button (120 imports across Home Library and Kindred); TarotGen.io's IconButton; Bulma buttons |
-| TextField, Textarea, NumberField | Native inputs, Reka NumberField | PrimeVue InputText, Textarea and InputNumber; TarotGen.io's NumberField |
-| FormField | Label, help and error wiring | FormField in Kindred and Home Library |
-| PageHeader, PagePanel | Plain markup | PageHeader in TarotGen.io, the Gallery, Kindred and Home Library; PagePanel in Kindred and Home Library |
-| Lightbox | Reka Dialog | Lightboxes in TarotGen.io, the Gallery, Kindred and Fantasy Dossier |
-| Select, Combobox | Reka Select, Combobox | PrimeVue Select and AutoComplete; TarotGen.io's BaseSelect and combo boxes |
-| Switch, SegmentedControl | Reka Switch, ToggleGroup | PrimeVue ToggleSwitch and SelectButton; TarotGen.io's ToggleSwitch and SegmentedControl |
-| Tooltip | Reka Tooltip | TarotGen.io's Tooltip, the Gallery's AppTooltip, Kindred's HelpTip |
-| Spinner, LoadingOverlay | Plain markup | LoadingSpinner in Senpan and the Gallery; TarotGen.io's LoadingOverlay |
-| Alert, EmptyState | Plain markup | PrimeVue Message; the Gallery's AppAlert and EmptyState |
-| TagInput | Reka TagsInput | TagInput in TarotGen.io and Home Library; the Gallery's TagMultiSelect |
-| TurnstileWidget | Cloudflare's script | The same widget in Senpan, TarotGen.io and the Gallery |
+| Component | Built on | Starts from | Replaces today |
+| --- | --- | --- | --- |
+| KitButton, KitIconButton | Native `<button>` | MathBot's BaseButton and IconButton | PrimeVue Button (128 files across Home Library and Kindred); Bulma's `.button` in the Gallery and TarotGen.io; Senpan's `.btn` classes; TarotGen.io's IconButton |
+| KitSpinner, KitLoadingOverlay | Plain markup | MathBot's LoadingSpinner; TarotGen.io's LoadingOverlay | LoadingSpinner in Senpan (51 files) and the Gallery; spinning icons in TarotGen.io and Fantasy Dossier; PrimeVue's `loading` spinners; TarotGen.io's LoadingOverlay |
+| KitFormField | Label, help, error and required wiring | MathBot's FormField | FormField in Kindred (58 files), Home Library (30) and Senpan (29); Bulma's `.field` markup in the Gallery and TarotGen.io |
+| KitTextField, KitTextarea, KitNumberField | Native inputs, Reka NumberField | MathBot's TextField, TextArea and NumberField | PrimeVue InputText, Textarea and InputNumber; Bulma's `.input` and `.textarea`; TarotGen.io's NumberField; Senpan's bare inputs |
+| KitDialog, KitConfirmDialog | Reka Dialog, AlertDialog | MathBot's BaseDialog, ConfirmDialog and confirm queue | PrimeVue Dialog and ConfirmDialog (Home Library; Kindred, mostly through its FormDialog); Senpan's ModalOverlay and ConfirmModal; TarotGen.io's BaseModal and ConfirmDialog; the Gallery's AppDialog; Fantasy Dossier's ModalDialog |
+| KitToast | Reka Toast | MathBot's ToastHost, ToastList and `useToast` | PrimeVue Toast (Home Library, Kindred); Senpan's ToastNotification; the ToastContainers in TarotGen.io and the Gallery; Fantasy Dossier's ToastStack |
+| KitPageHeader, KitPagePanel | Plain markup | MathBot's PageHeader and PagePanel | PageHeader in Kindred, TarotGen.io, Home Library, the Gallery and Fantasy Dossier; Senpan's SubPageHeader; PagePanel in Kindred and Home Library; Senpan's AdminPanel; Fantasy Dossier's SectionPanel |
+| KitAlert, KitEmptyState | Plain markup | MathBot's BaseAlert and EmptyState | PrimeVue Message (Kindred); Home Library's plain `role="alert"` and `role="status"` lines; Bulma's `.notification` in TarotGen.io; the Gallery's AppAlert and EmptyState; Senpan's EmptyState and sticky alerts |
+| KitSelect, KitCombobox | Reka Select, Combobox | MathBot's BaseSelect and BaseCombobox | PrimeVue Select and AutoComplete; Kindred's SearchPicker; TarotGen.io's BaseSelect, DeckComboBox and SpreadComboBox; the Gallery's TagMultiSelect, a multi-select combobox; native selects in Senpan, the Gallery and Fingerprint Generator |
+| KitSwitch, KitSegmentedControl | Reka Switch, ToggleGroup | MathBot's ToggleSwitch; TarotGen.io's SegmentedControl | PrimeVue ToggleSwitch and SelectButton; TarotGen.io's ToggleSwitch and SegmentedControl; hand-made switches and button groups in Senpan, Kindred and Fingerprint Generator |
+| KitTooltip | Reka Tooltip | MathBot's BaseTooltip | TarotGen.io's Tooltip, the Gallery's AppTooltip |
+| KitLightbox | Reka Dialog | The Gallery's, TarotGen.io's or Fantasy Dossier's | The Gallery's AppLightbox, TarotGen.io's LightboxOverlay, Fantasy Dossier's ImageLightbox, Kindred's PhotoLightbox (PrimeVue Galleria) |
+| KitTagInput | Reka TagsInput | TarotGen.io's TagInput, the only one on TagsInput | TagInput in TarotGen.io and Home Library |
+| KitTurnstileWidget | Cloudflare's script, loaded once for every instance | Senpan's, TarotGen.io's or the Gallery's | The same widget in Senpan, TarotGen.io and the Gallery |
 
-The second wave covers the bigger pieces: a data table (PrimeVue DataTable today, plus Kindred's StackTable and Senpan's TanStack table), drawers, menus, a date picker, pagination and popovers.
+The first release, v0.1.0, holds the first six rows: the jobs repeated most, and the pieces the rest build on (a dialog's buttons, a field's wrapper). MathBot moves onto it as the pilot while the rest of the wave is built.
+
+The second wave covers the bigger pieces: a data table (PrimeVue DataTable today, plus Kindred's StackTable and Senpan's TanStack table), drawers, menus, a date picker, pagination, popovers and tabs. MathBot's BaseTabs, the Gallery's AppMenu and PaginationBar, and Kindred's HelpTip, which is a popover rather than a tooltip, wait for it.
 
 Components that belong to one app stay in that app, such as Senpan's bingo board, TarotGen.io's spread editor and Home Library's book cover.
 
@@ -64,19 +74,21 @@ Components that belong to one app stay in that app, such as Senpan's bingo board
 
 - Every color, space, radius, font and shadow a component uses comes from a token, never a hard-coded value. A Stylelint rule enforces it.
 - Tokens have semantic names (surface, text, muted, accent, danger, focus ring), not raw colors. Each app maps its theme onto them in one file, so TarotGen.io keeps its mystic palette and Fantasy Dossier its vellum.
-- Today each app names its variables its own way: `--myst-*` in TarotGen.io, `--seal-*` and `--paper-*` in Fantasy Dossier, `--color-*` in Kindred and Home Library. `--color-*` is also Tailwind 4's own namespace, so kit tokens need a prefix that collides with none of these.
+- Today each app names its variables its own way: `--myst-*` in TarotGen.io; `--seal-*`, `--paper-*` and about 40 other groups in Fantasy Dossier; `--color-*` in Kindred and Home Library, beside PrimeVue's `--p-*`; and plain semantic names (`--surface`, `--text`, `--accent`) in the Gallery, Senpan, MathBot and Fingerprint Generator. Tailwind 4 owns `--color-*`, `--radius-*`, `--text-*`, `--font-*` and `--shadow-*` in the two Tailwind apps. So kit tokens take the `--kit-` prefix, which nothing in the apps uses (decided 2026-11-18).
 - The kit's CSS sits in a cascade layer (`@layer kit`), so an app's own styles always win without specificity fights.
-- The default theme meets WCAG AA contrast, and each app's theme is checked by its own page tests.
+- Each default color is `light-dark(light, dark)`, so it follows the `color-scheme` the app sets on its page rather than the device, and an app that lets the user pick a scheme gets the kit in that scheme. An app's production build rewrites `light-dark()` into a form that works only beside a `color-scheme` declared in CSS, so an app that sets its scheme from script maps every color token (AGENTS.md, Known traps).
+- The default theme starts from MathBot's tokens and contrast test, renamed to `--kit-*`. It meets WCAG AAA contrast (7:1 for body text, 4.5:1 for large text) in light and dark, and each app's theme is checked by its own contrast test, where a pair that reaches only AA is a recorded exception.
 
 ## Accessibility
 
 - Reka UI supplies roles, keyboard handling and focus management. The kit adds a visible focus ring from a token, 44 px touch targets (as Home Library already requires), and `prefers-reduced-motion` handling for every animation.
 - Each component has Vitest tests for its behavior, with axe run on what it renders.
-- A `playground/` app shows every component in every state. Playwright and axe run against it, the same way `test/a11y` checks the apps.
+- A `playground/` app shows every component in every state, in light and dark. Playwright and axe run against it through `test/a11y`, with axe's AAA rules on (`[...WCAG_22_AA, 'wcag2aaa']`) from the start, as the Gallery's and TarotGen.io's suites already have them, so a regression below AAA fails CI.
 
 ## Repo layout and build
 
-- `src/components/<Name>/` holds each component with its tests.
+- `src/components/` holds the components, one file each (`KitButton.vue`), and `src/__tests__/` their specs, as `standards/testing.md` asks.
+- `src/composables/` holds what code calls rather than renders: `confirm()` for KitConfirmDialog and `useToast()` for KitToast.
 - `src/tokens/` holds the token names and the default theme.
 - `playground/` is a small Vite app for review and for the Playwright and axe runs.
 - Vite's library mode builds ES modules plus type declarations (vue-tsc), and one CSS file that apps import once.
@@ -85,24 +97,28 @@ Components that belong to one app stay in that app, such as Senpan's bingo board
 ## Releases
 
 - Semantic version tags (`v1.0.0`) with a CHANGELOG. Breaking changes only in major versions.
-- Apps install a tag: `npm install github:jwill89/shared-components-vue#v1.0.0`. npm runs the kit's `prepare` build during install. If that gets slow, publish to npm as `@jwill89/shared-components-vue` instead.
+- Apps install a tag: `npm install github:jwill89/shared-components-vue#v1.0.0`. npm runs the kit's `prepare` build during install, and that build reads the kit's own `shared/` submodule (its tsconfig and Vite config come from there), so MathBot's pilot checks that npm fetches it. If it doesn't, or the build gets slow, publish to npm as `@jwill89/shared-components-vue` instead.
+- The kit's `shared/` is for its own lint, tests and CI. Nothing from it ships in the package, which holds only the built files, so an app on a different shared-tooling release takes the kit just the same, and each repo moves its own `shared/` when it chooses.
 
 ## Rollout order
 
-1. **The Gallery and TarotGen.io first.** Both already use Reka UI, and both drop Bulma. Bulma also supplies layout helpers (columns, spacing), which those apps replace with plain CSS at the same time.
-2. **Home Library and Kindred next.** They replace PrimeVue screen by screen; PrimeVue is removed once its last import goes.
-3. **Senpan, Fantasy Dossier and Fingerprint Generator.** They swap their hand-written equivalents and map their themes onto the kit's tokens.
-4. **MirageGO last,** for its menus and dialogs only; the game canvas stays Phaser.
+An app adopts the kit only after its shared-tooling rollout, whose end-to-end suite and axe checks show the swap broke nothing, and never in the same pass as a backend change (decided 2026-11-06). Those suites find elements by role and label, never by a Bulma or PrimeVue class, so they pass before and after.
+
+1. **MathBot first, as the pilot.** The kit starts from its components, so its switch is mostly imports and a token map. It proves the install from a tag, the `@layer kit` stylesheet and the token mapping before any app's screens change, and its styleguide page and axe checks show that nothing moved.
+2. **The Gallery and TarotGen.io next.** Both already use Reka UI, and both drop Bulma. Bulma also supplies layout helpers (columns, spacing), which those apps replace with plain CSS at the same time. TarotGen.io's unit tests find about 70 elements by CSS class, some of them on components the kit replaces, so those move to role and label queries first.
+3. **Home Library and Kindred.** They replace PrimeVue screen by screen; PrimeVue is removed once its last import goes. Kindred's end-to-end suite covers only its public pages, while 81 of its 141 PrimeVue files are in `views/manage` and `views/staff`, so it gains signed-in tests that reach those first.
+4. **Senpan, Fantasy Dossier and Fingerprint Generator.** They swap their hand-written equivalents and map their themes onto the kit's tokens. Senpan's unit tests find about 169 elements by its own CSS classes, so those move to role and label queries first. Its next phase, the Discord bot, is a backend change, so its switch comes before or after that, never with it.
+
+MirageGO is left out for now (decided 2026-11-18). It stays outside shared-tooling (`MirageGO/plans/shared-tooling-rollout.md`, 2026-11-11), so the rule above never lets it adopt the kit, and it has no tokens to map: its colors are written into each component.
 
 ## Open questions
 
-- **Token prefix.** Recommended: `--kit-`, which is short and collides with nothing in the apps or Tailwind.
 - **Data table.** Build it on TanStack Table, which Senpan already uses, in the second wave; or keep PrimeVue's DataTable in Home Library and Kindred until last.
-- **Markdown editor.** Kindred and TarotGen.io use TipTap and Senpan uses Milkdown. One shared editor (TipTap, as the majority) could ship as a separate, optional import, so apps without it don't carry its weight.
+- **Markdown editor.** Kindred, TarotGen.io and Senpan all use TipTap now (Senpan moved from Milkdown on November 16), as `standards/packages.md` asks. One shared editor could ship as a separate, optional import, so apps without it don't carry its weight.
 
 ## Sources
 
-The component counts come from each app's source code in `C:\Web Projects` on November 5, 2026.
+The component counts come from each app's source code in `C:\Web Projects` on November 5, 2026, checked again on November 18.
 
 - [PrimeVue roadmap](https://primevue.org/roadmap)
 - [Bulma vs Tailwind CSS](https://devtools-vs.pages.dev/bulma-vs-tailwindcss)

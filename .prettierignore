@@ -1,0 +1,10 @@
+# Prettier 3 already honours .gitignore (so node_modules/, dist/ and friends are skipped).
+# This file covers what .gitignore can't: the shared-tooling submodule, which has its own
+# formatting, the lockfile, Playwright's output from a failed end-to-end run, and the
+# Markdown, which markdownlint checks instead.
+shared/
+package-lock.json
+test-results/
+playwright-report/
+*.md
+.markdownlint-cli2.jsonc

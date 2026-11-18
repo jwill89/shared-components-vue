@@ -1,0 +1,18 @@
+{
+  // The type declarations the package ships (`npm run build`, after Vite's bundle): one
+  // .d.ts under dist/ for each source file the entry reaches, the components' included, so
+  // an app's vue-tsc sees each component's props, emits and slots.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.build.tsbuildinfo",
+    "paths": {}
+  },
+  "files": ["src/index.ts"],
+  "include": ["src/**/*.d.ts"],
+  "exclude": ["src/__tests__/**"]
+}

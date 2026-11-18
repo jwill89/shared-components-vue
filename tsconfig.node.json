@@ -1,0 +1,10 @@
+{
+  "extends": "@jwill89/lint-web/tsconfig.node.json",
+  "compilerOptions": {
+    "composite": true,
+    // The end-to-end specs pass functions to page.evaluate, which run in the browser.
+    "lib": ["ES2023", "DOM"],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
+  },
+  "include": ["vite.config.ts", "playground/vite.config.ts", "playwright.config.ts", "e2e/**/*.ts"]
+}

@@ -1,0 +1,46 @@
+# Weekly dependency updates, grouped so a quiet week is one pull request per ecosystem:
+# minors and patches together, majors one by one (they can need code changes).
+#
+# The shared/ submodule is public, so it needs no token.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      npm-minor:
+        patterns: ['*']
+        # Reka UI is pinned and shipped to every app, so each new version comes on its own
+        # pull request, read before it lands.
+        exclude-patterns: ['reka-ui']
+        update-types: [minor, patch]
+    ignore:
+      # Held on purpose: TypeScript stays on 6.x until vue-tsc and typescript-eslint support
+      # TypeScript 7.1.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # vue-tsc 3.3.14 turns a `//` in a static attribute into broken virtual code, which
+      # stops it checking the rest of that template (held at 3.3.13). Only that version: the
+      # fix comes through.
+      - dependency-name: vue-tsc
+        versions: ['3.3.14']
+      # The lint tools (ESLint, Prettier, Stylelint and their plugins) move to a new major
+      # together with the shared configs that must match, and reach here with
+      # `task shared:update`. Minors and patches come here.
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'eslint-*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: prettier
+        update-types: ['version-update:semver-major']
+      - dependency-name: stylelint
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'stylelint-*'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

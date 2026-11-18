@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# The shared workflows, at the release the shared/ submodule holds (the docs job fails if the
+# two ever differ), and the release this repo makes of its own. The kit sits at the repo root,
+# so every front-end job runs in `.`.
+jobs:
+  # Which areas this push or pull request changed: each job below runs when its area did,
+  # docs always, and every job when CI's own files, shared/ or the Taskfile change
+  # (changes.yml). `task shared:ci:changes` shows what a push would run.
+  changes:
+    uses: jwill89/shared-tooling/.github/workflows/changes.yml@v2.18.0
+    permissions:
+      contents: read
+      actions: read
+    with:
+      ignore: '**/*.md LICENSE LICENSE.* .gitignore .gitmodules .markdownlint-cli2.jsonc .vscode/** .claude/** .idea/** plans/** docs/**'
+      areas: |
+        kit: ** !**/*.md !.vscode/** !.claude/** !.idea/**
+
+  # ESLint and Stylelint, Prettier, the type check, the package build with its declarations,
+  # and the Vitest suite with its coverage floor.
+  web:
+    needs: changes
+    if: fromJSON(needs.changes.outputs.areas).kit
+    uses: jwill89/shared-tooling/.github/workflows/web.yml@v2.18.0
+    with:
+      dir: .
+      scripts: lint format:check typecheck build test:coverage
+
+  # The end-to-end run (playwright.config.ts): the playground, built and served, in the
+  # runner's Chrome, passing axe with the AAA rules in both color schemes.
+  e2e:
+    needs: [changes, web]
+    if: fromJSON(needs.changes.outputs.areas).kit
+    uses: jwill89/shared-tooling/.github/workflows/e2e.yml@v2.18.0
+    with:
+      dir: .
+
+  docs:
+    uses: jwill89/shared-tooling/.github/workflows/docs.yml@v2.18.0
+
+  # OSV-Scanner over the lockfile. An osv-scanner.toml beside it passes over the advisories
+  # that reach only lint, test or build tooling.
+  osv:
+    needs: changes
+    if: fromJSON(needs.changes.outputs.areas).lockfiles
+    uses: jwill89/shared-tooling/.github/workflows/osv.yml@v2.18.0
+
+  # On a push to main, after the gate passes, tag and release the kit's version if it has no
+  # release yet: tag v<version> (package.json), notes from that version's CHANGELOG section.
+  # Apps install the kit by that tag. A version already released, and 0.0.0, are skipped.
+  release:
+    name: Tag + release (on version bump)
+    needs: [changes, web, e2e, docs, osv]
+    if: ${{ !failure() && !cancelled() && (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    # A pull request from a fork runs on GitHub's runners, never on a self-hosted one.
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04' || vars.CI_RUNNER || 'ubuntu-24.04' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the existing tags, to see what's already released
+
+      - name: Tag + release on version bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/release.sh
+
+  # When a job fails, one report of what failed and where: at the head of the run's page,
+  # and as the ci-report artifact `task shared:ci:report` prints (report.yml).
+  report:
+    needs: [changes, web, e2e, docs, osv, release]
+    if: failure()
+    uses: jwill89/shared-tooling/.github/workflows/report.yml@v2.18.0
+    permissions:
+      contents: read
+      actions: read

@@ -1,0 +1,37 @@
+# Dependencies, build output and test output
+node_modules
+dist
+playground-dist
+coverage
+test-results
+playwright-report
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Local-only overrides (Vite's .env.local / .env.[mode].local, etc.)
+*.local
+
+# The kit has no secrets. Environment files stay local in case a tool ever reads one.
+.env
+.env.*
+*.env
+!.env.example
+
+# npm auth tokens live in the user's ~/.npmrc. The tracked .npmrc holds settings only.
+
+# Claude Code personal settings (local permission rules can embed hosts, paths, commands).
+.claude/settings.local.json
+CLAUDE.local.md
+
+# --- Editor & OS files -------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.sw?
+.DS_Store
+Thumbs.db
+desktop.ini

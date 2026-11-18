@@ -1,0 +1,82 @@
+/*
+ * The kit's tokens and its default theme: every color, font, size and space a kit component
+ * uses, read through var(--kit-*). An app maps its own palette onto them in one file of its
+ * own; its rules are unlayered, so they beat these layered defaults without a heavier selector.
+ *
+ * Each color is light-dark(light, dark), so it follows the color-scheme the app sets on its
+ * page and the kit never asks the device itself: an app that pins one scheme gets that
+ * scheme's colors, and one that sets no color-scheme gets the light ones. Each pair a reader
+ * reads (text on each surface, a filled control's words on its fill) holds 7:1 or more in
+ * both schemes, the AAA level; a control's border holds 3:1 against every surface it sits on.
+ * contrast.spec.ts measures every pair contrast.ts lists.
+ */
+@layer kit {
+  :root {
+    /* Colors: light, then dark */
+    --kit-surface: light-dark(#fbfbfc, #14161a);
+    --kit-surface-raised: light-dark(#fff, #1d2026);
+    --kit-surface-sunken: light-dark(#eef0f3, #0e1013);
+    --kit-text: light-dark(#16181d, #eceef2);
+    --kit-text-muted: light-dark(#474d57, #b4bac5);
+    --kit-accent: light-dark(#1a449a, #9fc4ff);
+    --kit-on-accent: light-dark(#fff, #0b1a33);
+    --kit-focus-ring: light-dark(#1a449a, #9fc4ff);
+    --kit-danger: light-dark(#9b1c1c, #ffb4ab);
+    --kit-on-danger: light-dark(#fff, #3b0907);
+    --kit-success: light-dark(#17572a, #8fdc9f);
+    --kit-warning: light-dark(#6b4700, #f3c969);
+    --kit-control-border: light-dark(#6b7280, #8a919c);
+    --kit-hairline: light-dark(#d5d8de, #353a43);
+
+    /* Fonts: the system's own, so nothing is fetched before the first page shows. */
+    --kit-font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    --kit-font-heading: var(--kit-font-body);
+    --kit-font-code: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+
+    /* Type scale, in rem so text follows the reader's own size. */
+    --kit-text-size-xs: 0.75rem;
+    --kit-text-size-sm: 0.875rem;
+    --kit-text-size-base: 1rem;
+    --kit-text-size-md: 1.125rem;
+    --kit-text-size-lg: 1.25rem;
+    --kit-text-size-xl: 2rem;
+    --kit-line-height-prose: 1.6;
+    --kit-line-height-heading: 1.2;
+    --kit-font-weight-strong: 600;
+
+    /* Space */
+    --kit-space-2xs: 0.25rem;
+    --kit-space-xs: 0.5rem;
+    --kit-space-sm: 0.75rem;
+    --kit-space-md: 1rem;
+    --kit-space-lg: 1.5rem;
+    --kit-space-xl: 2.5rem;
+
+    /* Controls: 44 px touch targets (2.75rem at the default text size), and their shapes. */
+    --kit-control-height: 2.75rem;
+    --kit-control-border-width: 1px;
+    --kit-radius-sm: 0.25rem;
+    --kit-radius-md: 0.5rem;
+    --kit-radius-full: 999rem;
+    --kit-focus-ring-width: 3px;
+
+    /* Elevation: what floats above the page, and the shade behind a modal. Toasts float over
+       a dialog, and a list or menu someone has just opened floats over both. */
+    --kit-shadow-overlay: 0 0.5rem 1.5rem rgb(0 0 0 / 25%);
+    --kit-scrim: rgb(0 0 0 / 55%);
+    --kit-layer-dialog: 50;
+    --kit-layer-toast: 60;
+    --kit-layer-popup: 70;
+
+    /* Motion: how long a change of state takes to show. */
+    --kit-duration-quick: 150ms;
+    --kit-duration-spin: 800ms;
+
+    /* Widths: prose stays readable, and a dialog, a wide dialog for a long form, and a menu
+       stop at these. */
+    --kit-measure-prose: 70ch;
+    --kit-width-dialog: 32rem;
+    --kit-width-dialog-wide: 48rem;
+    --kit-width-menu: 16rem;
+  }
+}

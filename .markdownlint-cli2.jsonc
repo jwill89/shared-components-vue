@@ -1,0 +1,16 @@
+// markdownlint for the docs (`task shared:lint:md`, and CI): the shared config, which sets no
+// line length. The VS Code markdownlint extension reads this file too.
+{
+  "config": { "extends": "shared/lint/markdown/markdownlint.jsonc" },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "**/node_modules/**",
+    "shared/**",
+    "dist/**",
+    "playground-dist/**",
+    "coverage/**",
+    // Playwright's notes on a failed end-to-end run.
+    "test-results/**",
+    "playwright-report/**"
+  ]
+}

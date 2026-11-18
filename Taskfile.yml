@@ -1,0 +1,82 @@
+version: '3'
+
+# Day-to-day commands; `task` alone lists them. CI (.github/workflows/ci.yml) runs the same
+# checks through the shared workflows, and the shared tasks come in as shared:*.
+
+includes:
+  shared: ./shared/repo/Taskfile.yml
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  setup:
+    desc: Install the dependencies, which also builds the package (a fresh clone runs git submodule update --init first)
+    cmds:
+      - npm ci
+
+  dev:
+    desc: Run the playground on http://localhost:5173, every component in each of its states
+    cmds:
+      - npm run dev
+
+  build:
+    desc: Build the package into dist/ - one ES module, its type declarations and one stylesheet
+    cmds:
+      - npm run build
+
+  test:
+    desc: Run the Vitest specs (the components, the tokens' contrast, the stylesheet's layer)
+    aliases: [tests, test:unit]
+    cmds:
+      - npm test
+
+  test:coverage:
+    desc: Run the Vitest specs with their coverage floor (vite.config.ts)
+    cmds:
+      - npm run test:coverage
+
+  test:e2e:
+    desc: Build the playground and run the end-to-end suite (Playwright and axe, AAA rules on) in the installed Edge
+    aliases: [tests:e2e]
+    cmds:
+      - npm run test:e2e
+
+  lint:
+    desc: Lint, format-check, type-check and statically analyse everything, the docs checks included
+    cmds:
+      - task: lint:web
+      - task: shared:docs:check
+
+  lint:web:
+    cmds:
+      - npm run lint
+      - npm run format:check
+      - npm run typecheck
+
+  vuln:
+    desc: Check the dependencies for known vulnerabilities
+    cmds:
+      - task: shared:web:audit
+        vars: { DIR: . }
+      - task: shared:vuln
+
+  check:
+    desc: Everything CI runs - lint (the docs checks included), the audits, the specs with their coverage floor and type-check, the build and the end-to-end suite
+    cmds:
+      # The steps that don't depend on each other run at once, each line prefixed with its
+      # task; the ones that need them follow, in order. lint holds shared:docs:check.
+      - task --parallel --output prefixed lint vuln test:coverage
+      # The specs' tsconfig.vitest.json and type-check, as web.yml runs them.
+      - task: shared:web:specs
+        vars: { DIR: . }
+      - task: build
+      - task: test:e2e
+
+  push:
+    desc: Take the in-range updates Dependabot would open, scan for advisories, run task check, then push (-- -Yes, -SkipUpdates, -SkipCheck)
+    interactive: true
+    cmds:
+      - task: shared:push

@@ -1,0 +1,11 @@
+# The advisories OSV-Scanner may pass over for this lockfile: each reaches only lint, test or
+# build tooling, and no fix fits its dependents' ranges. Each is looked at again by its date.
+
+# minimatch 7.0.0 to 11.0.0: denial of service from a crafted glob pattern. It comes with
+# ESLint 10's plugins (@jwill89/lint-web) and editorconfig (js-beautify, through
+# @vue/test-utils), which require it below the fix, 11.0.1. Our own configs write every
+# pattern, and none of it ships.
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-18
+reason = "Dev tooling only (ESLint through lint/web, js-beautify through @vue/test-utils); the fix, minimatch 11.0.1, is outside their ranges."
