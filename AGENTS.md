@@ -59,6 +59,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - **Reka 2.11's toasts are never read out.** Their announcer is wrapped in `VisuallyHidden` with `feature="fully-hidden"`, which sets `aria-hidden="true"` on it, and a modal dialog hides the toast stack besides. The kit reads each toast through its own `KitAnnouncer`, from the newest one mounted: the open dialog's when there is one, since some screen readers ignore live regions outside an `aria-modal` dialog. `KitToastHost.spec.ts` fails the day Reka's announcer speaks; remove the kit's from the toasts then, or each is read twice.
 - **Reka's toast manager holds what it's given until a host listens.** A spec that raises a toast with no host mounted leaves it for the next spec's host to show, so such a spec stubs `toastManager.add`.
 - **Teleported content isn't reached by scoped styles.** Reka's Toast, Select, Combobox and Tooltip content render outside the component's tree, so their styles go in an unscoped style block, still in `@layer kit`. Reka's Dialog parts are the exception.
+- **Apps install the release's file, not the git tag.** A git install runs the kit's `prepare` build on the app's side, about 40 seconds of cloning, fetching `shared/` and installing the kit's tools, and npm 11.20 warns that it hasn't approved that script; a later npm may refuse it. The release job attaches the packed build, so `prepare` stays only for a git install as a fallback.
 - **vue-tsc 3.3.14 is skipped.** It stops checking a template at a `//` in a static attribute. Dependabot skips that version only.
 
 ## Recipes
@@ -83,7 +84,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 
 1. Set the version in `package.json` (semver: a removed or renamed component, prop, slot or token is a major).
 2. Turn CHANGELOG.md's Unreleased into `## [x.y.z] - YYYY-MM-DD` and run `task shared:changelog:links`.
-3. Push. Once CI passes, its release job tags `vx.y.z` and publishes the notes, and apps take it with `npm install github:jwill89/shared-components-vue#vx.y.z`.
+3. Push. Once CI passes, its release job tags `vx.y.z`, publishes the notes, and attaches the package, packed from the build the `web` job checked. Apps take it with `npm install https://github.com/jwill89/shared-components-vue/releases/download/vx.y.z/jwill89-shared-components-vue-x.y.z.tgz`.
 
 ### Take a shared-tooling release
 

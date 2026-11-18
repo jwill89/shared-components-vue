@@ -34,6 +34,7 @@ Decided on November 18, 2026, after checking the plan against each app's code:
 - Tokens take the `--kit-` prefix (see Design tokens).
 - Each component starts from the cleanest copy the apps already have, renamed and moved onto the kit's tokens, rather than being written fresh. MathBot's is the default: its dashboard, built November 12 to 17, has Reka-based versions of most of the first wave, written to the current standards, with AAA tokens in both color schemes, a contrast test, and a styleguide page that axe checks. Where another app's copy is cleaner, or MathBot has none, that one is the start (see What to build first).
 - MathBot adopts the kit first, as the pilot, and MirageGO is left out for now (see Rollout order).
+- The kit builds the one Markdown editor, `KitMarkdownEditor`, with a CommonMark dialect and a Discord one: Discord's mentions, emoji and timestamps show by name and are suggested as the person types from the first version, and Kindred's widgets and tables move onto it as Kindred's own extensions (see The Markdown editor).
 - TypeScript stays on the standards' `~6.0` and doesn't hold the kit up. TypeScript 7.1, due in late November, moves Vue's type check onto TypeScript itself, but typescript-eslint doesn't support TypeScript 7 yet (8.73.0 still requires below 6.1) and Vue's support for it is an alpha. The kit moves when shared-tooling does, after the apps, since an app on 7.1 reads declarations built with 6.0 but the reverse isn't certain. No app moves to 7.1 in the same pass as it adopts the kit.
 
 From the shared standards, as for every repo:
@@ -72,7 +73,7 @@ Components that belong to one app stay in that app, such as Senpan's bingo board
 
 ## The Markdown editor
 
-Proposed on November 18, 2026, from what the apps run today; the choices left open are under Open questions. The standards already settle the editor itself: TipTap 3 with its Markdown package, storing Markdown (`standards/packages.md`). What the kit adds is one editor, with its toolbar, in place of each app's own.
+Decided on November 18, 2026, from what the apps run today. The standards already settle the editor itself: TipTap 3 with its Markdown package, storing Markdown (`standards/packages.md`). What the kit adds is one editor, with its toolbar, in place of each app's own.
 
 ### What the apps have
 
@@ -91,6 +92,7 @@ Counts and versions as of November 18; every `@tiptap/*` package is at 3.34.0.
 - **It stores Markdown, and a toolbar sits above the text**, built from the kit's own parts on Reka's Toolbar and Toggle primitives (TipTap's own UI components are for React). Each tool names the extension it needs, so the toolbar shows only what the editor can write. Icons come in through slots, as everywhere in the kit.
 - **A `dialect` prop says which Markdown it writes**: `commonmark`, the default, for the apps' own pages, or `discord` for text that is posted to Discord. Each dialect brings its own extensions, its own `Marked` instance and its own writer. A dialect never uses `marked`'s global instance, which `@tiptap/markdown` falls back to: one dialect's rules would leak into every editor on the page.
 - **A `profile` prop narrows a dialect for one field**: `full`; `inline`, marks only, for a Discord embed's title or a field's name; and `plain`, for a footer, which takes no Markdown at all.
+- **An app adds its own pieces through an `extensions` prop**: each extension brings its Markdown syntax and, where it has one, its toolbar tool. Kindred's `{{widget}}` block and its tables move onto the kit's editor this way, rather than Kindred keeping an editor of its own (decided 2026-11-18). An extension one app needs stays in that app; one a second app needs moves into the kit.
 - **It sits in a KitFormField** like any control (`id`, `describedBy`, `invalid`), and its `limit` counts the Markdown it writes, which is what a server and Discord count, not the text on screen.
 
 ### The Discord dialect
@@ -100,7 +102,11 @@ TipTap's Markdown package lets an extension bring its own syntax (`markdownToken
 - `__text__` is **underline**, not bold: TipTap's Underline, which reads and writes only `<u>`, is extended to read and write `__`.
 - `||text||` is a **spoiler**, a line starting `-#` is **subtext**, and `>>>` quotes to the end of the message: a new mark and two new blocks.
 - Every newline is a line break; headings stop at level 3; there are no tables, images, HTML, rules or reference links, so the dialect switches those rules off, as Senpan's editor already does.
-- **Mentions, channels, roles, custom emoji, timestamps and slash commands** (`<@id>`, `<#id>`, `<@&id>`, `<:name:id>`, `<t:unix:R>`, `</name:id>`) are atoms that write their raw token back. The first version passes them through as text, as Senpan's does; a later one shows each by its name, from a `names` prop the app fills (as MathBot's preview does), with suggestions on `@`, `#` and `:` from TipTap's Mention extension.
+- **Mentions, channels, roles, custom emoji, timestamps and slash commands** (`<@id>`, `<#id>`, `<@&id>`, `<:name:id>`, `<t:unix:R>`, `</name:id>`) are atoms that write their raw token back and show by name from the first version (decided 2026-11-18):
+  - A person sees `@Sam`, `#general`, a role in its own color, the emoji itself, and a time as Discord would show it ("in 2 hours"), never the raw token. A screen reader hears the same name.
+  - The app supplies the names, since only it can reach the server: a `names` prop for what the text already holds (as MathBot's preview takes them), and a `suggest(kind, query)` callback the editor calls as the person types, so a server with thousands of members is searched, not listed whole.
+  - Typing `@` suggests members and roles, `#` channels, `:` emoji and `/` commands, through TipTap's Mention extension (MIT), on the kit's own list of choices, which the keyboard drives. A timestamp comes from a toolbar tool: a date and a time, then how Discord should show it.
+  - A token whose name the app doesn't know shows as a plain, readable placeholder ("unknown member"), and is still written back unchanged.
 - A Discord preview is a second, smaller piece: MathBot's renderer and Kindred's `discordMarkdown.ts` do the same job twice, so one of them becomes the kit's `KitDiscordPreview`, beside the editor.
 
 **How it is tested.** Each dialect has round-trip specs: every construct read and written back unchanged. Discord's own parser, [`@discord/markdown-wasm`](https://www.npmjs.com/package/@discord/markdown-wasm) (MIT, published by Discord), is the test oracle for the Discord dialect: what the editor writes, Discord must read as the editor meant it. At 1.2 MB of WebAssembly it stays a development dependency and never ships.
@@ -111,7 +117,7 @@ TipTap's Markdown package lets an extension bring its own syntax (`markdownToken
 - Escaping goes through the package's private `encodeTextForMarkdown`, which Senpan patches. The kit doesn't patch a private function: it writes its own escaping in the dialect's writer, or asks upstream for a hook.
 - Pasted text has no handling in the package: the editor turns pasted HTML into the dialect's Markdown through the same parser, and a spec pastes from a web page and from Discord.
 
-**Who adopts it, and when.** It comes after the first wave, beside the second, as its own minor release. Senpan and MathBot first, since both write text that is posted to Discord and gain the most; then Kindred, whose widgets and tables join as extensions an app adds; then TarotGen.io, which leaves its `marked` and `turndown` round trip for the standard's package.
+**Who adopts it, and when.** It comes after the first wave, beside the second, as its own minor release. Senpan and MathBot first, since both write text that is posted to Discord and gain the most, and each serves the names and suggestions from its own server's data; then Kindred, with its widgets and tables as its own extensions, and its Discord messages on the Discord dialect in place of its plain text box; then TarotGen.io, which leaves its `marked` and `turndown` round trip for the standard's package.
 
 ## Design tokens
 
@@ -140,7 +146,8 @@ TipTap's Markdown package lets an extension bring its own syntax (`markdownToken
 ## Releases
 
 - Semantic version tags (`v1.0.0`) with a CHANGELOG. Breaking changes only in major versions.
-- Apps install a tag: `npm install github:jwill89/shared-components-vue#v1.0.0`. npm runs the kit's `prepare` build during install, and that build reads the kit's own `shared/` submodule (its tsconfig and Vite config come from there), so MathBot's pilot checks that npm fetches it. If it doesn't, or the build gets slow, publish to npm as `@jwill89/shared-components-vue` instead.
+- Apps install the package each release carries: CI packs the build it checked and attaches it to the GitHub release, and an app installs that file by its URL (`npm install https://github.com/jwill89/shared-components-vue/releases/download/v1.0.0/jwill89-shared-components-vue-1.0.0.tgz`). The lockfile pins its hash, nothing is built on the app's side, and no install script runs (decided 2026-11-18).
+- Installing the git tag instead (`github:jwill89/shared-components-vue#v1.0.0`) works, and was tried on November 18 with npm 11.20: npm clones the kit, fetches its `shared/` submodule, installs its development tools and runs its `prepare` build, about 40 seconds on each fresh install. npm 11.20 also warns that the `prepare` script isn't yet approved for install scripts, which a later npm may refuse to run. So the release file is the way apps take the kit, and the git tag only a fallback. Publishing to npm stays open, if Dependabot's updates of the kit are wanted.
 - The kit's `shared/` is for its own lint, tests and CI. Nothing from it ships in the package, which holds only the built files, so an app on a different shared-tooling release takes the kit just the same, and each repo moves its own `shared/` when it chooses.
 
 ## Rollout order
@@ -157,9 +164,6 @@ MirageGO is left out for now (decided 2026-11-18). It stays outside shared-tooli
 ## Open questions
 
 - **Data table.** Build it on TanStack Table, which Senpan already uses, in the second wave; or keep PrimeVue's DataTable in Home Library and Kindred until last.
-- **The Markdown editor** (see The Markdown editor). Recommended: build it in the kit as proposed, with both dialects. Left open with it:
-  - Discord's mentions, emoji and timestamps: passed through as text at first (recommended), or shown by name with suggestions from the start, which needs each app to supply the names.
-  - Kindred's widgets and tables: extensions Kindred adds to the kit's editor (recommended), or kept in Kindred's own editor.
 
 ## Sources
 

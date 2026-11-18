@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-18
+
+The first release: the jobs the apps repeat most, and the pieces the rest build on.
+
 ### Added
 
+- Each release carries the built package, which an app installs by its URL, with nothing built or run on install.
 - The design tokens (`--kit-*`) and their default theme, in light and dark at AAA contrast, in one stylesheet an app imports once.
 - KitButton, in four variants (primary, secondary, danger and quiet), with a leading icon from the app's own icon set, a busy state that shows a spinner and can't be pressed again, a disabled state, and a link form for an action that opens another page. Every variant keeps AAA contrast on hover.
 - KitIconButton, a button that shows only an icon, named by a label it can't be made without, which also shows as the browser's tooltip.
@@ -21,4 +26,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and note, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
-[Unreleased]: https://github.com/jwill89/shared-components-vue/commits/HEAD
+[Unreleased]: https://github.com/jwill89/shared-components-vue/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/jwill89/shared-components-vue/releases/tag/v0.1.0

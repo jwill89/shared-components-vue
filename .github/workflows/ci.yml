@@ -30,7 +30,8 @@ jobs:
         kit: ** !**/*.md !.vscode/** !.claude/** !.idea/**
 
   # ESLint and Stylelint, Prettier, the type check, the package build with its declarations,
-  # and the Vitest suite with its coverage floor.
+  # and the Vitest suite with its coverage floor. The build it checked goes up as kit-dist, for
+  # the release job to pack.
   web:
     needs: changes
     if: fromJSON(needs.changes.outputs.areas).kit
@@ -38,6 +39,8 @@ jobs:
     with:
       dir: .
       scripts: lint format:check typecheck build test:coverage
+      artifact-path: dist
+      artifact-name: kit-dist
 
   # The end-to-end run (playwright.config.ts): the playground, built and served, in the
   # runner's Chrome, passing axe with the AAA rules in both color schemes.
@@ -59,8 +62,10 @@ jobs:
     uses: jwill89/shared-tooling/.github/workflows/osv.yml@v2.18.0
 
   # On a push to main, after the gate passes, tag and release the kit's version if it has no
-  # release yet: tag v<version> (package.json), notes from that version's CHANGELOG section.
-  # Apps install the kit by that tag. A version already released, and 0.0.0, are skipped.
+  # release yet: tag v<version> (package.json), notes from that version's CHANGELOG section,
+  # and the package itself attached, packed from the build the web job checked. Apps install
+  # that file by its URL, so nothing is built on their side. A version already released, and
+  # 0.0.0, are skipped.
   release:
     name: Tag + release (on version bump)
     needs: [changes, web, e2e, docs, osv]
@@ -74,7 +79,31 @@ jobs:
         with:
           fetch-depth: 0 # the existing tags, to see what's already released
 
+      - name: Is a release due?
+        id: due
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/release.sh --check >> "$GITHUB_OUTPUT"
+
+      - name: Download the package build
+        if: steps.due.outputs.due == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: kit-dist
+          path: dist
+
+      - uses: actions/setup-node@v7
+        if: steps.due.outputs.due == 'true'
+        with:
+          node-version-file: .nvmrc
+
+      # The files the package ships, as npm would publish them; the build is already in dist/.
+      - name: Pack the package
+        if: steps.due.outputs.due == 'true'
+        run: npm pack --ignore-scripts
+
       - name: Tag + release on version bump
+        if: steps.due.outputs.due == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash .github/scripts/release.sh

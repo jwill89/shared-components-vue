@@ -6,11 +6,13 @@ No components have been released yet. The first release, v0.1.0, brings the butt
 
 ## Using it in an app
 
-Install a release by its tag. npm builds the package as it installs:
+Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install github:jwill89/shared-components-vue#v0.1.0
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.1.0/jwill89-shared-components-vue-0.1.0.tgz
 ```
+
+To take a later release, install its file the same way.
 
 Import the stylesheet once, before the app's own styles:
 
