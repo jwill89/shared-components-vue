@@ -40,12 +40,15 @@ test('a dialog holds focus, locks the page, closes on Escape and gives focus bac
   const dialog = page.getByRole('dialog', { name: 'About this shelf' })
   await expect(dialog).toBeVisible()
   const close = dialog.getByRole('button', { name: 'Close' })
+  const copy = dialog.getByRole('button', { name: 'Copy the shelf’s link' })
   await expect(close).toBeFocused()
-  // The Close button is its one control, so Tab comes back round to it.
+  // Tab goes round its two controls and never leaves it, either way.
+  await page.keyboard.press('Tab')
+  await expect(copy).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(close).toBeFocused()
   await page.keyboard.press('Shift+Tab')
-  await expect(close).toBeFocused()
+  await expect(copy).toBeFocused()
 
   // The page behind doesn't move under the wheel. (A script can still scroll it; a person can't.)
   // Nothing happening has no event to wait for, so the check waits as long as a scroll takes.

@@ -34,7 +34,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from 'reka-ui'
+import KitAnnouncer from './KitAnnouncer.vue'
 import KitButton from './KitButton.vue'
+import KitCrossIcon from './KitCrossIcon.vue'
 import KitIconButton from './KitIconButton.vue'
 
 const props = withDefaults(
@@ -148,13 +150,7 @@ function onOpenAutoFocus(event: Event): void {
           <component :is="parts.Title" class="kit-dialog__title">{{ title }}</component>
           <DialogClose v-if="!alert" as-child>
             <KitIconButton class="kit-dialog__close" label="Close">
-              <slot name="close-icon">
-                <svg viewBox="0 0 16 16" width="1em" height="1em" fill="currentColor">
-                  <path
-                    d="M3.5 2.1 8 6.6l4.5-4.5 1.4 1.4L9.4 8l4.5 4.5-1.4 1.4L8 9.4l-4.5 4.5-1.4-1.4L6.6 8 2.1 3.5z"
-                  />
-                </svg>
-              </slot>
+              <slot name="close-icon"><KitCrossIcon /></slot>
             </KitIconButton>
           </DialogClose>
         </header>
@@ -185,6 +181,8 @@ function onOpenAutoFocus(event: Event): void {
             </KitButton>
           </slot>
         </footer>
+        <!-- While it is open, a toast is read out from here (KitAnnouncer.vue says why). -->
+        <KitAnnouncer />
       </component>
     </component>
   </component>

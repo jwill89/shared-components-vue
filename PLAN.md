@@ -54,7 +54,7 @@ Your apps already contain the same components several times over. The first wave
 | KitFormField | Label, help, error and required wiring | MathBot's FormField | FormField in Kindred (58 files), Home Library (30) and Senpan (29); Bulma's `.field` markup in the Gallery and TarotGen.io |
 | KitTextField, KitTextarea, KitNumberField | Native inputs, Reka NumberField | MathBot's TextField, TextArea and NumberField | PrimeVue InputText, Textarea and InputNumber; Bulma's `.input` and `.textarea`; TarotGen.io's NumberField; Senpan's bare inputs |
 | KitDialog, KitConfirmDialog | Reka Dialog, AlertDialog | MathBot's BaseDialog, ConfirmDialog and confirm queue; Kindred's FormDialog for the form; the Gallery's AppDialog for the alert form | PrimeVue Dialog and ConfirmDialog (Home Library; Kindred, mostly through its FormDialog); Senpan's ModalOverlay and ConfirmModal; TarotGen.io's BaseModal and ConfirmDialog; the Gallery's AppDialog; Fantasy Dossier's ModalDialog |
-| KitToast | Reka Toast | MathBot's ToastHost, ToastList and `useToast` | PrimeVue Toast (Home Library, Kindred); Senpan's ToastNotification; the ToastContainers in TarotGen.io and the Gallery; Fantasy Dossier's ToastStack |
+| KitToastHost, `useToast()` | Reka Toast | MathBot's ToastHost, ToastList and `useToast`; TarotGen.io's warning tone | PrimeVue Toast (Home Library, Kindred); Senpan's ToastNotification; the ToastContainers in TarotGen.io and the Gallery; Fantasy Dossier's ToastStack |
 | KitPageHeader, KitPagePanel | Plain markup | MathBot's PageHeader and PagePanel | PageHeader in Kindred, TarotGen.io, Home Library, the Gallery and Fantasy Dossier; Senpan's SubPageHeader; PagePanel in Kindred and Home Library; Senpan's AdminPanel; Fantasy Dossier's SectionPanel |
 | KitAlert, KitEmptyState | Plain markup | MathBot's BaseAlert and EmptyState | PrimeVue Message (Kindred); Home Library's plain `role="alert"` and `role="status"` lines; Bulma's `.notification` in TarotGen.io; the Gallery's AppAlert and EmptyState; Senpan's EmptyState and sticky alerts |
 | KitSelect, KitCombobox | Reka Select, Combobox | MathBot's BaseSelect and BaseCombobox | PrimeVue Select and AutoComplete; Kindred's SearchPicker; TarotGen.io's BaseSelect, DeckComboBox and SpreadComboBox; the Gallery's TagMultiSelect, a multi-select combobox; native selects in Senpan, the Gallery and Fingerprint Generator |
@@ -66,9 +66,52 @@ Your apps already contain the same components several times over. The first wave
 
 The first release, v0.1.0, holds the first six rows: the jobs repeated most, and the pieces the rest build on (a dialog's buttons, a field's wrapper). MathBot moves onto it as the pilot while the rest of the wave is built.
 
-The second wave covers the bigger pieces: a data table (PrimeVue DataTable today, plus Kindred's StackTable and Senpan's TanStack table), drawers, menus, a date picker, pagination, popovers and tabs. MathBot's BaseTabs, the Gallery's AppMenu and PaginationBar, and Kindred's HelpTip, which is a popover rather than a tooltip, wait for it.
+The second wave covers the bigger pieces: a data table (PrimeVue DataTable today, plus Kindred's StackTable and Senpan's TanStack table), drawers, menus, a date picker, pagination, popovers and tabs. MathBot's BaseTabs, the Gallery's AppMenu and PaginationBar, and Kindred's HelpTip, which is a popover rather than a tooltip, wait for it. The Markdown editor comes beside it, as its own piece (see The Markdown editor).
 
 Components that belong to one app stay in that app, such as Senpan's bingo board, TarotGen.io's spread editor and Home Library's book cover.
+
+## The Markdown editor
+
+Proposed on November 18, 2026, from what the apps run today; the choices left open are under Open questions. The standards already settle the editor itself: TipTap 3 with its Markdown package, storing Markdown (`standards/packages.md`). What the kit adds is one editor, with its toolbar, in place of each app's own.
+
+### What the apps have
+
+Counts and versions as of November 18; every `@tiptap/*` package is at 3.34.0.
+
+| App | Editor | How it reads and writes Markdown | Toolbar | Used in |
+| --- | --- | --- | --- | --- |
+| Kindred | `MarkdownEditor.vue` on TipTap | `@tiptap/markdown`, with a custom `{{widget}}` block, GitHub tables, and aligned text written as HTML | Bold, italic, H2, H3, lists, quote, alignment, link, table tools, a widget menu | 5 places; its Discord messages are a plain text box with a preview of its own (`discordMarkdown.ts`) |
+| Senpan | `MarkdownEditor.vue` on TipTap, built without the Vue package and loaded on first use | `@tiptap/markdown` on a `Marked` of its own, with Discord-safe overrides, since the same text is posted to Discord: a bare newline is a line break, `<t:…>`, `<@id>` and `<:n:id>` pass through, underline is off. It patches the package's private `encodeTextForMarkdown` to get there | A heading select, bold, italic, strike, code, lists, link, an emoji picker, quote, divider | 12 admin tabs |
+| TarotGen.io | `MarkdownEditor.vue` on TipTap | No `@tiptap/markdown`: `marked` turns Markdown into HTML on the way in and `turndown` back on the way out, short of the standard | Bold, italic, H2, quote, lists, code, a link through `window.prompt` | 3 places |
+| MathBot | None: a plain text box with a character count | Its own 270-line renderer (`app/markdown.ts`) previews Discord's Markdown, mentions, emoji and timestamps included | None | The message composer, an embed's description and its fields' values |
+
+### The shape
+
+- **One component, `KitMarkdownEditor`, in an entry of its own** (`@jwill89/shared-components-vue/editor`), which an app loads on first use. TipTap's core, StarterKit, Vue package and Markdown package come to about 136 KB gzipped (measured with rolldown, Vue left out), several times the rest of the kit, so an app without an editor never carries it (`standards/performance.md`).
+- **It stores Markdown, and a toolbar sits above the text**, built from the kit's own parts on Reka's Toolbar and Toggle primitives (TipTap's own UI components are for React). Each tool names the extension it needs, so the toolbar shows only what the editor can write. Icons come in through slots, as everywhere in the kit.
+- **A `dialect` prop says which Markdown it writes**: `commonmark`, the default, for the apps' own pages, or `discord` for text that is posted to Discord. Each dialect brings its own extensions, its own `Marked` instance and its own writer. A dialect never uses `marked`'s global instance, which `@tiptap/markdown` falls back to: one dialect's rules would leak into every editor on the page.
+- **A `profile` prop narrows a dialect for one field**: `full`; `inline`, marks only, for a Discord embed's title or a field's name; and `plain`, for a footer, which takes no Markdown at all.
+- **It sits in a KitFormField** like any control (`id`, `describedBy`, `invalid`), and its `limit` counts the Markdown it writes, which is what a server and Discord count, not the text on screen.
+
+### The Discord dialect
+
+TipTap's Markdown package lets an extension bring its own syntax (`markdownTokenizer`, `parseMarkdown`, `renderMarkdown`), and `marked` tries those before its own rules at each position, so Discord's meanings can win where they differ from CommonMark. Checked against Discord's [own article on Markdown](https://support.discord.com/hc/en-us/articles/210298617) and its [message formatting reference](https://docs.discord.com/developers/reference):
+
+- `__text__` is **underline**, not bold: TipTap's Underline, which reads and writes only `<u>`, is extended to read and write `__`.
+- `||text||` is a **spoiler**, a line starting `-#` is **subtext**, and `>>>` quotes to the end of the message: a new mark and two new blocks.
+- Every newline is a line break; headings stop at level 3; there are no tables, images, HTML, rules or reference links, so the dialect switches those rules off, as Senpan's editor already does.
+- **Mentions, channels, roles, custom emoji, timestamps and slash commands** (`<@id>`, `<#id>`, `<@&id>`, `<:name:id>`, `<t:unix:R>`, `</name:id>`) are atoms that write their raw token back. The first version passes them through as text, as Senpan's does; a later one shows each by its name, from a `names` prop the app fills (as MathBot's preview does), with suggestions on `@`, `#` and `:` from TipTap's Mention extension.
+- A Discord preview is a second, smaller piece: MathBot's renderer and Kindred's `discordMarkdown.ts` do the same job twice, so one of them becomes the kit's `KitDiscordPreview`, beside the editor.
+
+**How it is tested.** Each dialect has round-trip specs: every construct read and written back unchanged. Discord's own parser, [`@discord/markdown-wasm`](https://www.npmjs.com/package/@discord/markdown-wasm) (MIT, published by Discord), is the test oracle for the Discord dialect: what the editor writes, Discord must read as the editor meant it. At 1.2 MB of WebAssembly it stays a development dependency and never ships.
+
+**The risks, each with its answer:**
+
+- `@tiptap/markdown` calls itself an early release, and its writer rewrites some text as it saves (`_x_` comes back as `*x*`). The round-trip specs catch every rewrite before an app sees it, and the kit takes its new versions one at a time (Dependabot holds it to a pull request of its own, as Reka UI).
+- Escaping goes through the package's private `encodeTextForMarkdown`, which Senpan patches. The kit doesn't patch a private function: it writes its own escaping in the dialect's writer, or asks upstream for a hook.
+- Pasted text has no handling in the package: the editor turns pasted HTML into the dialect's Markdown through the same parser, and a spec pastes from a web page and from Discord.
+
+**Who adopts it, and when.** It comes after the first wave, beside the second, as its own minor release. Senpan and MathBot first, since both write text that is posted to Discord and gain the most; then Kindred, whose widgets and tables join as extensions an app adds; then TarotGen.io, which leaves its `marked` and `turndown` round trip for the standard's package.
 
 ## Design tokens
 
@@ -88,7 +131,7 @@ Components that belong to one app stay in that app, such as Senpan's bingo board
 ## Repo layout and build
 
 - `src/components/` holds the components, one file each (`KitButton.vue`), and `src/__tests__/` their specs, as `standards/testing.md` asks.
-- `src/composables/` holds what code calls rather than renders: `confirm()` for KitConfirmDialog and `useToast()` for KitToast.
+- `src/composables/` holds what code calls rather than renders: `confirm()` for KitConfirmDialog, `useToast()` for KitToastHost, and the announcer both toasts and dialogs read out through.
 - `src/tokens/` holds the token names and the default theme.
 - `playground/` is a small Vite app for review and for the Playwright and axe runs.
 - Vite's library mode builds ES modules plus type declarations (vue-tsc), and one CSS file that apps import once.
@@ -114,7 +157,9 @@ MirageGO is left out for now (decided 2026-11-18). It stays outside shared-tooli
 ## Open questions
 
 - **Data table.** Build it on TanStack Table, which Senpan already uses, in the second wave; or keep PrimeVue's DataTable in Home Library and Kindred until last.
-- **Markdown editor.** Kindred, TarotGen.io and Senpan all use TipTap now (Senpan moved from Milkdown on November 16), as `standards/packages.md` asks. One shared editor could ship as a separate, optional import, so apps without it don't carry its weight.
+- **The Markdown editor** (see The Markdown editor). Recommended: build it in the kit as proposed, with both dialects. Left open with it:
+  - Discord's mentions, emoji and timestamps: passed through as text at first (recommended), or shown by name with suggestions from the start, which needs each app to supply the names.
+  - Kindred's widgets and tables: extensions Kindred adds to the kit's editor (recommended), or kept in Kindred's own editor.
 
 ## Sources
 

@@ -20,8 +20,11 @@ export interface Mix {
 }
 
 export interface TokenPair {
-  /** Whether the front color is read as text and icons, or drawn as a control's border. */
-  readonly kind: 'text' | 'border'
+  /**
+   * What the front color draws: text, read at AAA; an icon or a mark that means something,
+   * which WCAG asks 3:1 of; or a control's border.
+   */
+  readonly kind: 'text' | 'icon' | 'border'
   /** What sits in front. */
   readonly fg: string
   /** What it sits on: a token, or a color mixed from two. */
@@ -63,9 +66,24 @@ export const UNPAIRED: Readonly<Record<string, string>> = {
 export const BUTTON_HOVER = { filled: 0.15, quiet: 0.06 } as const
 
 /**
+ * How much of its tone a toast is washed with, over the raised surface. KitToastList.vue writes
+ * the same number. Each tone's toast holds its words at AAA on the wash, and its icon and its
+ * Dismiss button's at 3:1.
+ */
+export const TOAST_TINT = 0.1
+
+/** The tone each kind of toast is washed and marked with. */
+const TOAST_TONES = [
+  ['success', 'a success toast'],
+  ['danger', 'an error toast'],
+  ['warning', 'a warning toast'],
+  ['text-muted', 'a note toast'],
+] as const
+
+/**
  * AAA (7:1) for every color a reader reads or a control is marked with, on every surface; 3:1
- * for a control's border, which WCAG asks of a control's boundary; and AAA for a filled
- * control's words on its fill, at rest and on hover.
+ * for a control's border, which WCAG asks of a control's boundary; AAA for a filled control's
+ * words on its fill, at rest and on hover; and each toast's words and marks on its wash.
  */
 export const TOKEN_PAIRS: readonly TokenPair[] = [
   ...READ_ON_SURFACES.flatMap((fg) =>
@@ -102,6 +120,14 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
     floor: 7,
     state: 'a quiet button’s hover',
   })),
+  ...TOAST_TONES.flatMap(([tone, state]): TokenPair[] => {
+    const bg: Mix = { base: 'surface-raised', toward: tone, weight: TOAST_TINT }
+    return [
+      { kind: 'text', fg: 'text', bg, floor: 7, state },
+      { kind: 'icon', fg: tone, bg, floor: 3, state: `${state}’s icon` },
+      { kind: 'icon', fg: 'accent', bg, floor: 3, state: `${state}’s Dismiss button` },
+    ]
+  }),
 ]
 
 /** The tokens a pair's background is made from: one, or the two a mix takes. */

@@ -10,7 +10,10 @@ import {
   KitTextField,
   KitTextarea,
   confirm,
+  useToast,
 } from '@jwill89/shared-components-vue'
+
+const toast = useToast()
 
 const title = ref('')
 const titleError = ref<string>()
@@ -67,6 +70,11 @@ async function emptyBin(): Promise<void> {
       <KitDialog title="About this shelf" description="Where the books on it came from.">
         <template #trigger><KitButton>About this shelf</KitButton></template>
         <p>Most of these were bought second-hand in 2019, and a few were gifts.</p>
+        <template #footer>
+          <KitButton @click="toast.success('Copied the shelf’s link')">
+            Copy the shelf’s link
+          </KitButton>
+        </template>
       </KitDialog>
 
       <KitDialog

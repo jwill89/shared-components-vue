@@ -3,11 +3,12 @@
 // screen, and every component in each of its states as each lands. The end-to-end suite runs
 // axe on it in both schemes, with the AAA rules on.
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
-import { KitConfirmHost } from '@jwill89/shared-components-vue'
+import { KitConfirmHost, KitToastHost } from '@jwill89/shared-components-vue'
 import ButtonSection from './sections/ButtonSection.vue'
 import DialogSection from './sections/DialogSection.vue'
 import FieldSection from './sections/FieldSection.vue'
 import SpinnerSection from './sections/SpinnerSection.vue'
+import ToastSection from './sections/ToastSection.vue'
 import TokenPairs from './TokenPairs.vue'
 
 type Scheme = 'device' | 'light' | 'dark'
@@ -62,14 +63,16 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
     <SpinnerSection />
     <FieldSection />
     <DialogSection />
+    <ToastSection />
 
     <section class="playground-section" aria-labelledby="pairs-heading">
       <h2 id="pairs-heading">Color pairs</h2>
       <TokenPairs :key="shownScheme" />
     </section>
   </main>
-  <!-- Answers confirm(), once, at the root, as in an app. -->
+  <!-- Answers confirm() and shows the toasts, once each, at the root, as in an app. -->
   <KitConfirmHost />
+  <KitToastHost />
 </template>
 
 <style scoped>

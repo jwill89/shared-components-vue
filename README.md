@@ -72,6 +72,20 @@ if (await confirm({ title: 'Delete this shelf?', message: 'Its 12 books go back 
 }
 ```
 
+### Toasts
+
+Mount `KitToastHost` once, at the app's root, beside `KitConfirmHost`, and raise a toast after an action from anywhere, the app's global error handler included:
+
+```ts
+import { useToast } from '@jwill89/shared-components-vue'
+
+const toast = useToast()
+toast.success('Saved the shelf')
+toast.error('That didn’t save', problem.detail)
+```
+
+A toast reports how a finished action went and goes; a condition the person must act on is an alert on the page, which stays. An app with a fixed bar along the top maps `--kit-toast-inset-top` to the bar's height.
+
 ### Icons
 
 Kit components take icons through slots, so the app's own icon set draws them and the kit carries no icon library, Font Awesome's or any other. Whatever renders an icon goes in the slot: Font Awesome's `<font-awesome-icon>`, another library's component, or an inline `<svg>`. The kit hides it from screen readers, since the button's words or label already name it.

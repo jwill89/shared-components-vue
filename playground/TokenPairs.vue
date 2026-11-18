@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Every pair contrast.spec.ts measures, drawn in its own colors with the ratio the browser
 // gives it in the scheme on screen, so a person sees what the test checks. A mixed pair (a
-// hover) is drawn through the same color-mix() its component writes. A border pair draws a box
-// in the border's color, with ordinary text inside.
+// hover, a toast's wash) is drawn through the same color-mix() its component writes. A border
+// pair draws a box in the border's color, with ordinary text inside, and an icon pair a dot.
 import { onMounted, ref, useTemplateRef } from 'vue'
 import {
   TOKEN_PAIRS,
@@ -49,8 +49,20 @@ onMounted(() => {
             class="token-pairs__sample"
             :class="{ 'token-pairs__sample--border': pair.kind === 'border' }"
             :style="{ '--pair-fg': `var(--kit-${pair.fg})`, '--pair-bg': backgroundCss(pair.bg) }"
-            >Aa</span
           >
+            <!-- An icon pair draws a mark, not words: it is held to 3:1, which words aren't. -->
+            <svg
+              v-if="pair.kind === 'icon'"
+              viewBox="0 0 16 16"
+              width="1em"
+              height="1em"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="8" r="6" />
+            </svg>
+            <template v-else>Aa</template>
+          </span>
         </td>
         <td class="token-pairs__name">
           <code>{{ describePair(pair) }}</code>

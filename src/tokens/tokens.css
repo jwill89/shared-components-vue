@@ -81,5 +81,10 @@
     --kit-width-menu: 16rem;
     --kit-width-field: 48rem;
     --kit-width-number-field: 14rem;
+    --kit-width-toast: 26rem;
+
+    /* Where the toast stack starts down the screen: an app with a fixed bar along the top maps
+       this to the bar's height, so toasts never cover it. */
+    --kit-toast-inset-top: 0;
   }
 }
