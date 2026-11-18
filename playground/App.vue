@@ -4,6 +4,7 @@
 // axe on it in both schemes, with the AAA rules on.
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
 import ButtonSection from './sections/ButtonSection.vue'
+import FieldSection from './sections/FieldSection.vue'
 import SpinnerSection from './sections/SpinnerSection.vue'
 import TokenPairs from './TokenPairs.vue'
 
@@ -57,6 +58,7 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
 
     <ButtonSection />
     <SpinnerSection />
+    <FieldSection />
 
     <section class="playground-section" aria-labelledby="pairs-heading">
       <h2 id="pairs-heading">Color pairs</h2>

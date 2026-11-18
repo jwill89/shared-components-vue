@@ -36,7 +36,7 @@ export default defineConfig({
   test: vitestDefaults({
     include: ['src/__tests__/**/*.spec.ts'],
     setupFiles: ['src/__tests__/setup.ts'],
-    floor: { statements: 95, branches: 90, functions: 95, lines: 95 },
+    floor: { statements: 98, branches: 95, functions: 98, lines: 98 },
     // The entry files only re-export.
     coverageExclude: ['src/index.ts', 'src/bundle.ts'],
   }),

@@ -39,6 +39,16 @@ Each default color is `light-dark(light, dark)`, so it follows the `color-scheme
 
 The token names and the default theme are in [src/tokens/tokens.css](src/tokens/tokens.css).
 
+### Fields
+
+Every control sits in a `KitFormField`, whose slot hands it the id its label names, the ids of the error and hint that describe it, and whether it is in error. Bind them all with `v-bind`:
+
+```vue
+<KitFormField v-slot="field" label="Email" hint="The reset link goes here." :error="errors.email" required>
+  <KitTextField v-model="email" v-bind="field" type="email" autocomplete="email" />
+</KitFormField>
+```
+
 ### Icons
 
 Kit components take icons through slots, so the app's own icon set draws them and the kit carries no icon library, Font Awesome's or any other. Whatever renders an icon goes in the slot: Font Awesome's `<font-awesome-icon>`, another library's component, or an inline `<svg>`. The kit hides it from screen readers, since the button's words or label already name it.

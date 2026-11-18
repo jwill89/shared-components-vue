@@ -34,6 +34,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - Every style the kit ships sits in `@layer kit`: each component's style block is one `@layer kit { ... }`, and so is the token file. An app's rules are unlayered, so they win without a heavier selector.
 - Every color, font, size and space a component uses is a `--kit-*` token, read through `var()`; Stylelint's palette rule refuses a color written anywhere but the token file. A component's classes are BEM with its own name as the block (`.kit-button__icon`).
 - Each color token is `light-dark(light, dark)`, so it follows the `color-scheme` the app sets on its page. The kit never queries the device's scheme itself.
+- Every form control takes the same three props, `id`, `describedBy` and `invalid`, which `KitFormField`'s slot hands it (`v-bind="field"`), so one wrapper names and describes any control. A new control takes the same three.
 - Icons come in through slots; the kit has no icon library, so the app's own Font Awesome setup draws them.
 - Vue is a peer dependency, and Reka UI a dependency pinned to one version. The build keeps both as imports, so the app's copy of each is the one that runs.
 - The package build lowers and minifies nothing (`vite.config.ts`). The app's build does both, for the browsers it serves.
@@ -86,6 +87,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 
 - `src/__tests__/` runs under Vitest on jsdom; the token and stylesheet specs read the source files under Node. The coverage floor in `vite.config.ts` only rises.
 - `src/__tests__/helpers.ts` keeps each mounted wrapper for unmounting after the test (`kept`, `unmountKept`) and runs axe on what a component renders (`axeFindings`); `setup.ts` stands in for the browser APIs jsdom lacks. A component spec mounts with `@vue/test-utils`, drives it as a user would, and expects no axe findings.
+- Reka's primitives start listening a tick after mounting, so a spec awaits `nextTick()` before it sends a pointer event. Test Utils' `trigger` leaves out a pointer's type, which Reka reads as a touch, so a click on a Reka button is a real `PointerEvent` (`press()` in `KitNumberField.spec.ts`).
 - `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, the tokens following the scheme the page sets, each button's hover held at 7:1 as the browser draws it, and the focus ring.
 
 ## Departures from the standards

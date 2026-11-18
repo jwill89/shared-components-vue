@@ -73,11 +73,13 @@
     --kit-duration-quick: 150ms;
     --kit-duration-spin: 800ms;
 
-    /* Widths: prose stays readable, and a dialog, a wide dialog for a long form, and a menu
-       stop at these. */
+    /* Widths: prose stays readable, and a dialog, a wide dialog for a long form, a menu, a
+       field on a row of its own and a number box stop at these. */
     --kit-measure-prose: 70ch;
     --kit-width-dialog: 32rem;
     --kit-width-dialog-wide: 48rem;
     --kit-width-menu: 16rem;
+    --kit-width-field: 48rem;
+    --kit-width-number-field: 14rem;
   }
 }
