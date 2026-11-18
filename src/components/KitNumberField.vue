@@ -76,6 +76,7 @@ defineSlots<{
 <style scoped>
 @layer kit {
   .kit-number-field {
+    box-sizing: border-box;
     display: flex;
     width: 100%;
     max-width: var(--kit-width-number-field);
@@ -103,6 +104,7 @@ defineSlots<{
   }
 
   .kit-number-field__input {
+    box-sizing: border-box;
     flex: 1;
     width: 100%;
     min-width: 0;
@@ -120,6 +122,7 @@ defineSlots<{
   }
 
   .kit-number-field__step {
+    box-sizing: border-box;
     display: inline-flex;
     flex: none;
     align-items: center;

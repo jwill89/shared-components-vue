@@ -69,6 +69,7 @@ defineSlots<{
     --kit-button-ink: var(--kit-text);
     --kit-button-edge: var(--kit-control-border);
 
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;

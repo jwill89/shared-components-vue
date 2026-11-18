@@ -31,6 +31,7 @@ const model = defineModel<string>({ required: true })
 <style scoped>
 @layer kit {
   .kit-text-field {
+    box-sizing: border-box;
     width: 100%;
     min-width: 0;
     min-height: var(--kit-control-height);

@@ -49,6 +49,29 @@ Every control sits in a `KitFormField`, whose slot hands it the id its label nam
 </KitFormField>
 ```
 
+### Dialogs and confirm
+
+A form in a dialog takes a submit label, and the page closes the dialog once its save has worked:
+
+```vue
+<KitDialog v-model:open="adding" title="Add a book" submit-label="Add the book" :busy="saving" @submit="addBook">
+  <template #trigger><KitButton variant="primary">Add a book</KitButton></template>
+  <KitFormField v-slot="field" label="Title" :error="titleError" required>
+    <KitTextField v-model="title" v-bind="field" />
+  </KitFormField>
+</KitDialog>
+```
+
+The question before an irreversible action is `confirm()`. Mount `KitConfirmHost` once, at the app's root, and ask from anywhere:
+
+```ts
+import { confirm } from '@jwill89/shared-components-vue'
+
+if (await confirm({ title: 'Delete this shelf?', message: 'Its 12 books go back to unshelved.', confirmLabel: 'Delete the shelf', danger: true })) {
+  await deleteShelf()
+}
+```
+
 ### Icons
 
 Kit components take icons through slots, so the app's own icon set draws them and the kit carries no icon library, Font Awesome's or any other. Whatever renders an icon goes in the slot: Font Awesome's `<font-awesome-icon>`, another library's component, or an inline `<svg>`. The kit hides it from screen readers, since the button's words or label already name it.

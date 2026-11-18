@@ -14,6 +14,23 @@ async function outline(locator: Locator): Promise<{ style: string; width: string
   })
 }
 
+test('each control fits inside its field, with no reset stylesheet to lean on', async ({
+  page,
+}) => {
+  // The playground sets no box-sizing of its own, as some apps don't, so a control that counts
+  // on one spills out of its field here.
+  await page.goto('/')
+  const spilling = await page.evaluate(() =>
+    [...document.querySelectorAll('.kit-form-field')].flatMap((field) => {
+      const edge = field.getBoundingClientRect().right
+      return [...field.querySelectorAll('input, textarea, .kit-number-field')]
+        .filter((control) => control.getBoundingClientRect().right > edge + 0.5)
+        .map((control) => control.id || control.className)
+    }),
+  )
+  expect(spilling).toEqual([])
+})
+
 test('a text box and a box of several lines show the focus ring', async ({ page }) => {
   await page.goto('/')
   for (const label of ['Title', 'Notes']) {

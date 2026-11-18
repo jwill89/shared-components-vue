@@ -32,6 +32,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - `src/__tests__/` holds the specs, as `*.spec.ts`.
 - `playground/` imports the kit by its package name, pointed at the source by `playground/vite.config.ts`, and shows every component in each of its states. Its own stylesheet stands in for an app's: it sets the color scheme and draws the page from the kit's tokens.
 - Every style the kit ships sits in `@layer kit`: each component's style block is one `@layer kit { ... }`, and so is the token file. An app's rules are unlayered, so they win without a heavier selector.
+- An element the kit sizes or pads sets `box-sizing: border-box` itself, since an app may have no reset that sets it. The playground has none on purpose, and `e2e/fields.spec.ts` fails on a control that spills out of its field.
 - Every color, font, size and space a component uses is a `--kit-*` token, read through `var()`; Stylelint's palette rule refuses a color written anywhere but the token file. A component's classes are BEM with its own name as the block (`.kit-button__icon`).
 - Each color token is `light-dark(light, dark)`, so it follows the `color-scheme` the app sets on its page. The kit never queries the device's scheme itself.
 - Every form control takes the same three props, `id`, `describedBy` and `invalid`, which `KitFormField`'s slot hands it (`v-bind="field"`), so one wrapper names and describes any control. A new control takes the same three.
@@ -52,6 +53,9 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - **An app's build lowers `light-dark()`.** Vite's default CSS target rewrites it into lightningcss's stand-in, which reads variables lightningcss writes only beside a `color-scheme` declared in CSS. An app that declares its scheme in CSS, as the standards ask, is fine; one that sets it from script, or not at all, gets no default kit colors in production, only in development. Such an app maps every color token to its own. Lowering the kit's own build (a `target` or minifier in `vite.config.ts`) would bake the stand-in into `style.css`, so it stays off.
 - **A stylesheet imported in `src/index.ts` ships in the declarations.** vue-tsc keeps a side-effect import in `dist/index.d.ts`, pointing an app's type check at a file the package doesn't ship, so stylesheets are imported in `src/bundle.ts` and never in `index.ts`.
 - **A hover is a color too.** A state's color mixed where it is used (a hover's `color-mix()`) is listed in `contrast.ts` with the same weight the component writes, and `e2e/buttons.spec.ts` measures what the browser draws, so the two can't drift. MathBot's button hover, which mixed the fill toward its own words, fell to about 6:1.
+- **`confirm()` needs a `KitConfirmHost`.** The queue lives in the kit, and the host draws it; with no host, `confirm()` throws rather than wait for an answer that can't come, and when the last host unmounts, what is still waiting is answered no.
+- **Reka focuses the first control in a dialog, which is its Close button.** A form dialog moves focus to its first field itself (`onOpenAutoFocus` in `KitDialog.vue`), and an alert dialog's focus starts on Cancel through `AlertDialogCancel`, so KitConfirmDialog wraps its Cancel button in it.
+- **Reka sets a dialog's role but not `aria-modal`**, which the standards ask for, so KitDialog sets it.
 - **Teleported content isn't reached by scoped styles.** Reka's Toast, Select, Combobox and Tooltip content render outside the component's tree, so their styles go in an unscoped style block, still in `@layer kit`. Reka's Dialog parts are the exception.
 - **vue-tsc 3.3.14 is skipped.** It stops checking a template at a `//` in a static attribute. Dependabot skips that version only.
 
@@ -88,7 +92,8 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - `src/__tests__/` runs under Vitest on jsdom; the token and stylesheet specs read the source files under Node. The coverage floor in `vite.config.ts` only rises.
 - `src/__tests__/helpers.ts` keeps each mounted wrapper for unmounting after the test (`kept`, `unmountKept`) and runs axe on what a component renders (`axeFindings`); `setup.ts` stands in for the browser APIs jsdom lacks. A component spec mounts with `@vue/test-utils`, drives it as a user would, and expects no axe findings.
 - Reka's primitives start listening a tick after mounting, so a spec awaits `nextTick()` before it sends a pointer event. Test Utils' `trigger` leaves out a pointer's type, which Reka reads as a touch, so a click on a Reka button is a real `PointerEvent` (`press()` in `KitNumberField.spec.ts`).
-- `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, the tokens following the scheme the page sets, each button's hover held at 7:1 as the browser draws it, and the focus ring.
+- `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, the tokens following the scheme the page sets, each button's hover held at 7:1 as the browser draws it, the focus rings, and each dialog as a person meets it (focus held, the page locked under the wheel, Escape, focus given back). A scroll lock is checked with the mouse wheel: `overflow: hidden` still lets a script scroll.
+- A component that teleports (a dialog) is read from `document.body` in its spec, found by its role as a screen reader finds it.
 
 ## Departures from the standards
 

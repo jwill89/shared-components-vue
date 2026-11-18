@@ -79,6 +79,7 @@ const announcement = computed(() => {
   }
 
   .kit-textarea__box {
+    box-sizing: border-box;
     width: 100%;
     min-width: 0;
     padding: var(--kit-space-xs) var(--kit-space-sm);

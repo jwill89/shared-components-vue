@@ -35,6 +35,7 @@ defineProps<{
   }
 
   .kit-spinner__ring {
+    box-sizing: border-box;
     display: inline-block;
     flex: none;
     width: 1em;
