@@ -59,6 +59,7 @@
     --kit-radius-md: 0.5rem;
     --kit-radius-full: 999rem;
     --kit-focus-ring-width: 3px;
+    --kit-focus-ring-offset: 2px;
 
     /* Elevation: what floats above the page, and the shade behind a modal. Toasts float over
        a dialog, and a list or menu someone has just opened floats over both. */

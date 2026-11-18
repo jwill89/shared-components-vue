@@ -8,15 +8,28 @@
 /** A color as its red, green and blue channels, each 0 to 255. */
 export type Rgb = readonly [red: number, green: number, blue: number]
 
+/**
+ * A color made where it is used rather than stored as a token, as a hover is:
+ * `color-mix(in srgb, var(--kit-<base>) <100 - weight * 100>%, var(--kit-<toward>))`.
+ */
+export interface Mix {
+  readonly base: string
+  readonly toward: string
+  /** How far it moves toward `toward`, from 0 to 1. */
+  readonly weight: number
+}
+
 export interface TokenPair {
   /** Whether the front color is read as text and icons, or drawn as a control's border. */
   readonly kind: 'text' | 'border'
   /** What sits in front. */
   readonly fg: string
-  /** What it sits on. */
-  readonly bg: string
+  /** What it sits on: a token, or a color mixed from two. */
+  readonly bg: string | Mix
   /** The lowest contrast ratio the pair may have. */
   readonly floor: number
+  /** Where a mixed pair is used: "a primary button's hover". */
+  readonly state?: string
 }
 
 /** The surfaces text and controls sit on. */
@@ -42,9 +55,17 @@ export const UNPAIRED: Readonly<Record<string, string>> = {
 }
 
 /**
+ * How far a button's hover moves from its rest. KitButton.vue writes the same numbers into
+ * its color-mix() calls, so the two change together. A filled button's fill moves toward the
+ * page's text color, which takes it away from its own words in either scheme; a quiet button
+ * takes a faint wash of the accent over whatever surface it sits on.
+ */
+export const BUTTON_HOVER = { filled: 0.15, quiet: 0.06 } as const
+
+/**
  * AAA (7:1) for every color a reader reads or a control is marked with, on every surface; 3:1
  * for a control's border, which WCAG asks of a control's boundary; and AAA for a filled
- * control's words on its fill.
+ * control's words on its fill, at rest and on hover.
  */
 export const TOKEN_PAIRS: readonly TokenPair[] = [
   ...READ_ON_SURFACES.flatMap((fg) =>
@@ -53,7 +74,86 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
   ...SURFACES.map((bg): TokenPair => ({ kind: 'border', fg: 'control-border', bg, floor: 3 })),
   { kind: 'text', fg: 'on-accent', bg: 'accent', floor: 7 },
   { kind: 'text', fg: 'on-danger', bg: 'danger', floor: 7 },
+  {
+    kind: 'text',
+    fg: 'text',
+    bg: { base: 'surface-raised', toward: 'text', weight: BUTTON_HOVER.filled },
+    floor: 7,
+    state: 'a secondary button’s hover',
+  },
+  {
+    kind: 'text',
+    fg: 'on-accent',
+    bg: { base: 'accent', toward: 'text', weight: BUTTON_HOVER.filled },
+    floor: 7,
+    state: 'a primary button’s hover',
+  },
+  {
+    kind: 'text',
+    fg: 'on-danger',
+    bg: { base: 'danger', toward: 'text', weight: BUTTON_HOVER.filled },
+    floor: 7,
+    state: 'a danger button’s hover',
+  },
+  ...SURFACES.map((base): TokenPair => ({
+    kind: 'text',
+    fg: 'accent',
+    bg: { base, toward: 'accent', weight: BUTTON_HOVER.quiet },
+    floor: 7,
+    state: 'a quiet button’s hover',
+  })),
 ]
+
+/** The tokens a pair's background is made from: one, or the two a mix takes. */
+export function backgroundTokens(bg: TokenPair['bg']): string[] {
+  return typeof bg === 'string' ? [bg] : [bg.base, bg.toward]
+}
+
+/** A pair in words: "--kit-on-accent on --kit-accent, 15% toward --kit-text". */
+export function describePair({ fg, bg, state }: TokenPair): string {
+  const back =
+    typeof bg === 'string'
+      ? `--kit-${bg}`
+      : `--kit-${bg.base}, ${String(Math.round(bg.weight * 100))}% toward --kit-${bg.toward}`
+  return `--kit-${fg} on ${back}${state ? ` (${state})` : ''}`
+}
+
+/** A pair's background as CSS, through the tokens, as the component that uses it writes it. */
+export function backgroundCss(bg: TokenPair['bg']): string {
+  if (typeof bg === 'string') {
+    return `var(--kit-${bg})`
+  }
+  const rest = String(Math.round((1 - bg.weight) * 100))
+  return `color-mix(in srgb, var(--kit-${bg.base}) ${rest}%, var(--kit-${bg.toward}))`
+}
+
+/** Two colors mixed in sRGB, `weight` of the way from `a` to `b`, as color-mix() mixes them. */
+export function mixRgb(a: Rgb, b: Rgb, weight: number): Rgb {
+  const channel = (at: 0 | 1 | 2): number => a[at] * (1 - weight) + b[at] * weight
+  return [channel(0), channel(1), channel(2)]
+}
+
+/**
+ * A color as a browser computes it, as its channels and its alpha: `rgb(r, g, b)` or
+ * `rgba(r, g, b, a)` with channels from 0 to 255, or `color(srgb r g b / a)` with channels from
+ * 0 to 1, which is how a browser gives back a color-mix(). Undefined for anything else.
+ */
+export function parseComputedColor(css: string): { rgb: Rgb; alpha: number } | undefined {
+  const num = '([\\d.]+)'
+  const rgb = new RegExp(`^rgba?\\(${num},\\s*${num},\\s*${num}(?:,\\s*${num})?\\)$`).exec(css)
+  if (rgb) {
+    return { rgb: [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])], alpha: Number(rgb[4] ?? 1) }
+  }
+  const srgb = new RegExp(`^color\\(srgb ${num} ${num} ${num}(?: / ${num})?\\)$`).exec(css)
+  if (srgb) {
+    const channel = (value: string | undefined): number => Number(value) * 255
+    return {
+      rgb: [channel(srgb[1]), channel(srgb[2]), channel(srgb[3])],
+      alpha: Number(srgb[4] ?? 1),
+    }
+  }
+  return undefined
+}
 
 /** A #rgb or #rrggbb color as its channels. */
 export function parseHex(hex: string): Rgb {

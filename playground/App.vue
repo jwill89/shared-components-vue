@@ -3,6 +3,8 @@
 // screen, and every component in each of its states as each lands. The end-to-end suite runs
 // axe on it in both schemes, with the AAA rules on.
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
+import ButtonSection from './sections/ButtonSection.vue'
+import SpinnerSection from './sections/SpinnerSection.vue'
 import TokenPairs from './TokenPairs.vue'
 
 type Scheme = 'device' | 'light' | 'dark'
@@ -40,8 +42,8 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
     <header class="playground__header">
       <h1 class="playground__title">shared-components-vue</h1>
       <p class="playground__intro">
-        Every color pair the default theme holds, measured in the scheme on screen. Each component
-        joins this page, in each of its states, as it lands.
+        Every component in each of its states, and every color pair the default theme holds,
+        measured in the scheme on screen.
       </p>
       <label class="playground__scheme">
         Color scheme
@@ -53,7 +55,10 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
       </label>
     </header>
 
-    <section class="playground__section" aria-labelledby="pairs-heading">
+    <ButtonSection />
+    <SpinnerSection />
+
+    <section class="playground-section" aria-labelledby="pairs-heading">
       <h2 id="pairs-heading">Color pairs</h2>
       <TokenPairs :key="shownScheme" />
     </section>
@@ -94,9 +99,5 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
   background: var(--kit-surface-raised);
   color: var(--kit-text);
   font: inherit;
-}
-
-.playground__section {
-  margin-top: var(--kit-space-xl);
 }
 </style>

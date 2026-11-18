@@ -3,7 +3,18 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { TOKEN_PAIRS, UNPAIRED, contrastRatio, parseHex } from '../tokens/contrast'
+import {
+  TOKEN_PAIRS,
+  UNPAIRED,
+  backgroundCss,
+  backgroundTokens,
+  contrastRatio,
+  describePair,
+  mixRgb,
+  parseComputedColor,
+  parseHex,
+} from '../tokens/contrast'
+import type { Rgb, TokenPair } from '../tokens/contrast'
 
 // Read as a file: Vitest hands a stylesheet import to its CSS pipeline, which gives none of the
 // text back.
@@ -26,13 +37,27 @@ function colors(css: string): Map<string, { light: string; dark: string }> {
 
 const palette = colors(tokens)
 
+/** A token's color in one scheme, failing the test where the token isn't defined. */
+function token(name: string, scheme: 'light' | 'dark'): Rgb {
+  const value = palette.get(name)?.[scheme]
+  expect(value, `--kit-${name} is defined`).toBeDefined()
+  return parseHex(value ?? '')
+}
+
+/** A pair's background in one scheme: its token's color, or the two mixed. */
+function background(bg: TokenPair['bg'], scheme: 'light' | 'dark'): Rgb {
+  return typeof bg === 'string'
+    ? token(bg, scheme)
+    : mixRgb(token(bg.base, scheme), token(bg.toward, scheme), bg.weight)
+}
+
 describe('the default theme', () => {
   it('defines the colors it pairs', () => {
     expect(palette.size).toBeGreaterThan(0)
   })
 
   it('measures every color it defines', () => {
-    const paired = new Set(TOKEN_PAIRS.flatMap((pair) => [pair.fg, pair.bg]))
+    const paired = new Set(TOKEN_PAIRS.flatMap((pair) => [pair.fg, ...backgroundTokens(pair.bg)]))
     const unmeasured = [...palette.keys()].filter(
       (name) => !paired.has(name) && !(name in UNPAIRED),
     )
@@ -40,15 +65,41 @@ describe('the default theme', () => {
   })
 
   describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
-    it.each(TOKEN_PAIRS)('--kit-$fg holds $floor:1 on --kit-$bg', ({ fg, bg, floor }) => {
-      const front = palette.get(fg)?.[scheme]
-      const back = palette.get(bg)?.[scheme]
-      expect(front, `--kit-${fg} is defined`).toBeDefined()
-      expect(back, `--kit-${bg} is defined`).toBeDefined()
-      expect(contrastRatio(parseHex(front ?? ''), parseHex(back ?? ''))).toBeGreaterThanOrEqual(
-        floor,
-      )
-    })
+    it.each(TOKEN_PAIRS.map((pair) => [describePair(pair), pair] as const))(
+      '%s holds its floor',
+      (_, { fg, bg, floor }) => {
+        expect(contrastRatio(token(fg, scheme), background(bg, scheme))).toBeGreaterThanOrEqual(
+          floor,
+        )
+      },
+    )
+  })
+})
+
+describe('a pair in words and in CSS', () => {
+  const hover: TokenPair = {
+    kind: 'text',
+    fg: 'on-accent',
+    bg: { base: 'accent', toward: 'text', weight: 0.15 },
+    floor: 7,
+    state: 'a primary button’s hover',
+  }
+
+  it('names a plain pair by its tokens', () => {
+    const plain: TokenPair = { kind: 'text', fg: 'text', bg: 'surface', floor: 7 }
+    expect(describePair(plain)).toBe('--kit-text on --kit-surface')
+    expect(backgroundCss(plain.bg)).toBe('var(--kit-surface)')
+    expect(backgroundTokens(plain.bg)).toEqual(['surface'])
+  })
+
+  it('names a mixed pair by its mix and where it is used', () => {
+    expect(describePair(hover)).toBe(
+      '--kit-on-accent on --kit-accent, 15% toward --kit-text (a primary button’s hover)',
+    )
+    expect(backgroundCss(hover.bg)).toBe(
+      'color-mix(in srgb, var(--kit-accent) 85%, var(--kit-text))',
+    )
+    expect(backgroundTokens(hover.bg)).toEqual(['accent', 'text'])
   })
 })
 
@@ -62,6 +113,24 @@ describe('the contrast arithmetic', () => {
     expect(contrastRatio([255, 255, 255], [26, 68, 154])).toBe(
       contrastRatio([26, 68, 154], [255, 255, 255]),
     )
+  })
+
+  it('mixes two colors in sRGB, as color-mix() does', () => {
+    expect(mixRgb([0, 0, 0], [255, 255, 255], 0.5)).toEqual([127.5, 127.5, 127.5])
+    expect(mixRgb([10, 20, 30], [110, 120, 130], 0)).toEqual([10, 20, 30])
+    expect(mixRgb([10, 20, 30], [110, 120, 130], 1)).toEqual([110, 120, 130])
+  })
+
+  it('reads a computed color in either of the forms a browser gives', () => {
+    expect(parseComputedColor('rgb(26, 68, 154)')).toEqual({ rgb: [26, 68, 154], alpha: 1 })
+    expect(parseComputedColor('rgba(0, 0, 0, 0)')).toEqual({ rgb: [0, 0, 0], alpha: 0 })
+    expect(parseComputedColor('color(srgb 1 0.5 0)')).toEqual({ rgb: [255, 127.5, 0], alpha: 1 })
+    expect(parseComputedColor('color(srgb 0.1 0.2 0.6 / 0.06)')).toEqual({
+      rgb: [25.5, 51, 153],
+      alpha: 0.06,
+    })
+    expect(parseComputedColor('transparent')).toBeUndefined()
+    expect(parseComputedColor('oklch(0.5 0.1 200)')).toBeUndefined()
   })
 
   it('reads three hex digits as six', () => {

@@ -45,7 +45,7 @@ From the shared standards, as for every repo:
 
 ## What to build first
 
-Your apps already contain the same components several times over. The first wave covers those, starting with the ones repeated most. "Starts from" names the copy each component begins as; where it names more than one, the cleanest is chosen when the component is built. Counts are files that use a component, as of November 18.
+Your apps already contain the same components several times over. The first wave covers those, starting with the ones repeated most. "Starts from" names the copy each component begins as; where it names more than one, the cleanest is chosen when the component is built. Kindred's own components are always among those compared where it has one (its FormField, PageHeader, PagePanel and FormDialog, say), as one of the cleanest apps, though it builds on PrimeVue rather than Reka UI. A copy is checked against the standards as it moves, not taken as it is: MathBot's button hover, which mixed the fill toward its own words, fell to about 6:1 in the light scheme, under AAA. Counts are files that use a component, as of November 18.
 
 | Component | Built on | Starts from | Replaces today |
 | --- | --- | --- | --- |

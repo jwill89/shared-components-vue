@@ -6,5 +6,13 @@
     "lib": ["ES2023", "DOM"],
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "playground/vite.config.ts", "playwright.config.ts", "e2e/**/*.ts"]
+  // The end-to-end specs measure what the browser draws with the same arithmetic the unit
+  // specs use, so contrast.ts is part of this project too.
+  "include": [
+    "vite.config.ts",
+    "playground/vite.config.ts",
+    "playwright.config.ts",
+    "e2e/**/*.ts",
+    "src/tokens/contrast.ts"
+  ]
 }

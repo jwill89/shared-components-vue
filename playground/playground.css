@@ -33,5 +33,30 @@ h2 {
 
 :focus-visible {
   outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
-  outline-offset: 2px;
+  outline-offset: var(--kit-focus-ring-offset);
+}
+
+/* The page's own layout: a section per component, its notes, and a row of its states. */
+.playground-section {
+  margin-top: var(--kit-space-xl);
+}
+
+.playground-note {
+  max-width: var(--kit-measure-prose);
+  margin: 0 0 var(--kit-space-sm);
+  color: var(--kit-text-muted);
+}
+
+.playground-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--kit-space-sm);
+  margin-bottom: var(--kit-space-sm);
+}
+
+.playground-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kit-space-xs);
 }

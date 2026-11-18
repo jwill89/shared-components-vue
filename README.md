@@ -41,7 +41,18 @@ The token names and the default theme are in [src/tokens/tokens.css](src/tokens/
 
 ### Icons
 
-Kit components take icons through slots, so the app's own Font Awesome setup draws them, and the kit carries no icon library.
+Kit components take icons through slots, so the app's own icon set draws them and the kit carries no icon library, Font Awesome's or any other. Whatever renders an icon goes in the slot: Font Awesome's `<font-awesome-icon>`, another library's component, or an inline `<svg>`. The kit hides it from screen readers, since the button's words or label already name it.
+
+```vue
+<KitButton variant="primary" @click="addBook">
+  <template #icon><font-awesome-icon icon="fa-solid fa-plus" /></template>
+  Add a book
+</KitButton>
+
+<KitIconButton label="Delete the shelf" variant="danger" @click="deleteShelf">
+  <font-awesome-icon icon="fa-solid fa-trash" />
+</KitIconButton>
+```
 
 ## Developing
 

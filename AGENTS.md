@@ -26,7 +26,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 ## Architecture and conventions
 
 - `src/components/` holds the components, one file each, named `Kit` and the job (`KitButton.vue`). The shared ESLint refuses one-word names and the names of HTML elements, and the prefix keeps the kit's components apart from an app's own while the app moves over.
-- `src/index.ts` exports every component and composable an app may import, and imports the tokens, so the build gathers every style into one `style.css`.
+- `src/index.ts` exports every component and composable an app may import, and the type declarations are built from it alone. `src/bundle.ts`, the bundle's entry, adds the tokens to those exports, so the build gathers every style into one `style.css`.
 - `src/composables/` holds what code calls rather than renders, such as `confirm()` and `useToast()`.
 - `src/tokens/tokens.css` defines every token as `--kit-*`, and `src/tokens/contrast.ts` lists the color pairs the default theme holds.
 - `src/__tests__/` holds the specs, as `*.spec.ts`.
@@ -49,6 +49,8 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 
 - **The package marks only its CSS as having side effects.** An app that imports the package without `@jwill89/shared-components-vue/style.css` gets the components unstyled, and a bare `import '@jwill89/shared-components-vue'` is dropped from a build altogether. The playground imports `style.css` as an app does, which its end-to-end run checks.
 - **An app's build lowers `light-dark()`.** Vite's default CSS target rewrites it into lightningcss's stand-in, which reads variables lightningcss writes only beside a `color-scheme` declared in CSS. An app that declares its scheme in CSS, as the standards ask, is fine; one that sets it from script, or not at all, gets no default kit colors in production, only in development. Such an app maps every color token to its own. Lowering the kit's own build (a `target` or minifier in `vite.config.ts`) would bake the stand-in into `style.css`, so it stays off.
+- **A stylesheet imported in `src/index.ts` ships in the declarations.** vue-tsc keeps a side-effect import in `dist/index.d.ts`, pointing an app's type check at a file the package doesn't ship, so stylesheets are imported in `src/bundle.ts` and never in `index.ts`.
+- **A hover is a color too.** A state's color mixed where it is used (a hover's `color-mix()`) is listed in `contrast.ts` with the same weight the component writes, and `e2e/buttons.spec.ts` measures what the browser draws, so the two can't drift. MathBot's button hover, which mixed the fill toward its own words, fell to about 6:1.
 - **Teleported content isn't reached by scoped styles.** Reka's Toast, Select, Combobox and Tooltip content render outside the component's tree, so their styles go in an unscoped style block, still in `@layer kit`. Reka's Dialog parts are the exception.
 - **vue-tsc 3.3.14 is skipped.** It stops checking a template at a `//` in a static attribute. Dependabot skips that version only.
 
@@ -66,7 +68,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 ### Change a color or add a token
 
 1. Write it in `src/tokens/tokens.css`, a color as `light-dark(light, dark)`.
-2. A color joins a pair in `src/tokens/contrast.ts`, or `UNPAIRED` with its reason.
+2. A color joins a pair in `src/tokens/contrast.ts`, or `UNPAIRED` with its reason. A component's state color made with `color-mix()` (a hover, a wash) joins as a mixed pair, with the weight the component writes.
 3. `task test` measures it; the playground shows each pair with its ratio in the scheme on screen.
 4. A renamed or removed token breaks every app that maps it, so it waits for a major version.
 
@@ -83,7 +85,8 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 ## Testing
 
 - `src/__tests__/` runs under Vitest on jsdom; the token and stylesheet specs read the source files under Node. The coverage floor in `vite.config.ts` only rises.
-- `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, and the tokens following the scheme the page sets.
+- `src/__tests__/helpers.ts` keeps each mounted wrapper for unmounting after the test (`kept`, `unmountKept`) and runs axe on what a component renders (`axeFindings`); `setup.ts` stands in for the browser APIs jsdom lacks. A component spec mounts with `@vue/test-utils`, drives it as a user would, and expects no axe findings.
+- `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, the tokens following the scheme the page sets, each button's hover held at 7:1 as the browser draws it, and the focus ring.
 
 ## Departures from the standards
 

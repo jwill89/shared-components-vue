@@ -1,24 +1,26 @@
 <script setup lang="ts">
 // Every pair contrast.spec.ts measures, drawn in its own colors with the ratio the browser
-// gives it in the scheme on screen, so a person sees what the test checks. A border pair draws
-// a box in the border's color, with ordinary text inside.
+// gives it in the scheme on screen, so a person sees what the test checks. A mixed pair (a
+// hover) is drawn through the same color-mix() its component writes. A border pair draws a box
+// in the border's color, with ordinary text inside.
 import { onMounted, ref, useTemplateRef } from 'vue'
-import { TOKEN_PAIRS, contrastRatio, type Rgb, type TokenPair } from '../src/tokens/contrast'
+import {
+  TOKEN_PAIRS,
+  backgroundCss,
+  contrastRatio,
+  describePair,
+  parseComputedColor,
+  type TokenPair,
+} from '../src/tokens/contrast'
 
 const table = useTemplateRef<HTMLTableElement>('table')
 const ratios = ref<string[]>([])
 
-/** A computed color, `rgb(r, g, b)` or `rgba(...)`, as its channels. */
-function channels(css: string): Rgb | undefined {
-  const m = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(css)
-  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : undefined
-}
-
 function measure(sample: Element, pair: TokenPair): string {
   const style = getComputedStyle(sample)
-  const front = channels(pair.kind === 'border' ? style.borderTopColor : style.color)
-  const back = channels(style.backgroundColor)
-  return front && back ? `${contrastRatio(front, back).toFixed(2)}:1` : 'not measured'
+  const front = parseComputedColor(pair.kind === 'border' ? style.borderTopColor : style.color)
+  const back = parseComputedColor(style.backgroundColor)
+  return front && back ? `${contrastRatio(front.rgb, back.rgb).toFixed(2)}:1` : 'not measured'
 }
 
 onMounted(() => {
@@ -41,17 +43,17 @@ onMounted(() => {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(pair, index) in TOKEN_PAIRS" :key="`${pair.fg} on ${pair.bg}`">
+      <tr v-for="(pair, index) in TOKEN_PAIRS" :key="describePair(pair)">
         <td>
           <span
             class="token-pairs__sample"
             :class="{ 'token-pairs__sample--border': pair.kind === 'border' }"
-            :style="{ '--pair-fg': `var(--kit-${pair.fg})`, '--pair-bg': `var(--kit-${pair.bg})` }"
+            :style="{ '--pair-fg': `var(--kit-${pair.fg})`, '--pair-bg': backgroundCss(pair.bg) }"
             >Aa</span
           >
         </td>
         <td class="token-pairs__name">
-          <code>--kit-{{ pair.fg }}</code> on <code>--kit-{{ pair.bg }}</code>
+          <code>{{ describePair(pair) }}</code>
         </td>
         <td>{{ ratios[index] ?? 'not measured' }}</td>
         <td>{{ pair.floor }}:1</td>
