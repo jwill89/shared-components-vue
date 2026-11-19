@@ -11,6 +11,7 @@ import {
   contrastRatio,
   describePair,
   mixRgb,
+  pairRatio,
   parseComputedColor,
   parseHex,
 } from '../tokens/contrast'
@@ -44,16 +45,6 @@ function token(name: string, scheme: 'light' | 'dark'): Rgb {
   return parseHex(value ?? '')
 }
 
-/**
- * A pair's background in one scheme: its token's color, or its mix, worked out from the wash
- * underneath up, each rounded to whole channels as a browser draws it.
- */
-function background(bg: TokenPair['bg'], scheme: 'light' | 'dark'): Rgb {
-  return typeof bg === 'string'
-    ? token(bg, scheme)
-    : mixRgb(background(bg.base, scheme), token(bg.toward, scheme), bg.weight)
-}
-
 describe('the default theme', () => {
   it('defines the colors it pairs', () => {
     expect(palette.size).toBeGreaterThan(0)
@@ -70,10 +61,8 @@ describe('the default theme', () => {
   describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
     it.each(TOKEN_PAIRS.map((pair) => [describePair(pair), pair] as const))(
       '%s holds its floor',
-      (_, { fg, bg, floor }) => {
-        expect(contrastRatio(token(fg, scheme), background(bg, scheme))).toBeGreaterThanOrEqual(
-          floor,
-        )
+      (_, pair) => {
+        expect(pairRatio(pair, (name) => token(name, scheme))).toBeGreaterThanOrEqual(pair.floor)
       },
     )
   })
@@ -128,6 +117,27 @@ describe('a pair in words and in CSS', () => {
 })
 
 describe('the contrast arithmetic', () => {
+  it('measures a pair in the colors it is given, a wash over a wash from the one underneath up', () => {
+    // An app's own palette: black words, a white surface, and a mid-grey to wash toward.
+    const palette: Record<string, Rgb> = {
+      ink: [0, 0, 0],
+      paper: [255, 255, 255],
+      grey: [100, 100, 100],
+    }
+    const colorOf = (name: string): Rgb => palette[name] ?? [255, 0, 0]
+    const plain: TokenPair = { kind: 'text', fg: 'ink', bg: 'paper', floor: 7 }
+    expect(pairRatio(plain, colorOf)).toBeCloseTo(21, 5)
+
+    const twice: TokenPair = {
+      kind: 'text',
+      fg: 'ink',
+      bg: { base: { base: 'paper', toward: 'grey', weight: 0.5 }, toward: 'grey', weight: 0.5 },
+      floor: 7,
+    }
+    // White halfway to 100 is 178 (177.5, rounded); 178 halfway to 100 is 139.
+    expect(pairRatio(twice, colorOf)).toBe(contrastRatio([0, 0, 0], [139, 139, 139]))
+  })
+
   it('gives black on white 21:1 and a color on itself 1:1', () => {
     expect(contrastRatio([0, 0, 0], [255, 255, 255])).toBeCloseTo(21, 5)
     expect(contrastRatio([26, 68, 154], [26, 68, 154])).toBe(1)

@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-19
+
+The kit's color pairs, for an app to measure its own colors with.
+
+### Added
+
+- `@jwill89/shared-components-vue/contrast`, every color pair the kit holds, the washes and hovers its components mix among them, and `pairRatio()`, which measures a pair in the colors an app gives. An app that maps the tokens to its own colors tests each pair in them, with the kit's own weights rather than copies that a release can leave behind.
+
 ## [0.3.1] - 2026-11-18
 
 A form dialog that opens on its first field whatever kind it is, and a quiet button that keeps AAA contrast on hover in an alert.
@@ -76,6 +84,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.4.0]: https://github.com/jwill89/shared-components-vue/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/jwill89/shared-components-vue/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/jwill89/shared-components-vue/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jwill89/shared-components-vue/compare/v0.1.0...v0.2.0

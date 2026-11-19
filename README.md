@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling, and the default theme holds WCAG AAA contrast in light and dark.
 
-The latest release, v0.3.1, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.4.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.3.1/jwill89-shared-components-vue-0.3.1.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.4.0/jwill89-shared-components-vue-0.4.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -61,6 +61,22 @@ Every color, font, size and space the kit uses is a `--kit-*` custom property, d
 Each default color is `light-dark(light, dark)`, so it follows the `color-scheme` the app declares on its page. Declare it in CSS (`:root { color-scheme: light dark; }`, and the scheme a user picks on the `html` element's class or attribute): an app's production build rewrites `light-dark()` into a form that works only beside a `color-scheme` written in CSS. An app that sets its scheme from script maps every color token instead.
 
 The token names and the default theme are in [src/tokens/tokens.css](https://github.com/jwill89/shared-components-vue/blob/main/src/tokens/tokens.css). An informing alert and toast take `--kit-info`, the muted text's grey by default; an app that marks information in a color of its own maps it.
+
+### Measuring your colors
+
+The default theme holds every pair a reader reads at 7:1 in both schemes, and a control's border and an icon at 3:1. An app that maps the tokens to its own colors measures the same pairs in them: `@jwill89/shared-components-vue/contrast` lists every pair, the washes and hovers the components mix among them, and `pairRatio()` measures one in the colors the app gives, each token's by its name without `--kit-`, as `[red, green, blue]`. A test that runs them all fails the day a color, or a wash the kit changes, falls below its floor:
+
+```ts
+import { TOKEN_PAIRS, describePair, pairRatio, parseHex } from '@jwill89/shared-components-vue/contrast'
+
+describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
+  it.each(TOKEN_PAIRS.map((pair) => [describePair(pair), pair] as const))('%s holds its floor', (_, pair) => {
+    expect(pairRatio(pair, (token) => parseHex(ourColor(token, scheme)))).toBeGreaterThanOrEqual(pair.floor)
+  })
+})
+```
+
+`ourColor` is the app's own: the hex color it maps the token to in that scheme. The entry imports nothing, so it runs under Node with no page.
 
 ### Fields
 

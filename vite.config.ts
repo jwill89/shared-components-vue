@@ -6,8 +6,10 @@ import { vitestDefaults } from './shared/test/web/vitest.js'
 // The package build (`npm run build`): Vite's library mode bundles src/bundle.ts (the exports
 // and the tokens) into one ES module and every style, the tokens' and the components', into one
 // stylesheet that an app imports once. Vue and Reka UI stay imports, so an app's copy of each is
-// the one that runs. vue-tsc writes the type declarations after it, from src/index.ts alone
-// (tsconfig.build.json).
+// the one that runs. src/tokens/contrast.ts is a second entry, `/contrast`, which an app's tests
+// import to measure the kit's color pairs in its own colors; it imports nothing, so it shares no
+// code with the first. vue-tsc writes the type declarations after it, from the two entries'
+// sources (tsconfig.build.json).
 //
 // Nothing is lowered or minified here: the app's own build does both for the browsers it
 // serves, in one pass with its own styles. Lowered here, the tokens' light-dark() would become
@@ -19,9 +21,13 @@ export default defineConfig({
     minify: false,
     cssMinify: false,
     lib: {
-      entry: fileURLToPath(new URL('./src/bundle.ts', import.meta.url)),
+      entry: {
+        index: fileURLToPath(new URL('./src/bundle.ts', import.meta.url)),
+        // Beside its declaration, which vue-tsc writes at dist/tokens/contrast.d.ts.
+        'tokens/contrast': fileURLToPath(new URL('./src/tokens/contrast.ts', import.meta.url)),
+      },
       formats: ['es'],
-      fileName: 'index',
+      fileName: (_format, name) => `${name}.js`,
       cssFileName: 'style',
     },
     rolldownOptions: {

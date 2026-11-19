@@ -3,6 +3,11 @@
  * contrast.spec.ts checks every pair against tokens.css in both schemes, and the playground
  * shows each one with its ratio in the scheme on screen. Token names are written without
  * their --kit- prefix.
+ *
+ * The package ships this file as its own entry, `@jwill89/shared-components-vue/contrast`, so
+ * an app that maps the tokens to its own colors measures every pair in them with the weights
+ * the components write, rather than copies of them. It imports nothing, so an app's tests load
+ * it without Vue or a page.
  */
 
 /** A color as its red, green and blue channels, each 0 to 255. */
@@ -276,4 +281,22 @@ function luminance([red, green, blue]: Rgb): number {
 export function contrastRatio(a: Rgb, b: Rgb): number {
   const [la, lb] = [luminance(a), luminance(b)]
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
+}
+
+/**
+ * A pair's background in the colors `colorOf` gives: its token's color, or its mix, worked out
+ * from the wash underneath up, each rounded to whole channels as a browser draws it.
+ */
+export function backgroundRgb(bg: TokenPair['bg'], colorOf: (token: string) => Rgb): Rgb {
+  return typeof bg === 'string'
+    ? colorOf(bg)
+    : mixRgb(backgroundRgb(bg.base, colorOf), colorOf(bg.toward), bg.weight)
+}
+
+/**
+ * A pair's contrast ratio in the colors `colorOf` gives, each token's by its name without the
+ * --kit- prefix, in the scheme being measured: the kit's own theme, or an app's.
+ */
+export function pairRatio(pair: TokenPair, colorOf: (token: string) => Rgb): number {
+  return contrastRatio(colorOf(pair.fg), backgroundRgb(pair.bg, colorOf))
 }

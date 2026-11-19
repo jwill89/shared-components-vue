@@ -28,7 +28,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - `src/components/` holds the components, one file each, named `Kit` and the job (`KitButton.vue`). The shared ESLint refuses one-word names and the names of HTML elements, and the prefix keeps the kit's components apart from an app's own while the app moves over.
 - `src/index.ts` exports every component and composable an app may import, and the type declarations are built from it alone. `src/bundle.ts`, the bundle's entry, adds the tokens to those exports, so the build gathers every style into one `style.css`.
 - `src/composables/` holds what code calls rather than renders, such as `confirm()` and `useToast()`.
-- `src/tokens/tokens.css` defines every token as `--kit-*`, and `src/tokens/contrast.ts` lists the color pairs the default theme holds.
+- `src/tokens/tokens.css` defines every token as `--kit-*`, and `src/tokens/contrast.ts` lists the color pairs the default theme holds. The package ships `contrast.ts` as its own entry, `@jwill89/shared-components-vue/contrast` (a second entry in `vite.config.ts`, its declaration from `tsconfig.build.json`), so an app's tests measure every pair in the app's colors with the weights the components write. It imports nothing, so an app's tests load it without Vue or a page, and it shares no code with the main bundle.
 - `src/__tests__/` holds the specs, as `*.spec.ts`.
 - `playground/` imports the kit by its package name, pointed at the source by `playground/vite.config.ts`, and shows every component in each of its states. Its own stylesheet stands in for an app's: it sets the color scheme and draws the page from the kit's tokens.
 - Every style the kit ships sits in `@layer kit`: each component's style block is one `@layer kit { ... }`, and so is the token file. An app's rules are unlayered, so they win without a heavier selector.
@@ -44,7 +44,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 ## Key principles: don't undo these
 
 - **One style outside `@layer kit` beats the app.** `layers.spec.ts` reads every stylesheet and style block under `src/` and fails on anything outside the layer.
-- **Every color pair is measured.** A color token sits in a pair in `contrast.ts` or in its `UNPAIRED` list with a reason; `contrast.spec.ts` fails on one in neither, and on a pair below its floor in either scheme.
+- **Every color pair is measured.** A color token sits in a pair in `contrast.ts` or in its `UNPAIRED` list with a reason; `contrast.spec.ts` fails on one in neither, and on a pair below its floor in either scheme. Apps run the same list through `pairRatio()` in their own colors, so a weight lives only in `contrast.ts` and the component that writes it, never copied into an app.
 - **The kit follows the page's color scheme.** Turning a token back into a `prefers-color-scheme` query would break every app that lets the user pick a scheme.
 - **A component starts from the cleanest copy an app already has** (PLAN.md, What to build first), not from scratch.
 

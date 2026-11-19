@@ -1,7 +1,7 @@
 {
   "name": "@jwill89/shared-components-vue",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.4.0",
   "type": "module",
   "description": "Shared Vue 3 components on Reka UI, styled only through design tokens, for jwill89's front ends.",
   "license": "MIT",
@@ -19,6 +19,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./contrast": {
+      "types": "./dist/tokens/contrast.d.ts",
+      "default": "./dist/tokens/contrast.js"
     },
     "./style.css": "./dist/style.css"
   },

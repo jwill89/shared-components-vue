@@ -1,7 +1,8 @@
 {
   // The type declarations the package ships (`npm run build`, after Vite's bundle): one
-  // .d.ts under dist/ for each source file the entry reaches, the components' included, so
-  // an app's vue-tsc sees each component's props, emits and slots.
+  // .d.ts under dist/ for each source file the two entries reach, the components' included, so
+  // an app's vue-tsc sees each component's props, emits and slots, and its tests the types of
+  // the contrast pairs.
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "noEmit": false,
@@ -12,7 +13,7 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.build.tsbuildinfo",
     "paths": {}
   },
-  "files": ["src/index.ts"],
+  "files": ["src/index.ts", "src/tokens/contrast.ts"],
   "include": ["src/**/*.d.ts"],
   "exclude": ["src/__tests__/**"]
 }
