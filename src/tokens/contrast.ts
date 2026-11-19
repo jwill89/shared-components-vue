@@ -1,6 +1,6 @@
 /**
- * Every color token the kit draws with, the pairs they meet in, and the contrast arithmetic
- * that measures them. The kit sets no color: each token here is the app's to set, and each pair
+ * Every color token the kit draws with, the pairs they meet in, the contrast arithmetic that
+ * measures them, and the name of every token the kit has. The kit sets no color: each token here is the app's to set, and each pair
  * is one the app holds to its floor in its own colors. contrast.spec.ts checks that the
  * components draw with these tokens and no others, and measures every pair in the playground's
  * colors in both schemes; the playground shows each with its ratio in the scheme on screen.
@@ -211,6 +211,63 @@ export const COLOR_TOKENS: readonly string[] = [
     ...Object.keys(UNPAIRED),
   ]),
 ].sort()
+
+/**
+ * Every token tokens.css gives a value, which an app may change: the fonts, sizes, spaces,
+ * shapes, layers and timings, and the neutral scrim and shadow. contrast.spec.ts fails where
+ * this and tokens.css differ.
+ */
+const VALUED_TOKENS = [
+  'font-body',
+  'font-heading',
+  'font-code',
+  'text-size-xs',
+  'text-size-sm',
+  'text-size-base',
+  'text-size-md',
+  'text-size-lg',
+  'text-size-xl',
+  'line-height-prose',
+  'line-height-heading',
+  'font-weight-strong',
+  'space-2xs',
+  'space-xs',
+  'space-sm',
+  'space-md',
+  'space-lg',
+  'space-xl',
+  'control-height',
+  'control-border-width',
+  'radius-sm',
+  'radius-md',
+  'radius-full',
+  'focus-ring-width',
+  'focus-ring-offset',
+  'shadow-overlay',
+  'scrim',
+  'layer-dialog',
+  'layer-toast',
+  'layer-popup',
+  'duration-quick',
+  'duration-spin',
+  'measure-prose',
+  'width-dialog',
+  'width-dialog-wide',
+  'width-menu',
+  'width-field',
+  'width-number-field',
+  'width-toast',
+  'width-option-list',
+  'height-option-list',
+  'toast-inset-top',
+] as const
+
+/**
+ * The name of every token the kit has, each without the --kit- prefix: each color token, which
+ * the app sets, and each tokens.css gives a value, which the app may change. A --kit- name an
+ * app sets that isn't here is one the kit never reads.
+ */
+export const KIT_TOKENS: readonly string[] = [...COLOR_TOKENS, ...VALUED_TOKENS].sort()
 
 /** The tokens a pair's background is made from: one, or every one its mixes take. */
 export function backgroundTokens(bg: TokenPair['bg']): string[] {

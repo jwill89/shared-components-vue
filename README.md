@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.5.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.6.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.5.0/jwill89-shared-components-vue-0.5.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.6.0/jwill89-shared-components-vue-0.6.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -69,7 +69,7 @@ The kit draws no color of its own. Every color a component draws is a `--kit-*` 
 }
 ```
 
-A token left unset draws nothing: no fill, border or focus ring, and words in the color around them. `COLOR_TOKENS` in `@jwill89/shared-components-vue/contrast` names every one, so a test can check the app sets them all. The scrim behind a dialog and the shadow under what floats are neutral black, which the kit sets and an app may change (`--kit-scrim`, `--kit-shadow-overlay`). The rest of the tokens, the fonts, sizes, spaces and timings, are in [src/tokens/tokens.css](https://github.com/jwill89/shared-components-vue/blob/main/src/tokens/tokens.css), each with a value an app may change the same way.
+A token left unset draws nothing: no fill, border or focus ring, and words in the color around them. `COLOR_TOKENS` in `@jwill89/shared-components-vue/contrast` names every one, so a test can check the app sets them all. The scrim behind a dialog and the shadow under what floats are neutral black, which the kit sets and an app may change (`--kit-scrim`, `--kit-shadow-overlay`). The rest of the tokens, the fonts, sizes, spaces and timings, are in [src/tokens/tokens.css](https://github.com/jwill89/shared-components-vue/blob/main/src/tokens/tokens.css), each with a value an app may change the same way. `KIT_TOKENS` names every token the kit has, the colors among them, so a test can check the app's theme sets no `--kit-` name the kit never reads, as a misspelled one is.
 
 A color that changes with the scheme is written `light-dark(light, dark)`, and follows the `color-scheme` the app declares on its page. Declare it in CSS (`:root { color-scheme: light dark; }`, and the scheme a user picks on the `html` element's class or attribute): an app's production build rewrites `light-dark()` into a form that works only beside a `color-scheme` written in CSS.
 
@@ -78,10 +78,14 @@ A color that changes with the scheme is written `light-dark(light, dark)`, and f
 The kit names every pair of colors that meet in its components, and the floor each holds to: 7:1 for words, the AAA level, and 3:1 for a control's border or an icon. The contrast is the app's, in its own colors: `@jwill89/shared-components-vue/contrast` lists every pair, the washes and hovers the components mix among them, and `pairRatio()` measures one in the colors the app gives, each token's by its name without `--kit-`, as `[red, green, blue]`. A test that runs them all fails the day a color, or a wash the kit changes, falls below its floor:
 
 ```ts
-import { COLOR_TOKENS, TOKEN_PAIRS, describePair, pairRatio, parseHex } from '@jwill89/shared-components-vue/contrast'
+import { COLOR_TOKENS, KIT_TOKENS, TOKEN_PAIRS, describePair, pairRatio, parseHex } from '@jwill89/shared-components-vue/contrast'
 
 it('sets every color the kit draws with', () => {
   expect(COLOR_TOKENS.filter((token) => ourColor(token, 'light') === undefined)).toEqual([])
+})
+
+it('sets no token the kit never reads', () => {
+  expect(ourTokens.filter((token) => !KIT_TOKENS.includes(token))).toEqual([])
 })
 
 describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
@@ -91,7 +95,7 @@ describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
 })
 ```
 
-`ourColor` is the app's own: the hex color it sets the token to in that scheme. The entry imports nothing, so it runs under Node with no page.
+`ourColor` and `ourTokens` are the app's own: the hex color it sets a token to in a scheme, and the name of each token its theme sets, without `--kit-`. The entry imports nothing, so it runs under Node with no page.
 
 ### Fields
 

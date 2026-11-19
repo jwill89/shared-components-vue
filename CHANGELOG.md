@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-19
+
+The name of every token the kit has, for an app's theme check.
+
+### Added
+
+- `KIT_TOKENS` in `@jwill89/shared-components-vue/contrast`: the name of every token the kit has, the colors among them, so an app's test can check its theme sets only names the kit reads.
+
 ## [0.5.0] - 2026-11-19
 
 No colors of its own: every color is the app's to set.
@@ -96,6 +104,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.6.0]: https://github.com/jwill89/shared-components-vue/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jwill89/shared-components-vue/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jwill89/shared-components-vue/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/jwill89/shared-components-vue/compare/v0.3.0...v0.3.1

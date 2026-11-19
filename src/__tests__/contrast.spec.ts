@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   COLOR_TOKENS,
+  KIT_TOKENS,
   TOKEN_PAIRS,
   UNPAIRED,
   backgroundCss,
@@ -79,6 +80,29 @@ function token(name: string, scheme: 'light' | 'dark'): Rgb {
   expect(value, `--kit-${name} is defined`).toBeDefined()
   return parseHex(value ?? '')
 }
+
+describe('every token the kit has', () => {
+  const { declared, read } = kitNames()
+  const valued = new Set(
+    [
+      ...readFileSync(join(src, 'tokens', 'tokens.css'), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .matchAll(/--kit-([a-z0-9-]+)\s*:/g),
+    ].map((m) => m[1] ?? ''),
+  )
+
+  it('is each token tokens.css gives a value, and each color token', () => {
+    expect(KIT_TOKENS.filter((name) => !COLOR_TOKENS.includes(name))).toEqual([...valued].sort())
+    expect(COLOR_TOKENS.filter((name) => valued.has(name))).toEqual([])
+  })
+
+  it('holds every token a component reads that no component sets for itself', () => {
+    // A component's own property (a button's fill, an alert's tone) is set where it is read.
+    const own = [...declared].filter((name) => !valued.has(name.slice(6)))
+    const shared = [...read].filter((name) => !own.includes(name)).map((name) => name.slice(6))
+    expect(shared.filter((name) => !KIT_TOKENS.includes(name))).toEqual([])
+  })
+})
 
 describe('the colors an app sets', () => {
   const { declared, read } = kitNames()
