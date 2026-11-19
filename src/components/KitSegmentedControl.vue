@@ -6,6 +6,7 @@
 // alone. An option's icon, from the app's own set, comes from the `icon` slot, given the option.
 // A longer list, or one that may be empty, is a KitSelect.
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
+import { filled } from './slots'
 
 /** One option: its value, and the words on its button. */
 export interface KitSegmentOption<V extends string | number = string> {
@@ -69,7 +70,11 @@ function choose(value: unknown): void {
       :disabled="option.disabled"
       class="kit-segmented-control__option"
     >
-      <span v-if="$slots.icon" class="kit-segmented-control__icon" aria-hidden="true">
+      <span
+        v-if="filled($slots.icon, { option })"
+        class="kit-segmented-control__icon"
+        aria-hidden="true"
+      >
         <slot name="icon" :option="option" />
       </span>
       {{ option.label }}

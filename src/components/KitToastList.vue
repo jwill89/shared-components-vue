@@ -92,7 +92,7 @@ watch(
   }
 
   .kit-toast {
-    --kit-toast-tone: var(--kit-text-muted);
+    --kit-toast-tone: var(--kit-info);
 
     box-sizing: border-box;
     display: flex;

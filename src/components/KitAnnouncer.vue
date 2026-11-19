@@ -10,7 +10,7 @@
 //
 // They are plain aria-live regions, without the status and alert roles, which say the same
 // to a screen reader. With the roles, every open dialog would carry an empty alert, which an
-// app's own test that finds "the alert" in a dialog would find first (the MathBot pilot hit it).
+// app's own test that finds "the alert" in a dialog would find first.
 //
 // Reka 2.11's toasts carry an announcer of their own, but it is hidden from screen readers
 // (aria-hidden), so it never speaks; KitToastHost.spec.ts fails the day Reka's speaks, and

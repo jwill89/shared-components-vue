@@ -36,7 +36,7 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { default: false })
 
 // With no trigger of its own, the dialog only ever asks to close: on Cancel or Escape. While
-// the action runs it stays, since backing out can no longer stop it.
+// the action runs it stays, since backing out can't stop what has begun.
 function backOut(): void {
   if (props.busy) {
     return

@@ -1,7 +1,7 @@
 {
   "name": "@jwill89/shared-components-vue",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Shared Vue 3 components on Reka UI, styled only through design tokens, for jwill89's front ends.",
   "license": "MIT",
@@ -23,7 +23,8 @@
     "./style.css": "./dist/style.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "dev": "vite --config playground/vite.config.ts",

@@ -47,6 +47,7 @@ const READ_ON_SURFACES = [
   'danger',
   'success',
   'warning',
+  'info',
 ] as const
 
 /**
@@ -92,7 +93,7 @@ const TOAST_TONES = [
   ['success', 'a success toast'],
   ['danger', 'an error toast'],
   ['warning', 'a warning toast'],
-  ['text-muted', 'an info toast'],
+  ['info', 'an info toast'],
 ] as const
 
 /**

@@ -27,7 +27,8 @@ withDefaults(
     padding: var(--kit-space-xl) var(--kit-space-md);
   }
 
-  .kit-loading-state__spinner {
+  /* The ring is drawn large; the words beside it stay at the size of the text around them. */
+  .kit-loading-state__spinner :deep(.kit-spinner__ring) {
     font-size: var(--kit-text-size-lg);
   }
 }

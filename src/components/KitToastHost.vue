@@ -26,6 +26,6 @@ defineSlots<{
     </KitToastList>
     <ToastViewport class="kit-toast-stack" label="Notifications ({hotkey})" />
   </ToastProvider>
-  <!-- Where a toast is read out when no dialog is open (KitAnnouncer.vue says why). -->
+  <!-- Where a toast is read out when no dialog is open; an open dialog reads it from its own. -->
   <KitAnnouncer />
 </template>

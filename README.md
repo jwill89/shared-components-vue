@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling, and the default theme holds WCAG AAA contrast in light and dark.
 
-The latest release, v0.2.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](PLAN.md) the rest and the order they come in.
+The latest release, v0.3.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.2.0/jwill89-shared-components-vue-0.2.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.3.0/jwill89-shared-components-vue-0.3.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -60,7 +60,7 @@ Every color, font, size and space the kit uses is a `--kit-*` custom property, d
 
 Each default color is `light-dark(light, dark)`, so it follows the `color-scheme` the app declares on its page. Declare it in CSS (`:root { color-scheme: light dark; }`, and the scheme a user picks on the `html` element's class or attribute): an app's production build rewrites `light-dark()` into a form that works only beside a `color-scheme` written in CSS. An app that sets its scheme from script maps every color token instead.
 
-The token names and the default theme are in [src/tokens/tokens.css](src/tokens/tokens.css).
+The token names and the default theme are in [src/tokens/tokens.css](https://github.com/jwill89/shared-components-vue/blob/main/src/tokens/tokens.css). An informing alert and toast take `--kit-info`, the muted text's grey by default; an app that marks information in a color of its own maps it.
 
 ### Fields
 
@@ -84,6 +84,16 @@ A form in a dialog takes a submit label, and the page closes the dialog once its
   </KitFormField>
 </KitDialog>
 ```
+
+The form's other buttons go in `footer-start`, at the footer's other end from Cancel and submit, and an icon on the submit button in `submit-icon`. A button that takes the submit button's place goes in `submit`: while what it holds is switched off, the kit's own submit button shows.
+
+```vue
+<template #submit>
+  <KitButton v-if="conflict" variant="primary" @click="reload">Reload</KitButton>
+</template>
+```
+
+A box the kit draws around a slot (a footer's start, a panel's actions) is left out when the slot's content is all switched off with `v-if`, so it leaves no gap behind. Cancel is a secondary button in every form dialog, as in the confirm dialog, so the way back looks the same in each.
 
 The question before an irreversible action is `confirm()`. Mount `KitConfirmHost` once, at the app's root, and ask from anywhere:
 
@@ -151,7 +161,7 @@ task setup    # install the dependencies, which also builds the package
 task dev      # the playground (http://localhost:5173): every component in each of its states
 ```
 
-`task` alone lists every command, and `task check` runs everything CI runs. [AGENTS.md](AGENTS.md) is the guide to the code: its conventions, known traps, and the recipes for adding a component and cutting a release.
+`task` alone lists every command, and `task check` runs everything CI runs. [AGENTS.md](https://github.com/jwill89/shared-components-vue/blob/main/AGENTS.md) is the guide to the code: its conventions, known traps, and the recipes for adding a component and cutting a release.
 
 ## License
 

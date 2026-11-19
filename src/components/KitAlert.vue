@@ -9,6 +9,7 @@
 // An alert that can appear while the page is open is `live`, so a screen reader says it at
 // once, an error assertively; one already there when the page opens is read in its place.
 import KitToneIcon from './KitToneIcon.vue'
+import { filled } from './slots'
 
 export type KitAlertTone = 'info' | 'success' | 'warning' | 'error'
 
@@ -41,8 +42,8 @@ defineSlots<{
     </span>
     <div class="kit-alert__body">
       <p v-if="title" class="kit-alert__title">{{ title }}</p>
-      <div v-if="$slots.default" class="kit-alert__text"><slot /></div>
-      <div v-if="$slots.actions" class="kit-alert__actions"><slot name="actions" /></div>
+      <div v-if="filled($slots.default)" class="kit-alert__text"><slot /></div>
+      <div v-if="filled($slots.actions)" class="kit-alert__actions"><slot name="actions" /></div>
     </div>
   </div>
 </template>
@@ -55,7 +56,7 @@ defineSlots<{
  */
 @layer kit {
   .kit-alert {
-    --kit-alert-tone: var(--kit-text-muted);
+    --kit-alert-tone: var(--kit-info);
 
     box-sizing: border-box;
     display: flex;

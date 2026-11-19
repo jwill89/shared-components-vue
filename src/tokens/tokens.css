@@ -25,6 +25,9 @@
     --kit-on-danger: light-dark(#fff, #3b0907);
     --kit-success: light-dark(#17572a, #8fdc9f);
     --kit-warning: light-dark(#6b4700, #f3c969);
+
+    /* An informing alert's and toast's tone: the muted text's grey, until an app maps its own. */
+    --kit-info: light-dark(#474d57, #b4bac5);
     --kit-control-border: light-dark(#6b7280, #8a919c);
     --kit-hairline: light-dark(#d5d8de, #353a43);
 

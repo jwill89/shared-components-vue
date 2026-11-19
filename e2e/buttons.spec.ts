@@ -52,8 +52,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
 test('a button drawn as a link keeps its own words’ color, whatever the page sets for links', async ({
   page,
 }) => {
-  // An app's own `a { color }` sits in a layer under the kit's (README, Your own base styles);
-  // unlayered, it would draw a primary link-button's words in the accent, on the accent.
+  // The page's own `a { color }` sits in a layer under the kit's; unlayered, it would beat the
+  // kit's layered rules and draw a primary link-button's words in the accent, on the accent.
   await page.goto('/')
   for (const name of ['Continue', 'Read more']) {
     const link = page.getByRole('link', { name })

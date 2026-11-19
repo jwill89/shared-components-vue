@@ -8,6 +8,7 @@
 // A button that shows only an icon is KitIconButton, which gives this one the
 // `kit-button--icon-only` modifier.
 import KitSpinner from './KitSpinner.vue'
+import { filled } from './slots'
 
 export type KitButtonVariant = 'primary' | 'secondary' | 'danger' | 'quiet' | 'plain'
 
@@ -34,7 +35,7 @@ defineSlots<{
 
 <template>
   <a v-if="href" class="kit-button" :class="`kit-button--${variant}`" :href="href">
-    <span v-if="$slots.icon" class="kit-button__icon" aria-hidden="true">
+    <span v-if="filled($slots.icon)" class="kit-button__icon" aria-hidden="true">
       <slot name="icon" />
     </span>
     <slot />
@@ -48,7 +49,7 @@ defineSlots<{
     :aria-busy="loading || undefined"
   >
     <KitSpinner v-if="loading" />
-    <span v-else-if="$slots.icon" class="kit-button__icon" aria-hidden="true">
+    <span v-else-if="filled($slots.icon)" class="kit-button__icon" aria-hidden="true">
       <slot name="icon" />
     </span>
     <slot />

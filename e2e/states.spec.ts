@@ -61,3 +61,21 @@ test('a failed load tries again, and waits while it does', async ({ page }) => {
   await expect(again).toHaveAttribute('aria-busy', 'true')
   await expect(failed).toContainText('Still failing (1).')
 })
+
+test('a loading state draws its ring large and its words at the size around them', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const loading = page.locator('.kit-loading-state')
+  const sizes = await loading.evaluate((element) => {
+    const size = (selector: string): number =>
+      parseFloat(getComputedStyle(element.querySelector(selector) ?? element).fontSize)
+    return {
+      around: parseFloat(getComputedStyle(element).fontSize),
+      ring: size('.kit-spinner__ring'),
+      words: size('.kit-spinner__label'),
+    }
+  })
+  expect(sizes.words).toBe(sizes.around)
+  expect(sizes.ring).toBeGreaterThan(sizes.around)
+})

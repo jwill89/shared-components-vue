@@ -4,9 +4,24 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-18
+
+A slot in the submit button's place, an info tone an app can color, and fixes to the loading state and to empty slots.
+
+### Added
+
+- KitDialog's `submit` slot, which takes the submit button's place, as a Reload does once a save has met a conflict and could only be refused again. While what it holds is switched off, the kit's own submit button shows.
+- `--kit-info`, the tone of an informing alert and toast, for an app that marks information in a color of its own. It is the muted text's grey until an app maps it, as before.
+- The package carries CHANGELOG.md, so an app can read what a release changed where it installed it.
+
+### Fixed
+
+- KitLoadingState draws its words at the size of the text around them; only its ring is large.
+- A box the kit draws around an app's slot (a dialog footer's start, a panel's actions, an alert's buttons, a button's icon) is left out when everything in the slot is switched off with `v-if`, so it leaves no empty gap behind.
+
 ## [0.2.0] - 2026-11-18
 
-A page's frame, its alerts and its states, the choice controls, and what the MathBot pilot asked for.
+A page's frame, its alerts and its states, and the choice controls, with a plain button, more room in a dialog's footer, and toasts an app's tests can follow.
 
 ### Added
 
@@ -30,7 +45,7 @@ A page's frame, its alerts and its states, the choice controls, and what the Mat
 
 ### Removed
 
-- The package's `prepare` script: a git install of the package no longer builds it. An app installs the release's file, as the README says.
+- The package's `prepare` script, so a git install builds nothing: the release's file is the package.
 
 ## [0.1.0] - 2026-11-18
 
@@ -52,5 +67,6 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.3.0]: https://github.com/jwill89/shared-components-vue/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jwill89/shared-components-vue/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jwill89/shared-components-vue/releases/tag/v0.1.0

@@ -4,6 +4,7 @@
 // set apart by a rule. Panels sit under the page's h1, so their headings are h2 unless one
 // nests in another, which takes `level` 3.
 import { useId } from 'vue'
+import { filled } from './slots'
 
 withDefaults(
   defineProps<{
@@ -27,7 +28,7 @@ const headingId = useId()
 
 <template>
   <section class="kit-page-panel" :aria-labelledby="title ? headingId : undefined">
-    <header v-if="title || $slots.actions" class="kit-page-panel__header">
+    <header v-if="title || filled($slots.actions)" class="kit-page-panel__header">
       <div class="kit-page-panel__words">
         <component
           :is="`h${String(level)}`"
@@ -39,10 +40,14 @@ const headingId = useId()
         </component>
         <p v-if="description" class="kit-page-panel__description">{{ description }}</p>
       </div>
-      <div v-if="$slots.actions" class="kit-page-panel__actions"><slot name="actions" /></div>
+      <div v-if="filled($slots.actions)" class="kit-page-panel__actions">
+        <slot name="actions" />
+      </div>
     </header>
-    <div v-if="$slots.default" class="kit-page-panel__body"><slot /></div>
-    <footer v-if="$slots.footer" class="kit-page-panel__footer"><slot name="footer" /></footer>
+    <div v-if="filled($slots.default)" class="kit-page-panel__body"><slot /></div>
+    <footer v-if="filled($slots.footer)" class="kit-page-panel__footer">
+      <slot name="footer" />
+    </footer>
   </section>
 </template>
 

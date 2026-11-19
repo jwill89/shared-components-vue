@@ -7,6 +7,7 @@
 // where it hasn't. The kit never imports Vue Router itself, so an app without it takes the kit
 // just the same.
 import { getCurrentInstance } from 'vue'
+import { filled } from './slots'
 
 /** A page above this one: its name, and where it is, as a RouterLink's `to` or an address. */
 export interface KitCrumb {
@@ -55,11 +56,13 @@ function linkTo(to: KitCrumb['to']): Record<string, unknown> {
     <div class="kit-page-header__row">
       <div class="kit-page-header__words">
         <h1 class="kit-page-header__title">{{ title }}</h1>
-        <div v-if="description || $slots.description" class="kit-page-header__description">
+        <div v-if="description || filled($slots.description)" class="kit-page-header__description">
           <slot name="description">{{ description }}</slot>
         </div>
       </div>
-      <div v-if="$slots.actions" class="kit-page-header__actions"><slot name="actions" /></div>
+      <div v-if="filled($slots.actions)" class="kit-page-header__actions">
+        <slot name="actions" />
+      </div>
     </div>
   </header>
 </template>

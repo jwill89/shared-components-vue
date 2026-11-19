@@ -13,7 +13,12 @@
 // each field, and the submit button is never greyed out for it. A form's other buttons (Reload,
 // on a conflict) go in `footer-start`, at the footer's other end; the submit button's icon is
 // the `submit-icon` slot; and the body and `footer-start` slots are given the form's id, for a
-// button elsewhere that sends it (`form="…"`).
+// button elsewhere that sends it (`form="…"`). The `submit` slot takes the submit button's
+// place, as a Reload does once a save has met a conflict and could only be refused again;
+// while what it holds is switched off with `v-if`, the kit's own submit button shows.
+//
+// Cancel is a secondary button in every form, as in KitConfirmDialog, so each dialog's way
+// back looks the same in every app, and has an edge beside the filled submit button.
 //
 // `alert` is its form for a question before an irreversible action (KitConfirmDialog asks
 // with it): a screen reader announces it as an alert, it has no Close button, and nothing but
@@ -40,6 +45,7 @@ import KitAnnouncer from './KitAnnouncer.vue'
 import KitButton from './KitButton.vue'
 import KitGlyph from './KitGlyph.vue'
 import KitIconButton from './KitIconButton.vue'
+import { filled } from './slots'
 
 const props = withDefaults(
   defineProps<{
@@ -85,6 +91,8 @@ defineSlots<{
   'footer-start'?: (props: { formId: string }) => unknown
   /** The icon on a form's submit button. */
   'submit-icon'?: () => unknown
+  /** What stands in a form's submit button's place, given the form's id. */
+  submit?: (props: { formId: string }) => unknown
   trigger?: () => unknown
   /** The Close button's icon, a drawn cross by default. */
   'close-icon'?: () => unknown
@@ -175,25 +183,32 @@ function onOpenAutoFocus(event: Event): void {
         >
           <slot :form-id="formId" />
         </form>
-        <div v-else-if="$slots.default" class="kit-dialog__body"><slot :form-id="formId" /></div>
-        <footer v-if="$slots.footer || isForm" class="kit-dialog__footer">
+        <div v-else-if="filled($slots.default, { formId })" class="kit-dialog__body">
+          <slot :form-id="formId" />
+        </div>
+        <footer v-if="isForm || filled($slots.footer)" class="kit-dialog__footer">
           <slot name="footer">
-            <div v-if="$slots['footer-start']" class="kit-dialog__footer-start">
+            <div v-if="filled($slots['footer-start'], { formId })" class="kit-dialog__footer-start">
               <slot name="footer-start" :form-id="formId" />
             </div>
             <KitButton :disabled="busy" @click="open = false">{{ cancelLabel }}</KitButton>
-            <KitButton
-              type="submit"
-              :form="formId"
-              :variant="danger ? 'danger' : 'primary'"
-              :loading="busy"
-            >
-              <template v-if="$slots['submit-icon']" #icon><slot name="submit-icon" /></template>
-              {{ submitLabel }}
-            </KitButton>
+            <slot name="submit" :form-id="formId">
+              <KitButton
+                type="submit"
+                :form="formId"
+                :variant="danger ? 'danger' : 'primary'"
+                :loading="busy"
+              >
+                <template v-if="filled($slots['submit-icon'])" #icon>
+                  <slot name="submit-icon" />
+                </template>
+                {{ submitLabel }}
+              </KitButton>
+            </slot>
           </slot>
         </footer>
-        <!-- While it is open, a toast is read out from here (KitAnnouncer.vue says why). -->
+        <!-- While it is open, a toast is read out from here: some screen readers hear no live
+             region outside an aria-modal dialog. -->
         <KitAnnouncer />
       </component>
     </component>

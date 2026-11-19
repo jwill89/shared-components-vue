@@ -3,6 +3,8 @@
 // to do (the `message` prop, or its slot for markup such as a link), and the button that does
 // it. Never shown while loading, which is KitLoadingState, or after a failed load, which is
 // KitErrorState: a list that holds nothing and one nobody could read are not the same news.
+import { filled } from './slots'
+
 defineProps<{
   title: string
   message?: string
@@ -17,14 +19,16 @@ defineSlots<{
 
 <template>
   <div class="kit-empty-state">
-    <span v-if="$slots.icon" class="kit-empty-state__icon" aria-hidden="true">
+    <span v-if="filled($slots.icon)" class="kit-empty-state__icon" aria-hidden="true">
       <slot name="icon" />
     </span>
     <p class="kit-empty-state__title">{{ title }}</p>
-    <p v-if="message || $slots.message" class="kit-empty-state__message">
+    <p v-if="message || filled($slots.message)" class="kit-empty-state__message">
       <slot name="message">{{ message }}</slot>
     </p>
-    <div v-if="$slots.actions" class="kit-empty-state__actions"><slot name="actions" /></div>
+    <div v-if="filled($slots.actions)" class="kit-empty-state__actions">
+      <slot name="actions" />
+    </div>
   </div>
 </template>
 
@@ -39,6 +43,10 @@ defineSlots<{
     text-align: center;
   }
 
+  /*
+   * The icon's box is the icon itself, with no line of text around it, so what parts it from the
+   * title is the state's gap and nothing taller: the same at every icon size.
+   */
   .kit-empty-state__icon {
     display: inline-flex;
     color: var(--kit-text-muted);

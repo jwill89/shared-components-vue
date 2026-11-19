@@ -1,6 +1,7 @@
 /*
  * The order of the page's cascade layers, named before the kit's stylesheet names its own, so
  * the page's element rules (in `base`) sit under the kit's components and its class rules,
- * unlayered, sit over them. An app does the same; the kit's README says why.
+ * unlayered, sit over them. Left unlayered, an element rule such as `a { color }` would beat
+ * every layered rule of the kit's, and paint a link-button's words in its own fill's color.
  */
 @layer base, kit;

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { defineComponent, h, nextTick, ref } from 'vue'
+import { createCommentVNode, defineComponent, h, nextTick, ref } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import KitButton from '../components/KitButton.vue'
 import KitDialog from '../components/KitDialog.vue'
@@ -206,6 +206,45 @@ describe('KitDialog', () => {
       form?.requestSubmit(button('Save as new'))
       await settle()
       expect(submits.value).toBe(1)
+    })
+
+    it('puts what the page gives in its submit button’s place, and its own back when that goes', async () => {
+      // A save that met a conflict can only be refused again, so the page offers Reload instead.
+      const conflict = ref(false)
+      const reloads = ref(0)
+      page(
+        { submitLabel: 'Save the shelf' },
+        {
+          submit: () =>
+            conflict.value
+              ? h(KitButton, { variant: 'primary', onClick: () => reloads.value++ }, () => 'Reload')
+              : createCommentVNode('v-if', true),
+        },
+      )
+      button('Open').click()
+      await settle()
+      expect(button('Save the shelf').type).toBe('submit')
+
+      conflict.value = true
+      await settle()
+      const footer = dialog().querySelector('.kit-dialog__footer')
+      expect(
+        [...(footer?.querySelectorAll('button') ?? [])].map((b) => b.textContent.trim()),
+      ).toEqual(['Cancel', 'Reload'])
+      button('Reload').click()
+      expect(reloads.value).toBe(1)
+      expect(await axeFindings(document.body)).toEqual([])
+    })
+
+    it('draws no box at the footer’s start when what the page put there is switched off', async () => {
+      page(
+        { submitLabel: 'Save the shelf' },
+        { 'footer-start': () => [createCommentVNode('v-if', true)] },
+      )
+      button('Open').click()
+      await settle()
+      expect(dialog().querySelector('.kit-dialog__footer-start')).toBeNull()
+      expect(dialog().querySelector('.kit-dialog__footer')).not.toBeNull()
     })
 
     it('waits while its save runs, and says when it can’t be undone', async () => {
