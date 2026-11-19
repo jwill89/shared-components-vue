@@ -1,9 +1,11 @@
 // @vitest-environment node
 // No DOM here, and under jsdom import.meta.url is a page's address rather than this file's.
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
+  COLOR_TOKENS,
   TOKEN_PAIRS,
   UNPAIRED,
   backgroundCss,
@@ -17,9 +19,42 @@ import {
 } from '../tokens/contrast'
 import type { Rgb, TokenPair } from '../tokens/contrast'
 
-// Read as a file: Vitest hands a stylesheet import to its CSS pipeline, which gives none of the
+// Read as files: Vitest hands a stylesheet import to its CSS pipeline, which gives none of the
 // text back.
-const tokens = readFileSync(fileURLToPath(new URL('../tokens/tokens.css', import.meta.url)), 'utf8')
+const src = fileURLToPath(new URL('..', import.meta.url))
+
+/** The components and stylesheets under src, the specs left out. */
+function sources(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      return entry.name === '__tests__' ? [] : sources(path)
+    }
+    return /\.(css|vue)$/.test(entry.name) ? [path] : []
+  })
+}
+
+/** Every --kit- name the kit's code declares (`--kit-x:`) and reads (`var(--kit-x)`). */
+function kitNames(): { declared: Set<string>; read: Set<string> } {
+  const declared = new Set<string>()
+  const read = new Set<string>()
+  for (const path of sources(src)) {
+    const text = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->/g, '')
+    for (const m of text.matchAll(/(--kit-[a-z0-9-]+)\s*:/g)) {
+      declared.add(m[1] ?? '')
+    }
+    for (const m of text.matchAll(/var\(\s*(--kit-[a-z0-9-]+)/g)) {
+      read.add(m[1] ?? '')
+    }
+  }
+  return { declared, read }
+}
+
+// The playground's colors, standing in for an app's.
+const tokens = readFileSync(
+  fileURLToPath(new URL('../../playground/palette.css', import.meta.url)),
+  'utf8',
+)
 
 /** Each color token's light and dark values, by its name without the --kit- prefix. */
 function colors(css: string): Map<string, { light: string; dark: string }> {
@@ -45,17 +80,29 @@ function token(name: string, scheme: 'light' | 'dark'): Rgb {
   return parseHex(value ?? '')
 }
 
-describe('the default theme', () => {
-  it('defines the colors it pairs', () => {
-    expect(palette.size).toBeGreaterThan(0)
+describe('the colors an app sets', () => {
+  const { declared, read } = kitNames()
+
+  it('are every token the components draw with that the kit leaves unset, and the page’s own', () => {
+    const unset = [...read].filter((name) => !declared.has(name)).map((name) => name.slice(6))
+    // The page's background is the app's to draw: the components sit on it and never draw it.
+    expect([...unset, 'surface'].sort()).toEqual([...COLOR_TOKENS])
   })
 
-  it('measures every color it defines', () => {
+  it('are none of them set by the kit', () => {
+    expect(COLOR_TOKENS.filter((name) => declared.has(`--kit-${name}`))).toEqual([])
+  })
+
+  it('are each in a pair, or unpaired with a reason', () => {
     const paired = new Set(TOKEN_PAIRS.flatMap((pair) => [pair.fg, ...backgroundTokens(pair.bg)]))
-    const unmeasured = [...palette.keys()].filter(
-      (name) => !paired.has(name) && !(name in UNPAIRED),
-    )
-    expect(unmeasured).toEqual([])
+    expect(COLOR_TOKENS.filter((name) => !paired.has(name) && !(name in UNPAIRED))).toEqual([])
+    expect(Object.values(UNPAIRED).every((reason) => reason.length > 0)).toBe(true)
+  })
+})
+
+describe('the playground’s colors', () => {
+  it('set every color token, and nothing else', () => {
+    expect([...palette.keys()].sort()).toEqual([...COLOR_TOKENS])
   })
 
   describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {

@@ -1,36 +1,16 @@
 /*
- * The kit's tokens and its default theme: every color, font, size and space a kit component
- * uses, read through var(--kit-*). An app maps its own palette onto them in one file of its
- * own; its rules are unlayered, so they beat these layered defaults without a heavier selector.
+ * The kit's tokens: every font, size, space and timing a kit component uses, read through
+ * var(--kit-*). An app changes any of them in a stylesheet of its own; its rules are unlayered,
+ * so they beat these layered values without a heavier selector.
  *
- * Each color is light-dark(light, dark), so it follows the color-scheme the app sets on its
- * page and the kit never asks the device itself: an app that pins one scheme gets that
- * scheme's colors, and one that sets no color-scheme gets the light ones. Each pair a reader
- * reads (text on each surface, a filled control's words on its fill) holds 7:1 or more in
- * both schemes, the AAA level; a control's border holds 3:1 against every surface it sits on.
- * contrast.spec.ts measures every pair contrast.ts lists.
+ * The kit sets no color. Every color a component draws is a color token the app sets, in each
+ * scheme it serves (README, Your colors), so the app alone decides its colors and their contrast.
+ * contrast.ts names each one (COLOR_TOKENS) and each pair a reader meets, which an app measures
+ * in its own colors; contrast.spec.ts fails on a component that draws with a color it doesn't
+ * name. The scrim and the shadow below are neutral black, a shade rather than a color.
  */
 @layer kit {
   :root {
-    /* Colors: light, then dark */
-    --kit-surface: light-dark(#fbfbfc, #14161a);
-    --kit-surface-raised: light-dark(#fff, #1d2026);
-    --kit-surface-sunken: light-dark(#eef0f3, #0e1013);
-    --kit-text: light-dark(#16181d, #eceef2);
-    --kit-text-muted: light-dark(#474d57, #b4bac5);
-    --kit-accent: light-dark(#1a449a, #9fc4ff);
-    --kit-on-accent: light-dark(#fff, #0b1a33);
-    --kit-focus-ring: light-dark(#1a449a, #9fc4ff);
-    --kit-danger: light-dark(#9b1c1c, #ffb4ab);
-    --kit-on-danger: light-dark(#fff, #3b0907);
-    --kit-success: light-dark(#17572a, #8fdc9f);
-    --kit-warning: light-dark(#6b4700, #f3c969);
-
-    /* An informing alert's and toast's tone: the muted text's grey, until an app maps its own. */
-    --kit-info: light-dark(#474d57, #b4bac5);
-    --kit-control-border: light-dark(#6b7280, #8a919c);
-    --kit-hairline: light-dark(#d5d8de, #353a43);
-
     /* Fonts: the system's own, so nothing is fetched before the first page shows. */
     --kit-font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     --kit-font-heading: var(--kit-font-body);

@@ -16,7 +16,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     test('the playground passes axe with the AAA rules', async ({ page }) => {
       await page.goto('/')
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-      // The tokens reach the page: without them every color falls back to the browser's own,
+      // The page's colors reach it: without them every color falls back to the browser's own,
       // which would pass axe while showing nothing of the kit.
       const surface = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
       expect(surface).not.toBe('rgba(0, 0, 0, 0)')
@@ -26,7 +26,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
   })
 }
 
-test('the kit follows the scheme the page sets, not the device', async ({ page }) => {
+test('the colors follow the scheme the page sets, not the device', async ({ page }) => {
+  // In the playground's built page, as in an app's: its colors are light-dark() pairs, which the
+  // build rewrites into a form that follows only a color-scheme declared in CSS.
   await page.emulateMedia({ colorScheme: 'light' })
   await page.goto('/')
   const surface = (): Promise<string> =>

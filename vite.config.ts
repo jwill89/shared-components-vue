@@ -12,8 +12,7 @@ import { vitestDefaults } from './shared/test/web/vitest.js'
 // sources (tsconfig.build.json).
 //
 // Nothing is lowered or minified here: the app's own build does both for the browsers it
-// serves, in one pass with its own styles. Lowered here, the tokens' light-dark() would become
-// lightningcss's stand-in, which reads variables only the app's pass writes.
+// serves, in one pass with its own styles.
 export default defineConfig({
   plugins: [vue()],
   build: {

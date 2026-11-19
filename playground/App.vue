@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// The playground: every color pair the default theme holds, with its ratio in the scheme on
-// screen, and every component in each of its states as each lands. The end-to-end suite runs
+// The playground: every color pair the kit names, in the playground's own colors with its ratio
+// in the scheme on screen, and every component in each of its states as each lands. The end-to-end suite runs
 // axe on it in both schemes, with the AAA rules on.
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
 import {
@@ -34,7 +34,7 @@ onBeforeUnmount(() => {
   darkQuery.removeEventListener('change', followDevice)
 })
 
-// The page's scheme is one attribute on <html>, as in an app; the kit's colors follow it.
+// The page's scheme is one attribute on <html>, as in an app; the page's colors follow it.
 watchEffect(() => {
   const root = document.documentElement
   if (scheme.value === 'device') {
@@ -53,7 +53,7 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
     <!-- The page's own header and panels are the kit's, as an app's are. -->
     <KitPageHeader
       title="Playground"
-      description="Every component in each of its states, and every color pair the default theme holds, measured in the scheme on screen."
+      description="Every component in each of its states, and every color pair the kit names, measured in the playground’s colors in the scheme on screen."
       :crumbs="[
         { label: 'shared-components-vue', to: 'https://github.com/jwill89/shared-components-vue' },
       ]"

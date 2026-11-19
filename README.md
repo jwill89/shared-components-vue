@@ -1,15 +1,15 @@
 # shared-components-vue
 
-Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling, and the default theme holds WCAG AAA contrast in light and dark.
+Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.4.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.5.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.4.0/jwill89-shared-components-vue-0.4.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.5.0/jwill89-shared-components-vue-0.5.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -44,30 +44,45 @@ So name the layers' order in a stylesheet of its own, imported before the kit's,
 
 An app on Tailwind 4 names its layers around Tailwind's: `@layer theme, base, kit, components, utilities;`. The app's class rules stay unlayered, over the kit's.
 
-### The theme
+### Your colors
 
-Every color, font, size and space the kit uses is a `--kit-*` custom property, defined in `@layer kit`. An app maps its own palette onto them in one file of its own; its rules are unlayered, so they win without a heavier selector:
+The kit draws no color of its own. Every color a component draws is a `--kit-*` color token the app sets, in a stylesheet of its own:
 
 ```css
 /* src/styles/kit-theme.css */
 :root {
-  --kit-surface: var(--surface);
-  --kit-text: var(--text);
-  --kit-accent: var(--accent);
-  --kit-focus-ring: var(--focus-ring);
+  --kit-surface: var(--page); /* the page's background, which the components sit on */
+  --kit-surface-raised: var(--panel); /* panels, dialogs, toasts, open lists and fields */
+  --kit-surface-sunken: var(--well); /* a switch's track, a number box's step buttons, a combobox's chips */
+  --kit-text: var(--ink);
+  --kit-text-muted: var(--ink-soft);
+  --kit-accent: var(--brand); /* a primary button's fill, a quiet button's words, a switch that is on, the chosen segment */
+  --kit-on-accent: var(--on-brand); /* words on the accent */
+  --kit-focus-ring: var(--brand);
+  --kit-danger: var(--danger); /* a danger button's fill, a field's error, an error alert's tone */
+  --kit-on-danger: var(--on-danger); /* words on the danger color */
+  --kit-success: var(--success);
+  --kit-warning: var(--warning);
+  --kit-info: var(--brand); /* an informing alert's and toast's tone */
+  --kit-control-border: var(--edge); /* a control's edge */
+  --kit-hairline: var(--rule); /* a divider */
 }
 ```
 
-Each default color is `light-dark(light, dark)`, so it follows the `color-scheme` the app declares on its page. Declare it in CSS (`:root { color-scheme: light dark; }`, and the scheme a user picks on the `html` element's class or attribute): an app's production build rewrites `light-dark()` into a form that works only beside a `color-scheme` written in CSS. An app that sets its scheme from script maps every color token instead.
+A token left unset draws nothing: no fill, border or focus ring, and words in the color around them. `COLOR_TOKENS` in `@jwill89/shared-components-vue/contrast` names every one, so a test can check the app sets them all. The scrim behind a dialog and the shadow under what floats are neutral black, which the kit sets and an app may change (`--kit-scrim`, `--kit-shadow-overlay`). The rest of the tokens, the fonts, sizes, spaces and timings, are in [src/tokens/tokens.css](https://github.com/jwill89/shared-components-vue/blob/main/src/tokens/tokens.css), each with a value an app may change the same way.
 
-The token names and the default theme are in [src/tokens/tokens.css](https://github.com/jwill89/shared-components-vue/blob/main/src/tokens/tokens.css). An informing alert and toast take `--kit-info`, the muted text's grey by default; an app that marks information in a color of its own maps it.
+A color that changes with the scheme is written `light-dark(light, dark)`, and follows the `color-scheme` the app declares on its page. Declare it in CSS (`:root { color-scheme: light dark; }`, and the scheme a user picks on the `html` element's class or attribute): an app's production build rewrites `light-dark()` into a form that works only beside a `color-scheme` written in CSS.
 
 ### Measuring your colors
 
-The default theme holds every pair a reader reads at 7:1 in both schemes, and a control's border and an icon at 3:1. An app that maps the tokens to its own colors measures the same pairs in them: `@jwill89/shared-components-vue/contrast` lists every pair, the washes and hovers the components mix among them, and `pairRatio()` measures one in the colors the app gives, each token's by its name without `--kit-`, as `[red, green, blue]`. A test that runs them all fails the day a color, or a wash the kit changes, falls below its floor:
+The kit names every pair of colors that meet in its components, and the floor each holds to: 7:1 for words, the AAA level, and 3:1 for a control's border or an icon. The contrast is the app's, in its own colors: `@jwill89/shared-components-vue/contrast` lists every pair, the washes and hovers the components mix among them, and `pairRatio()` measures one in the colors the app gives, each token's by its name without `--kit-`, as `[red, green, blue]`. A test that runs them all fails the day a color, or a wash the kit changes, falls below its floor:
 
 ```ts
-import { TOKEN_PAIRS, describePair, pairRatio, parseHex } from '@jwill89/shared-components-vue/contrast'
+import { COLOR_TOKENS, TOKEN_PAIRS, describePair, pairRatio, parseHex } from '@jwill89/shared-components-vue/contrast'
+
+it('sets every color the kit draws with', () => {
+  expect(COLOR_TOKENS.filter((token) => ourColor(token, 'light') === undefined)).toEqual([])
+})
 
 describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
   it.each(TOKEN_PAIRS.map((pair) => [describePair(pair), pair] as const))('%s holds its floor', (_, pair) => {
@@ -76,7 +91,7 @@ describe.each(['light', 'dark'] as const)('in the %s scheme', (scheme) => {
 })
 ```
 
-`ourColor` is the app's own: the hex color it maps the token to in that scheme. The entry imports nothing, so it runs under Node with no page.
+`ourColor` is the app's own: the hex color it sets the token to in that scheme. The entry imports nothing, so it runs under Node with no page.
 
 ### Fields
 

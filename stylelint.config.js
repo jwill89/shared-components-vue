@@ -4,11 +4,11 @@
 // doesn't fit with the reason beside it.
 import { paletteRules } from '@jwill89/lint-web/stylelint'
 
-// A color is defined once, as a token in src/tokens/tokens.css, and used through var(). Neutral
-// black and white at any alpha (shadows, scrims) are not palette colors and may be written
-// inline.
+// The kit sets no color: a component draws with a color token the app sets, through var().
+// Neutral black and white at any alpha (shadows, scrims) are not palette colors and may be
+// written inline.
 const PALETTE =
-  'Use a src/tokens/tokens.css token: var(--kit-x), or color-mix(in srgb, var(--kit-x) N%, transparent) for a tint; only neutral black/white (rgb(0 0 0 / a), rgb(255 255 255 / a)) may be written inline'
+  'The kit sets no color: use a color token the app sets, var(--kit-x), or color-mix(in srgb, var(--kit-x) N%, transparent) for a tint; only neutral black/white (rgb(0 0 0 / a), rgb(255 255 255 / a)) may be written inline'
 
 export default {
   extends: ['@jwill89/lint-web/stylelint'],
@@ -20,8 +20,8 @@ export default {
   },
   overrides: [
     {
-      // The token file is where the palette is defined.
-      files: ['src/tokens/tokens.css'],
+      // The playground's colors, standing in for an app's own.
+      files: ['playground/palette.css'],
       rules: { 'color-no-hex': null },
     },
   ],

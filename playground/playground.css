@@ -1,6 +1,7 @@
 /*
- * The playground's own page, standing in for an app: it sets the color scheme the kit's tokens
- * follow (the device's until a scheme is picked), and draws the page from the kit's tokens. Its
+ * The playground's own page, standing in for an app: it sets the color scheme its colors
+ * (palette.css) follow, the device's until a scheme is picked, and draws the page from the
+ * kit's tokens. Its
  * element rules sit in the `base` layer, under the kit's (layers.css): unlayered, `a { color }`
  * would beat a KitButton drawn as a link, and `:focus-visible` every control's own ring. Its
  * class rules are unlayered, over the kit's, as an app's are.

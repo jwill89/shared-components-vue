@@ -4,7 +4,7 @@ The guide to this repo, for agents and developers alike: read it before any chan
 
 ## What this is
 
-shared-components-vue is the component kit every Vue front end uses: Vue 3 components on Reka UI's headless primitives, styled only through design tokens, so each app keeps its own look. Apps install it by its release tag and import its stylesheet once. It ships no app: the playground in `playground/` exists for review and for the end-to-end run.
+shared-components-vue is the component kit every Vue front end uses: Vue 3 components on Reka UI's headless primitives, styled only through design tokens, so each app keeps its own look. The kit sets no color: each app sets every color token, and holds the pairs the kit names to their floors in its own colors. Apps install it by its release tag and import its stylesheet once. It ships no app: the playground in `playground/` exists for review and for the end-to-end run.
 
 ## Commands
 
@@ -28,13 +28,13 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - `src/components/` holds the components, one file each, named `Kit` and the job (`KitButton.vue`). The shared ESLint refuses one-word names and the names of HTML elements, and the prefix keeps the kit's components apart from an app's own while the app moves over.
 - `src/index.ts` exports every component and composable an app may import, and the type declarations are built from it alone. `src/bundle.ts`, the bundle's entry, adds the tokens to those exports, so the build gathers every style into one `style.css`.
 - `src/composables/` holds what code calls rather than renders, such as `confirm()` and `useToast()`.
-- `src/tokens/tokens.css` defines every token as `--kit-*`, and `src/tokens/contrast.ts` lists the color pairs the default theme holds. The package ships `contrast.ts` as its own entry, `@jwill89/shared-components-vue/contrast` (a second entry in `vite.config.ts`, its declaration from `tsconfig.build.json`), so an app's tests measure every pair in the app's colors with the weights the components write. It imports nothing, so an app's tests load it without Vue or a page, and it shares no code with the main bundle.
+- `src/tokens/tokens.css` defines every token but the colors as `--kit-*`. `src/tokens/contrast.ts` names every color token, which the app sets (`COLOR_TOKENS`), and every pair they meet in, with its floor. The package ships `contrast.ts` as its own entry, `@jwill89/shared-components-vue/contrast` (a second entry in `vite.config.ts`, its declaration from `tsconfig.build.json`), so an app's tests measure every pair in the app's colors with the weights the components write. It imports nothing, so an app's tests load it without Vue or a page, and it shares no code with the main bundle.
 - `src/__tests__/` holds the specs, as `*.spec.ts`.
-- `playground/` imports the kit by its package name, pointed at the source by `playground/vite.config.ts`, and shows every component in each of its states. Its own stylesheet stands in for an app's: it sets the color scheme and draws the page from the kit's tokens.
+- `playground/` imports the kit by its package name, pointed at the source by `playground/vite.config.ts`, and shows every component in each of its states. Its own stylesheets stand in for an app's: `palette.css` sets every color token, and `playground.css` sets the color scheme and draws the page from the kit's tokens.
 - Every style the kit ships sits in `@layer kit`: each component's style block is one `@layer kit { ... }`, and so is the token file. An app's rules are unlayered, so they win without a heavier selector.
 - An element the kit sizes or pads sets `box-sizing: border-box` itself, since an app may have no reset that sets it. The playground has none on purpose, and `e2e/fields.spec.ts` fails on a control that spills out of its field.
-- Every color, font, size and space a component uses is a `--kit-*` token, read through `var()`; Stylelint's palette rule refuses a color written anywhere but the token file. A component's classes are BEM with its own name as the block (`.kit-button__icon`).
-- Each color token is `light-dark(light, dark)`, so it follows the `color-scheme` the app sets on its page. The kit never queries the device's scheme itself.
+- Every color, font, size and space a component uses is a `--kit-*` token, read through `var()`; Stylelint's palette rule refuses a color written anywhere in `src/` but neutral black and white (the scrim, the shadow). A component's classes are BEM with its own name as the block (`.kit-button__icon`).
+- The kit sets no color and asks nothing of the color scheme: the app's colors follow the scheme the app picks, by its own `light-dark()` or otherwise.
 - Every form control takes the same three props, `id`, `describedBy` and `invalid`, which `KitFormField`'s slot hands it (`v-bind="field"`), so one wrapper names and describes any control. A new control takes the same three.
 - Icons come in through slots; the kit has no icon library, so the app's own Font Awesome setup draws them.
 - A box the kit draws around a slot asks `filled($slots.x)` (`src/components/slots.ts`), not `$slots.x`, so a slot whose content an app switches off with `v-if` leaves no empty box behind.
@@ -44,15 +44,16 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 ## Key principles: don't undo these
 
 - **One style outside `@layer kit` beats the app.** `layers.spec.ts` reads every stylesheet and style block under `src/` and fails on anything outside the layer.
-- **Every color pair is measured.** A color token sits in a pair in `contrast.ts` or in its `UNPAIRED` list with a reason; `contrast.spec.ts` fails on one in neither, and on a pair below its floor in either scheme. Apps run the same list through `pairRatio()` in their own colors, so a weight lives only in `contrast.ts` and the component that writes it, never copied into an app.
-- **The kit follows the page's color scheme.** Turning a token back into a `prefers-color-scheme` query would break every app that lets the user pick a scheme.
+- **The kit ships no colors.** Each app sets every color token, so the colors and their contrast are the app's alone; a color given a value in the kit is one an app can forget to set and never notice. `contrast.spec.ts` fails on a color token given a value under `src/`, and on a component drawing with one that `COLOR_TOKENS` doesn't name; Stylelint refuses a color written there.
+- **Every color pair is named and measured.** A color token sits in a pair in `contrast.ts` or in its `UNPAIRED` list with a reason, and `contrast.spec.ts` fails on one in neither. Apps run the pairs through `pairRatio()` in their own colors, so a weight lives only in `contrast.ts` and the component that writes it, never copied into an app. The kit's own run measures them in the playground's colors, in both schemes.
 - **A component starts from the cleanest copy an app already has** (PLAN.md, What to build first), not from scratch.
 
 ## Known traps
 
 - **An app's unlayered element rules beat the kit's components.** A rule outside any layer beats every layered one, so `button { color: inherit }` or `a { color }` in an app's base stylesheet overrides a KitButton's colors. An app names `@layer base, kit;` in a stylesheet imported before the kit's and puts its element rules in `base` (README, Your own base styles); the playground does the same (`playground/layers.css`), and `e2e/buttons.spec.ts` measures a link-button's words, which an unlayered `a { color }` would paint the color of its own fill.
 - **The package marks only its CSS as having side effects.** An app that imports the package without `@jwill89/shared-components-vue/style.css` gets the components unstyled, and a bare `import '@jwill89/shared-components-vue'` is dropped from a build altogether. The playground imports `style.css` as an app does, which its end-to-end run checks.
-- **An app's build lowers `light-dark()`.** Vite's default CSS target rewrites it into lightningcss's stand-in, which reads variables lightningcss writes only beside a `color-scheme` declared in CSS. An app that declares its scheme in CSS, as the standards ask, is fine; one that sets it from script, or not at all, gets no default kit colors in production, only in development. Such an app maps every color token to its own. Lowering the kit's own build (a `target` or minifier in `vite.config.ts`) would bake the stand-in into `style.css`, so it stays off.
+- **A new color token is a breaking change.** Every app must set it before anything drawn with it shows, so one added to a component waits for a version that says so, and its line in CHANGELOG.md names it.
+- **The playground's colors are an app's, not the kit's.** `playground/palette.css` sets every color token so the playground and its axe runs have something to draw; nothing in `src/` reads it, and the package doesn't ship it.
 - **A stylesheet imported in `src/index.ts` ships in the declarations.** vue-tsc keeps a side-effect import in `dist/index.d.ts`, pointing an app's type check at a file the package doesn't ship, so stylesheets are imported in `src/bundle.ts` and never in `index.ts`.
 - **Browsers round a `color-mix()` to whole channels.** A pair worked out in fractions can measure 7.01 here and 6.98 on screen, so `mixRgb` rounds as the browser does, one wash at a time where one lies over another.
 - **The kit never imports Vue Router.** An app without it would fail to build. KitPageHeader takes RouterLink from the app's registered components when it is there, and draws a plain link when it isn't.
@@ -82,12 +83,13 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 5. Add it to the playground in each of its states.
 6. Add a line under Unreleased in CHANGELOG.md, then run `task check`.
 
-### Change a color or add a token
+### Add a token, or a pair of colors
 
-1. Write it in `src/tokens/tokens.css`, a color as `light-dark(light, dark)`.
-2. A color joins a pair in `src/tokens/contrast.ts`, or `UNPAIRED` with its reason. A component's state color made with `color-mix()` (a hover, a wash) joins as a mixed pair, with the weight the component writes.
-3. `task test` measures it; the playground shows each pair with its ratio in the scheme on screen.
-4. A renamed or removed token breaks every app that maps it, so it waits for a major version.
+1. A font, size, space or timing goes in `src/tokens/tokens.css`, with its value.
+2. A color token gets no value in the kit. It joins a pair in `src/tokens/contrast.ts`, or `UNPAIRED` with its reason, which puts it in `COLOR_TOKENS`, and the playground sets it in `playground/palette.css`, in light and dark. Every app must set it too, so it is a breaking change (Known traps).
+3. Where two colors meet that no pair names yet, the pair joins `contrast.ts`. A component's state color made with `color-mix()` (a hover, a wash) joins as a mixed pair, with the weight the component writes.
+4. `task test` measures every pair in the playground's colors; the playground shows each with its ratio in the scheme on screen.
+5. A renamed or removed token breaks every app that sets it, so it waits for a major version.
 
 ### Cut a release
 
@@ -104,7 +106,7 @@ shared-components-vue is the component kit every Vue front end uses: Vue 3 compo
 - `src/__tests__/` runs under Vitest on jsdom; the token and stylesheet specs read the source files under Node. The coverage floor in `vite.config.ts` only rises.
 - `src/__tests__/helpers.ts` keeps each mounted wrapper for unmounting after the test (`kept`, `unmountKept`) and runs axe on what a component renders (`axeFindings`); `setup.ts` stands in for the browser APIs jsdom lacks. A component spec mounts with `@vue/test-utils`, drives it as a user would, and expects no axe findings.
 - Reka's primitives start listening a tick after mounting, so a spec awaits `nextTick()` before it sends a pointer event. Test Utils' `trigger` leaves out a pointer's type, which Reka reads as a touch, so a click on a Reka button is a real `PointerEvent` (`press()` in `KitNumberField.spec.ts`).
-- `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, the tokens following the scheme the page sets, each button's hover held at 7:1 as the browser draws it, the focus rings, and each dialog as a person meets it (focus held, the page locked under the wheel, Escape, focus given back). A scroll lock is checked with the mouse wheel: `overflow: hidden` still lets a script scroll.
+- `e2e/` runs Playwright on the built playground: axe with the AAA rules in the light and dark schemes, the playground's colors following the scheme the page sets, each button's hover held at 7:1 as the browser draws it, the focus rings, and each dialog as a person meets it (focus held, the page locked under the wheel, Escape, focus given back). A scroll lock is checked with the mouse wheel: `overflow: hidden` still lets a script scroll.
 - A component that teleports (a dialog) is read from `document.body` in its spec, found by its role as a screen reader finds it.
 
 ## Departures from the standards

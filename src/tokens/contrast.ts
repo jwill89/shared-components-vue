@@ -1,13 +1,14 @@
 /**
- * The color pairs the default theme holds, and the contrast arithmetic that measures them.
- * contrast.spec.ts checks every pair against tokens.css in both schemes, and the playground
- * shows each one with its ratio in the scheme on screen. Token names are written without
- * their --kit- prefix.
+ * Every color token the kit draws with, the pairs they meet in, and the contrast arithmetic
+ * that measures them. The kit sets no color: each token here is the app's to set, and each pair
+ * is one the app holds to its floor in its own colors. contrast.spec.ts checks that the
+ * components draw with these tokens and no others, and measures every pair in the playground's
+ * colors in both schemes; the playground shows each with its ratio in the scheme on screen.
+ * Token names are written without their --kit- prefix.
  *
  * The package ships this file as its own entry, `@jwill89/shared-components-vue/contrast`, so
- * an app that maps the tokens to its own colors measures every pair in them with the weights
- * the components write, rather than copies of them. It imports nothing, so an app's tests load
- * it without Vue or a page.
+ * an app measures every pair in its own colors with the weights the components write, rather
+ * than copies of them. It imports nothing, so an app's tests load it without Vue or a page.
  */
 
 /** A color as its red, green and blue channels, each 0 to 255. */
@@ -57,8 +58,9 @@ const READ_ON_SURFACES = [
 ] as const
 
 /**
- * The colors that sit in no pair, each with its reason. A color token missing from both
- * this and TOKEN_PAIRS fails contrast.spec.ts, so a new one can't go unmeasured.
+ * The color tokens that sit in no pair, each with its reason. A token a component draws with
+ * that is missing from both this and TOKEN_PAIRS fails contrast.spec.ts, so none goes unnamed
+ * or unmeasured.
  */
 export const UNPAIRED: Readonly<Record<string, string>> = {
   hairline: 'Divides one area from another and never marks text or a control.',
@@ -196,6 +198,19 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
     ]
   }),
 ]
+
+/**
+ * Every color token the kit draws with, each by its name without the --kit- prefix: each pair's,
+ * and each in UNPAIRED. An app sets every one: where one is unset, nothing is drawn with it (no
+ * fill, border or focus ring), and words take the color around them. `surface` is the page's own
+ * background, which no component draws but every one sits on: the app draws its page in it.
+ */
+export const COLOR_TOKENS: readonly string[] = [
+  ...new Set([
+    ...TOKEN_PAIRS.flatMap((pair) => [pair.fg, ...backgroundTokens(pair.bg)]),
+    ...Object.keys(UNPAIRED),
+  ]),
+].sort()
 
 /** The tokens a pair's background is made from: one, or every one its mixes take. */
 export function backgroundTokens(bg: TokenPair['bg']): string[] {

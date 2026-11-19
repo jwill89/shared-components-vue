@@ -1,0 +1,24 @@
+/*
+ * The playground's colors, standing in for an app's: the kit draws no color of its own, so the
+ * page sets every color token, as an app does in a stylesheet of its own. Each is
+ * light-dark(light, dark), so it follows the color-scheme playground.css declares, and the
+ * scheme picked in the header. contrast.spec.ts measures every pair the kit names in them, and
+ * the end-to-end suite runs axe on the page with the AAA rules on, in both schemes.
+ */
+:root {
+  --kit-surface: light-dark(#fbfbfc, #14161a);
+  --kit-surface-raised: light-dark(#fff, #1d2026);
+  --kit-surface-sunken: light-dark(#eef0f3, #0e1013);
+  --kit-text: light-dark(#16181d, #eceef2);
+  --kit-text-muted: light-dark(#474d57, #b4bac5);
+  --kit-accent: light-dark(#1a449a, #9fc4ff);
+  --kit-on-accent: light-dark(#fff, #0b1a33);
+  --kit-focus-ring: light-dark(#1a449a, #9fc4ff);
+  --kit-danger: light-dark(#9b1c1c, #ffb4ab);
+  --kit-on-danger: light-dark(#fff, #3b0907);
+  --kit-success: light-dark(#17572a, #8fdc9f);
+  --kit-warning: light-dark(#6b4700, #f3c969);
+  --kit-info: light-dark(#474d57, #b4bac5);
+  --kit-control-border: light-dark(#6b7280, #8a919c);
+  --kit-hairline: light-dark(#d5d8de, #353a43);
+}
