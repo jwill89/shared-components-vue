@@ -8,6 +8,10 @@
 // from them besides, so a message is read from the newest announcer: the open dialog's when
 // there is one.
 //
+// They are plain aria-live regions, without the status and alert roles, which say the same
+// to a screen reader. With the roles, every open dialog would carry an empty alert, which an
+// app's own test that finds "the alert" in a dialog would find first (the MathBot pilot hit it).
+//
 // Reka 2.11's toasts carry an announcer of their own, but it is hidden from screen readers
 // (aria-hidden), so it never speaks; KitToastHost.spec.ts fails the day Reka's speaks, and
 // then this one goes, so that no toast is read twice.
@@ -18,8 +22,8 @@ const { polite, assertive } = useAnnouncerRegion()
 
 <template>
   <div class="kit-announcer">
-    <span role="status" aria-live="polite" aria-atomic="true">{{ polite }}</span>
-    <span role="alert" aria-live="assertive" aria-atomic="true">{{ assertive }}</span>
+    <span aria-live="polite" aria-atomic="true">{{ polite }}</span>
+    <span aria-live="assertive" aria-atomic="true">{{ assertive }}</span>
   </div>
 </template>
 

@@ -3,6 +3,7 @@
 // and used itself to show its action running.
 import { ref } from 'vue'
 import {
+  KitPagePanel,
   KitButton,
   KitConfirmDialog,
   KitDialog,
@@ -59,9 +60,7 @@ async function emptyBin(): Promise<void> {
 </script>
 
 <template>
-  <section class="playground-section" aria-labelledby="dialogs-heading">
-    <h2 id="dialogs-heading">Dialogs</h2>
-
+  <KitPagePanel id="dialogs" class="playground-section" title="Dialogs">
     <h3>KitDialog</h3>
     <p class="playground-note">
       A panel, a form that says what is missing and waits while it saves, and a wide one.
@@ -115,5 +114,5 @@ async function emptyBin(): Promise<void> {
       />
     </div>
     <p class="playground-note" role="status">{{ lastAnswer }}</p>
-  </section>
+  </KitPagePanel>
 </template>

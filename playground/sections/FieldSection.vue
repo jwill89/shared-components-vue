@@ -3,6 +3,7 @@
 // number box, each at rest, with a hint, required, in error and disabled.
 import { ref } from 'vue'
 import {
+  KitPagePanel,
   KitFormField,
   KitNumberField,
   KitTextField,
@@ -22,9 +23,7 @@ const rating = ref<number | undefined>(undefined)
 </script>
 
 <template>
-  <section class="playground-section" aria-labelledby="fields-heading">
-    <h2 id="fields-heading">Fields</h2>
-
+  <KitPagePanel id="fields" class="playground-section" title="Fields">
     <h3>KitFormField with KitTextField</h3>
     <div class="field-grid">
       <KitFormField v-slot="field" label="Title">
@@ -49,9 +48,7 @@ const rating = ref<number | undefined>(undefined)
       </KitFormField>
       <KitFormField label="Slug">
         <template #default="field"><KitTextField v-model="slug" v-bind="field" /></template>
-        <template #hint
-          >Lower case, with hyphens. <a href="#fields-heading">What's a slug?</a></template
-        >
+        <template #hint>Lower case, with hyphens. <a href="#fields">What's a slug?</a></template>
       </KitFormField>
       <KitFormField v-slot="field" label="Shelf" hint="Set by the bookcase.">
         <KitTextField v-model="locked" v-bind="field" disabled />
@@ -85,7 +82,7 @@ const rating = ref<number | undefined>(undefined)
         <KitNumberField v-model="rating" v-bind="field" :min="1" :max="5" disabled />
       </KitFormField>
     </div>
-  </section>
+  </KitPagePanel>
 </template>
 
 <style scoped>

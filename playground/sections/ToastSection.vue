@@ -1,14 +1,12 @@
 <script setup lang="ts">
 // Each tone of toast, raised with useToast() as a page raises one after an action.
-import { KitButton, useToast } from '@jwill89/shared-components-vue'
+import { KitPagePanel, KitButton, useToast } from '@jwill89/shared-components-vue'
 
 const toast = useToast()
 </script>
 
 <template>
-  <section class="playground-section" aria-labelledby="toasts-heading">
-    <h2 id="toasts-heading">Toasts</h2>
-
+  <KitPagePanel id="toasts" class="playground-section" title="Toasts">
     <h3>KitToastHost and useToast()</h3>
     <p class="playground-note">
       Each tone, at the screen's top edge. Hover or focus one to hold it; F8 moves focus to them.
@@ -23,7 +21,7 @@ const toast = useToast()
       <KitButton @click="toast.warning('Nearly full', 'Two places left on the shelf.')">
         Show a warning
       </KitButton>
-      <KitButton @click="toast.info('The shelf is shared with Sam')">Show a note</KitButton>
+      <KitButton @click="toast.info('The shelf is shared with Sam')">Show some info</KitButton>
     </div>
-  </section>
+  </KitPagePanel>
 </template>

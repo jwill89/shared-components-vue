@@ -4,9 +4,10 @@
 // focusing one holds it, F8 moves focus to them, and a swipe or its Dismiss button closes one.
 // A press on a toast leaves an open dialog open. A screen reader hears each toast through the
 // kit's own announcer, from inside the open dialog when there is one: errors and warnings at
-// once, the rest when it next pauses. Each tone's icon comes from the `icon` slot,
-// given the tone, from the app's own icon set; with none, a drawn dot stands in. An app with a
-// fixed bar along the top maps --kit-toast-inset-top to its height, so toasts start below it.
+// once, the rest when it next pauses. Each tone's icon comes from the `icon` slot, given the
+// tone, from the app's own icon set; with none, the kit draws each tone's own shape, so color
+// is never the only cue. An app with a fixed bar along the top maps --kit-toast-inset-top to
+// its height, so toasts start below it.
 import { ToastProvider, ToastViewport } from 'reka-ui'
 import { toastManager } from '../composables/useToast'
 import type { KitToastTone } from '../composables/useToast'

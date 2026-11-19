@@ -1,0 +1,7 @@
+/*
+ * The kit's global stylesheets from source, as src/bundle.ts gathers them into style.css: the
+ * playground's stand-in for `@jwill89/shared-components-vue/style.css`, which its Vite config
+ * points here. A global stylesheet added to bundle.ts is added here too.
+ */
+@import url('../src/tokens/tokens.css');
+@import url('../src/styles/option-list.css');

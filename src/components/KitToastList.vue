@@ -7,8 +7,9 @@ import { watch } from 'vue'
 import { ToastClose, ToastDescription, ToastRoot, ToastTitle, useToastManager } from 'reka-ui'
 import { announce } from '../composables/useAnnouncer'
 import type { KitToastTone } from '../composables/useToast'
-import KitCrossIcon from './KitCrossIcon.vue'
+import KitGlyph from './KitGlyph.vue'
 import KitIconButton from './KitIconButton.vue'
+import KitToneIcon from './KitToneIcon.vue'
 
 defineSlots<{
   icon?: (props: { tone: KitToastTone }) => unknown
@@ -48,14 +49,18 @@ watch(
     :class="`kit-toast--${toneOf(toast.status)}`"
   >
     <span class="kit-toast__icon" aria-hidden="true">
-      <slot name="icon" :tone="toneOf(toast.status)"><span class="kit-toast__dot"></span></slot>
+      <slot name="icon" :tone="toneOf(toast.status)"
+        ><KitToneIcon :tone="toneOf(toast.status)"
+      /></slot>
     </span>
     <div class="kit-toast__words">
       <ToastTitle class="kit-toast__title" />
       <ToastDescription v-if="toast.description" class="kit-toast__detail" />
     </div>
     <ToastClose as-child>
-      <KitIconButton class="kit-toast__close" label="Dismiss"><KitCrossIcon /></KitIconButton>
+      <KitIconButton class="kit-toast__close" label="Dismiss" variant="plain"
+        ><KitGlyph name="cross"
+      /></KitIconButton>
     </ToastClose>
   </ToastRoot>
 </template>
@@ -121,13 +126,6 @@ watch(
     flex: none;
     margin-block-start: 0.2rem;
     color: var(--kit-toast-tone);
-  }
-
-  .kit-toast__dot {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: var(--kit-radius-full);
-    background: currentcolor;
   }
 
   .kit-toast__words {

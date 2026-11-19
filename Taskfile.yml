@@ -13,7 +13,7 @@ tasks:
       - task --list
 
   setup:
-    desc: Install the dependencies, which also builds the package (a fresh clone runs git submodule update --init first)
+    desc: Install the dependencies (a fresh clone runs git submodule update --init first)
     cmds:
       - npm ci
 

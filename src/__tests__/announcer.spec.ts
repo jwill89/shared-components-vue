@@ -21,8 +21,8 @@ function twoAnnouncers() {
   return kept(mount(Page, { attachTo: document.body }))
 }
 
-function said(where: string, role: 'status' | 'alert'): string | undefined {
-  return document.querySelector(`#${where} [role="${role}"]`)?.textContent ?? undefined
+function said(where: string, live: 'polite' | 'assertive'): string | undefined {
+  return document.querySelector(`#${where} [aria-live="${live}"]`)?.textContent ?? undefined
 }
 
 describe('announce', () => {
@@ -31,16 +31,16 @@ describe('announce', () => {
     twoAnnouncers()
     announce('Copied the link', 'polite')
     await nextTick()
-    expect(said('dialog', 'status')).toBe('')
+    expect(said('dialog', 'polite')).toBe('')
     vi.advanceTimersByTime(ANNOUNCE_DELAY)
     await nextTick()
-    expect(said('dialog', 'status')).toBe('Copied the link')
-    expect(said('page', 'status')).toBe('')
+    expect(said('dialog', 'polite')).toBe('Copied the link')
+    expect(said('page', 'polite')).toBe('')
 
     announce('That didn’t save', 'assertive')
     vi.advanceTimersByTime(ANNOUNCE_DELAY)
     await nextTick()
-    expect(said('dialog', 'alert')).toBe('That didn’t save')
+    expect(said('dialog', 'assertive')).toBe('That didn’t save')
   })
 
   it('reads the same message twice by emptying the region first', async () => {
@@ -51,10 +51,10 @@ describe('announce', () => {
     await nextTick()
     announce('Saved', 'polite')
     await nextTick()
-    expect(said('dialog', 'status')).toBe('')
+    expect(said('dialog', 'polite')).toBe('')
     vi.advanceTimersByTime(ANNOUNCE_DELAY)
     await nextTick()
-    expect(said('dialog', 'status')).toBe('Saved')
+    expect(said('dialog', 'polite')).toBe('Saved')
   })
 
   it('falls back to the older announcer once the newer one goes', async () => {
@@ -65,7 +65,19 @@ describe('announce', () => {
     announce('Back on the page', 'polite')
     vi.advanceTimersByTime(ANNOUNCE_DELAY)
     await nextTick()
-    expect(document.querySelector('[role="status"]')?.textContent).toBe('Back on the page')
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe('Back on the page')
+  })
+
+  it('marks its regions live without the status and alert roles', () => {
+    // An open dialog holds an announcer; with the roles, an app's test that finds the dialog's
+    // alert would find the kit's empty one first.
+    kept(mount(KitAnnouncer, { attachTo: document.body }))
+    const regions = [...document.querySelectorAll('.kit-announcer [aria-live]')]
+    expect(regions.map((region) => region.getAttribute('aria-live'))).toEqual([
+      'polite',
+      'assertive',
+    ])
+    expect(document.querySelector('.kit-announcer [role]')).toBeNull()
   })
 
   it('does nothing with no announcer on the page', () => {

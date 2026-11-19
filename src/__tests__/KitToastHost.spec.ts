@@ -3,7 +3,13 @@ import { h, nextTick } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import KitToastHost from '../components/KitToastHost.vue'
 import { ANNOUNCE_DELAY } from '../composables/useAnnouncer'
-import { showToast, toastManager, useToast } from '../composables/useToast'
+import {
+  dismissAllToasts,
+  onToast,
+  showToast,
+  toastManager,
+  useToast,
+} from '../composables/useToast'
 import { axeFindings, kept, unmountKept } from './helpers'
 
 afterEach(() => {
@@ -63,6 +69,35 @@ describe('useToast', () => {
     expect(showToast('info', 'Again')).toBe('toast-id')
   })
 
+  it('hands each toast raised to a listener, until it stops listening', () => {
+    vi.spyOn(toastManager, 'add').mockReturnValueOnce('toast-a').mockReturnValueOnce('toast-b')
+    const heard: unknown[] = []
+    const stop = onToast((toast) => heard.push(toast))
+    const toast = useToast()
+    toast.error('That didn’t save', 'The shelf is gone.')
+    stop()
+    toast.success('Saved')
+    expect(heard).toEqual([
+      { id: 'toast-a', tone: 'error', title: 'That didn’t save', detail: 'The shelf is gone.' },
+    ])
+  })
+
+  it('takes back every toast still up, for a spec to start clean', () => {
+    vi.spyOn(toastManager, 'add').mockReturnValueOnce('toast-a').mockReturnValueOnce('toast-b')
+    const close = vi.spyOn(toastManager, 'close').mockReturnValue(undefined)
+    // The earlier specs' toasts are still counted as up, as a previous test's would be in an app.
+    dismissAllToasts()
+    close.mockClear()
+    const toast = useToast()
+    toast.info('One')
+    toast.info('Two')
+    toast.dismiss('toast-a')
+    dismissAllToasts()
+    expect(close.mock.calls).toEqual([['toast-a'], ['toast-b']])
+    dismissAllToasts()
+    expect(close).toHaveBeenCalledTimes(2)
+  })
+
   it('takes a toast back by its id', () => {
     const close = vi.spyOn(toastManager, 'close').mockReturnValue(undefined)
     useToast().dismiss('toast-1')
@@ -85,9 +120,10 @@ describe('KitToastHost', () => {
     expect(failed?.querySelector('.kit-toast__detail')?.textContent).toBe('The shelf is gone.')
     const saved = shown.find((element) => element.classList.contains('kit-toast--success'))
     expect(saved?.querySelector('.kit-toast__detail')).toBeNull()
-    // With no icon from the app, a drawn dot stands in, hidden from screen readers.
+    // With no icon from the app, the kit draws each tone's own shape, hidden from screen readers.
     expect(saved?.querySelector('.kit-toast__icon')?.getAttribute('aria-hidden')).toBe('true')
-    expect(saved?.querySelector('.kit-toast__dot')).not.toBeNull()
+    expect(saved?.querySelector('svg[data-tone="success"]')).not.toBeNull()
+    expect(failed?.querySelector('svg[data-tone="error"]')).not.toBeNull()
     expect(await axeFindings(document.body)).toEqual([])
   })
 
@@ -127,7 +163,7 @@ describe('KitToastHost', () => {
     await settle()
     vi.advanceTimersByTime(ANNOUNCE_DELAY)
     await nextTick()
-    expect(document.querySelector('.kit-announcer [role="status"]')?.textContent).toBe(
+    expect(document.querySelector('.kit-announcer [aria-live="polite"]')?.textContent).toBe(
       'Saved the shelf',
     )
 
@@ -135,7 +171,7 @@ describe('KitToastHost', () => {
     await settle()
     vi.advanceTimersByTime(ANNOUNCE_DELAY)
     await nextTick()
-    expect(document.querySelector('.kit-announcer [role="alert"]')?.textContent).toBe(
+    expect(document.querySelector('.kit-announcer [aria-live="assertive"]')?.textContent).toBe(
       'That didn’t save. The shelf is gone.',
     )
   })

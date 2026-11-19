@@ -46,7 +46,7 @@ describe('KitButton', () => {
   })
 
   it('takes each variant and the native types', () => {
-    for (const variant of ['primary', 'secondary', 'danger', 'quiet'] as const) {
+    for (const variant of ['primary', 'secondary', 'danger', 'quiet', 'plain'] as const) {
       const wrapper = kept(mount(KitButton, { props: { variant }, slots: { default: () => 'Go' } }))
       expect(wrapper.classes()).toContain(`kit-button--${variant}`)
     }

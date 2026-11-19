@@ -3,11 +3,18 @@
 // screen, and every component in each of its states as each lands. The end-to-end suite runs
 // axe on it in both schemes, with the AAA rules on.
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
-import { KitConfirmHost, KitToastHost } from '@jwill89/shared-components-vue'
+import {
+  KitConfirmHost,
+  KitPageHeader,
+  KitPagePanel,
+  KitToastHost,
+} from '@jwill89/shared-components-vue'
 import ButtonSection from './sections/ButtonSection.vue'
+import ChoiceSection from './sections/ChoiceSection.vue'
 import DialogSection from './sections/DialogSection.vue'
 import FieldSection from './sections/FieldSection.vue'
 import SpinnerSection from './sections/SpinnerSection.vue'
+import StateSection from './sections/StateSection.vue'
 import ToastSection from './sections/ToastSection.vue'
 import TokenPairs from './TokenPairs.vue'
 
@@ -43,32 +50,37 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
 
 <template>
   <main id="main-content" class="playground">
-    <header class="playground__header">
-      <h1 class="playground__title">shared-components-vue</h1>
-      <p class="playground__intro">
-        Every component in each of its states, and every color pair the default theme holds,
-        measured in the scheme on screen.
-      </p>
-      <label class="playground__scheme">
-        Color scheme
-        <select v-model="scheme" class="playground__select">
-          <option value="device">Device</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </label>
-    </header>
+    <!-- The page's own header and panels are the kit's, as an app's are. -->
+    <KitPageHeader
+      title="Playground"
+      description="Every component in each of its states, and every color pair the default theme holds, measured in the scheme on screen."
+      :crumbs="[
+        { label: 'shared-components-vue', to: 'https://github.com/jwill89/shared-components-vue' },
+      ]"
+    >
+      <template #actions>
+        <label class="playground__scheme">
+          Color scheme
+          <select v-model="scheme" class="playground__select">
+            <option value="device">Device</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </template>
+    </KitPageHeader>
 
     <ButtonSection />
     <SpinnerSection />
     <FieldSection />
+    <ChoiceSection />
     <DialogSection />
     <ToastSection />
+    <StateSection />
 
-    <section class="playground-section" aria-labelledby="pairs-heading">
-      <h2 id="pairs-heading">Color pairs</h2>
+    <KitPagePanel id="pairs" class="playground-section" title="Color pairs">
       <TokenPairs :key="shownScheme" />
-    </section>
+    </KitPagePanel>
   </main>
   <!-- Answers confirm() and shows the toasts, once each, at the root, as in an app. -->
   <KitConfirmHost />
@@ -80,17 +92,6 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
   max-width: var(--kit-width-dialog-wide);
   margin: 0 auto;
   padding: var(--kit-space-lg) var(--kit-space-md);
-}
-
-.playground__title {
-  margin: 0 0 var(--kit-space-xs);
-  font-size: var(--kit-text-size-xl);
-}
-
-.playground__intro {
-  max-width: var(--kit-measure-prose);
-  margin: 0 0 var(--kit-space-md);
-  color: var(--kit-text-muted);
 }
 
 .playground__scheme {

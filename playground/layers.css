@@ -1,0 +1,6 @@
+/*
+ * The order of the page's cascade layers, named before the kit's stylesheet names its own, so
+ * the page's element rules (in `base`) sit under the kit's components and its class rules,
+ * unlayered, sit over them. An app does the same; the kit's README says why.
+ */
+@layer base, kit;

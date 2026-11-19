@@ -1,7 +1,9 @@
 /*
  * The playground's own page, standing in for an app: it sets the color scheme the kit's tokens
- * follow (the device's until a scheme is picked), and draws the page from the kit's tokens.
- * These rules are unlayered, as an app's are.
+ * follow (the device's until a scheme is picked), and draws the page from the kit's tokens. Its
+ * element rules sit in the `base` layer, under the kit's (layers.css): unlayered, `a { color }`
+ * would beat a KitButton drawn as a link, and `:focus-visible` every control's own ring. Its
+ * class rules are unlayered, over the kit's, as an app's are.
  */
 :root {
   color-scheme: light dark;
@@ -16,24 +18,32 @@
   color-scheme: dark;
 }
 
-body {
-  margin: 0;
-  background: var(--kit-surface);
-  color: var(--kit-text);
-  font-family: var(--kit-font-body);
-  font-size: var(--kit-text-size-base);
-  line-height: var(--kit-line-height-prose);
-}
+@layer base {
+  body {
+    margin: 0;
+    background: var(--kit-surface);
+    color: var(--kit-text);
+    font-family: var(--kit-font-body);
+    font-size: var(--kit-text-size-base);
+    line-height: var(--kit-line-height-prose);
+  }
 
-h1,
-h2 {
-  font-family: var(--kit-font-heading);
-  line-height: var(--kit-line-height-heading);
-}
+  h1,
+  h2,
+  h3 {
+    font-family: var(--kit-font-heading);
+    line-height: var(--kit-line-height-heading);
+  }
 
-:focus-visible {
-  outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
-  outline-offset: var(--kit-focus-ring-offset);
+  /* Links in the page's own words, as an app styles its own: the kit draws none of them. */
+  a {
+    color: var(--kit-accent);
+  }
+
+  :focus-visible {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: var(--kit-focus-ring-offset);
+  }
 }
 
 /* The page's own layout: a section per component, its notes, and a row of its states. */

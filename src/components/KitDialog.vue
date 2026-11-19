@@ -6,12 +6,14 @@
 // while a long body scrolls between them. A dialog holding a long form is `wide`.
 //
 // Given `submitLabel`, it is a form: the body sits in a <form>, so Enter in any field submits,
-// it opens with focus on its first field, and the footer holds Cancel beside the submit
-// button, which shows `busy` while the save
-// runs. It emits `submit` and stays open, so the page closes it once the save has worked. A
-// form never closes on a click outside, where it would lose what was typed. The browser's own
-// checks are off (novalidate): the page says what is missing beside each field, and the submit
-// button is never greyed out for it.
+// it opens with focus on its first field, and the footer holds Cancel beside the submit button,
+// which shows `busy` while the save runs. It emits `submit` and stays open, so the page closes
+// it once the save has worked. A form never closes on a click outside, where it would lose what
+// was typed. The browser's own checks are off (novalidate): the page says what is missing beside
+// each field, and the submit button is never greyed out for it. A form's other buttons (Reload,
+// on a conflict) go in `footer-start`, at the footer's other end; the submit button's icon is
+// the `submit-icon` slot; and the body and `footer-start` slots are given the form's id, for a
+// button elsewhere that sends it (`form="…"`).
 //
 // `alert` is its form for a question before an irreversible action (KitConfirmDialog asks
 // with it): a screen reader announces it as an alert, it has no Close button, and nothing but
@@ -36,7 +38,7 @@ import {
 } from 'reka-ui'
 import KitAnnouncer from './KitAnnouncer.vue'
 import KitButton from './KitButton.vue'
-import KitCrossIcon from './KitCrossIcon.vue'
+import KitGlyph from './KitGlyph.vue'
 import KitIconButton from './KitIconButton.vue'
 
 const props = withDefaults(
@@ -75,8 +77,14 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { default: false })
 
 defineSlots<{
-  default?: () => unknown
+  /** The body; in a form, given the form's id. */
+  default?: (props: { formId: string }) => unknown
+  /** The buttons, in place of a form's Cancel and submit. */
   footer?: () => unknown
+  /** A form's other buttons, at the footer's start, away from Cancel and submit. */
+  'footer-start'?: (props: { formId: string }) => unknown
+  /** The icon on a form's submit button. */
+  'submit-icon'?: () => unknown
   trigger?: () => unknown
   /** The Close button's icon, a drawn cross by default. */
   'close-icon'?: () => unknown
@@ -149,8 +157,8 @@ function onOpenAutoFocus(event: Event): void {
         <header class="kit-dialog__header">
           <component :is="parts.Title" class="kit-dialog__title">{{ title }}</component>
           <DialogClose v-if="!alert" as-child>
-            <KitIconButton class="kit-dialog__close" label="Close">
-              <slot name="close-icon"><KitCrossIcon /></slot>
+            <KitIconButton class="kit-dialog__close" label="Close" variant="plain">
+              <slot name="close-icon"><KitGlyph name="cross" /></slot>
             </KitIconButton>
           </DialogClose>
         </header>
@@ -165,11 +173,14 @@ function onOpenAutoFocus(event: Event): void {
           novalidate
           @submit.prevent="emit('submit')"
         >
-          <slot />
+          <slot :form-id="formId" />
         </form>
-        <div v-else-if="$slots.default" class="kit-dialog__body"><slot /></div>
+        <div v-else-if="$slots.default" class="kit-dialog__body"><slot :form-id="formId" /></div>
         <footer v-if="$slots.footer || isForm" class="kit-dialog__footer">
           <slot name="footer">
+            <div v-if="$slots['footer-start']" class="kit-dialog__footer-start">
+              <slot name="footer-start" :form-id="formId" />
+            </div>
             <KitButton :disabled="busy" @click="open = false">{{ cancelLabel }}</KitButton>
             <KitButton
               type="submit"
@@ -177,6 +188,7 @@ function onOpenAutoFocus(event: Event): void {
               :variant="danger ? 'danger' : 'primary'"
               :loading="busy"
             >
+              <template v-if="$slots['submit-icon']" #icon><slot name="submit-icon" /></template>
               {{ submitLabel }}
             </KitButton>
           </slot>
@@ -271,6 +283,14 @@ function onOpenAutoFocus(event: Event): void {
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--kit-space-xs);
+  }
+
+  /* A form's other buttons sit at the footer's start, away from Cancel and submit. */
+  .kit-dialog__footer-start {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kit-space-xs);
+    margin-inline-end: auto;
   }
 }
 </style>

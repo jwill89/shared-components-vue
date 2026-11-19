@@ -4,8 +4,9 @@ import vue from '@vitejs/plugin-vue'
 
 // The playground (`npm run dev`, and `npm run build:playground` for the end-to-end run). It
 // imports the kit by its package name, as an app does, and the names point at the source, so a
-// change to a component shows at once: the package at src/index.ts, and its stylesheet at the
-// tokens (each component brings its own styles along when it is imported).
+// change to a component shows at once: the package at src/index.ts, and its stylesheet at
+// kit-source.css, the global stylesheets bundle.ts gathers (each component brings its own styles
+// along when it is imported).
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [vue()],
@@ -17,7 +18,7 @@ export default defineConfig({
       },
       {
         find: /^@jwill89\/shared-components-vue\/style\.css$/,
-        replacement: fileURLToPath(new URL('../src/tokens/tokens.css', import.meta.url)),
+        replacement: fileURLToPath(new URL('./kit-source.css', import.meta.url)),
       },
     ],
   },

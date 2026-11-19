@@ -1,0 +1,86 @@
+/*
+ * The open list of a KitSelect or KitCombobox. Reka draws it at the end of the page, outside the
+ * component, where a component's scoped styles can't reach, so its styles are here, global and
+ * in the kit's layer; bundle.ts gathers them into style.css with the tokens.
+ *
+ * The option under the keyboard or the pointer is washed 12% with the accent and ringed;
+ * contrast.ts (OPTION_HIGHLIGHT) holds the same number, and contrast.spec.ts measures the words
+ * on it.
+ */
+@layer kit {
+  .kit-option-list {
+    box-sizing: border-box;
+    z-index: var(--kit-layer-popup);
+    min-width: var(--reka-select-trigger-width, var(--reka-combobox-trigger-width));
+    max-width: min(calc(100vw - 2 * var(--kit-space-md)), var(--kit-width-option-list));
+    max-height: min(
+      var(--reka-select-content-available-height, var(--kit-height-option-list)),
+      var(--reka-combobox-content-available-height, var(--kit-height-option-list)),
+      var(--kit-height-option-list)
+    );
+    overflow: hidden;
+    border: var(--kit-control-border-width) solid var(--kit-control-border);
+    border-radius: var(--kit-radius-md);
+    background: var(--kit-surface-raised);
+    color: var(--kit-text);
+    font-family: var(--kit-font-body);
+    box-shadow: var(--kit-shadow-overlay);
+  }
+
+  .kit-option-list__viewport {
+    padding: var(--kit-space-2xs);
+  }
+
+  .kit-option-list__group + .kit-option-list__group {
+    margin-block-start: var(--kit-space-2xs);
+    padding-block-start: var(--kit-space-2xs);
+    border-block-start: var(--kit-control-border-width) solid var(--kit-hairline);
+  }
+
+  .kit-option-list__group-label {
+    padding: var(--kit-space-2xs) var(--kit-space-sm);
+    color: var(--kit-text-muted);
+    font-size: var(--kit-text-size-sm);
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-option-list__item {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--kit-space-xs);
+    min-height: var(--kit-control-height);
+    padding: var(--kit-space-2xs) var(--kit-space-sm) var(--kit-space-2xs)
+      calc(var(--kit-space-sm) + 1.25rem);
+    border-radius: var(--kit-radius-sm);
+    cursor: pointer;
+    user-select: none;
+    overflow-wrap: anywhere;
+  }
+
+  .kit-option-list__item[data-highlighted] {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: calc(-1 * var(--kit-focus-ring-width));
+    background: color-mix(in srgb, var(--kit-surface-raised) 88%, var(--kit-accent));
+  }
+
+  .kit-option-list__item[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .kit-option-list__check {
+    position: absolute;
+    left: var(--kit-space-sm);
+    display: inline-flex;
+    justify-content: center;
+    width: 1rem;
+  }
+
+  .kit-option-list__empty {
+    padding: var(--kit-space-sm);
+    color: var(--kit-text-muted);
+    text-align: center;
+  }
+}

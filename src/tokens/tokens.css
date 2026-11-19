@@ -74,7 +74,7 @@
     --kit-duration-spin: 800ms;
 
     /* Widths: prose stays readable, and a dialog, a wide dialog for a long form, a menu, a
-       field on a row of its own and a number box stop at these. */
+       field on a row of its own, a number box, a toast and an open list stop at these. */
     --kit-measure-prose: 70ch;
     --kit-width-dialog: 32rem;
     --kit-width-dialog-wide: 48rem;
@@ -82,6 +82,8 @@
     --kit-width-field: 48rem;
     --kit-width-number-field: 14rem;
     --kit-width-toast: 26rem;
+    --kit-width-option-list: 30rem;
+    --kit-height-option-list: 20rem;
 
     /* Where the toast stack starts down the screen: an app with a fixed bar along the top maps
        this to the bar's height, so toasts never cover it. */

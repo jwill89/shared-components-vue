@@ -115,8 +115,8 @@ describe('the contrast arithmetic', () => {
     )
   })
 
-  it('mixes two colors in sRGB, as color-mix() does', () => {
-    expect(mixRgb([0, 0, 0], [255, 255, 255], 0.5)).toEqual([127.5, 127.5, 127.5])
+  it('mixes two colors in sRGB, as color-mix() does, to whole channels as a browser draws them', () => {
+    expect(mixRgb([0, 0, 0], [255, 255, 255], 0.5)).toEqual([128, 128, 128])
     expect(mixRgb([10, 20, 30], [110, 120, 130], 0)).toEqual([10, 20, 30])
     expect(mixRgb([10, 20, 30], [110, 120, 130], 1)).toEqual([110, 120, 130])
   })

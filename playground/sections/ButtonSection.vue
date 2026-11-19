@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // KitButton and KitIconButton in each variant and each state. A hover can't be shown at rest,
 // so its colors are in the color pairs below, measured.
-import { KitButton, KitIconButton } from '@jwill89/shared-components-vue'
+import { KitPagePanel, KitButton, KitIconButton } from '@jwill89/shared-components-vue'
 import type { KitButtonVariant } from '@jwill89/shared-components-vue'
 import PlaygroundIcon from '../PlaygroundIcon.vue'
 
@@ -10,13 +10,12 @@ const variants: { variant: KitButtonVariant; label: string }[] = [
   { variant: 'secondary', label: 'Secondary' },
   { variant: 'danger', label: 'Danger' },
   { variant: 'quiet', label: 'Quiet' },
+  { variant: 'plain', label: 'Plain' },
 ]
 </script>
 
 <template>
-  <section class="playground-section" aria-labelledby="buttons-heading">
-    <h2 id="buttons-heading">Buttons</h2>
-
+  <KitPagePanel id="buttons" class="playground-section" title="Buttons">
     <h3>KitButton</h3>
     <p class="playground-note">At rest, with an icon, busy, and disabled.</p>
     <div class="playground-row">
@@ -45,11 +44,11 @@ const variants: { variant: KitButtonVariant; label: string }[] = [
     <h3>As a link</h3>
     <p class="playground-note">For an action that opens another page.</p>
     <div class="playground-row">
-      <KitButton href="#buttons-heading" variant="primary">
+      <KitButton href="#buttons" variant="primary">
         <template #icon><PlaygroundIcon name="arrow" /></template>
         Continue
       </KitButton>
-      <KitButton href="#buttons-heading">Read more</KitButton>
+      <KitButton href="#buttons">Read more</KitButton>
     </div>
 
     <h3>KitIconButton</h3>
@@ -88,5 +87,5 @@ const variants: { variant: KitButtonVariant; label: string }[] = [
         <PlaygroundIcon name="trash" />
       </KitIconButton>
     </div>
-  </section>
+  </KitPagePanel>
 </template>

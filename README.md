@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling, and the default theme holds WCAG AAA contrast in light and dark.
 
-No components have been released yet. The first release, v0.1.0, brings the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; [PLAN.md](PLAN.md) lists the rest and the order they come in.
+The latest release, v0.2.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.1.0/jwill89-shared-components-vue-0.1.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.2.0/jwill89-shared-components-vue-0.2.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -22,6 +22,27 @@ import '@jwill89/shared-components-vue/style.css'
 ```
 
 The package marks only its CSS as having side effects, so the components arrive unstyled without this line.
+
+### Your own base styles
+
+The kit's styles sit in the `kit` cascade layer, and a rule outside any layer beats every layered rule, whatever its selector. That is what lets an app's own classes restyle a kit component without a fight, and also what breaks one: an unlayered element rule in the app's base stylesheet, such as `button { color: inherit }`, `a { color: … }` or `:focus-visible { … }`, beats the kit's components too, so a primary button's words take the page's color and its focus ring the page's.
+
+So name the layers' order in a stylesheet of its own, imported before the kit's, and put the app's element rules in `base`:
+
+```css
+/* src/styles/layers.css, imported first */
+@layer base, kit;
+```
+
+```css
+/* the app's base stylesheet */
+@layer base {
+  a { color: var(--link); }
+  button { font: inherit; color: inherit; }
+}
+```
+
+An app on Tailwind 4 names its layers around Tailwind's: `@layer theme, base, kit, components, utilities;`. The app's class rules stay unlayered, over the kit's.
 
 ### The theme
 
@@ -74,6 +95,22 @@ if (await confirm({ title: 'Delete this shelf?', message: 'Its 12 books go back 
 }
 ```
 
+### Pages, alerts and states
+
+Every page opens with `KitPageHeader` and puts its content in `KitPagePanel`s. A list says it is loading, empty or failed with `KitLoadingState`, `KitEmptyState` and `KitErrorState`, never one for another, and a condition the person must act on is a `KitAlert` where it applies:
+
+```vue
+<KitPageHeader title="Living room" description="Twelve books, two shelves." :crumbs="[{ label: 'Shelves', to: '/shelves' }]">
+  <template #actions><KitButton variant="primary" @click="adding = true">Add a book</KitButton></template>
+</KitPageHeader>
+<KitPagePanel title="Books">
+  <KitLoadingState v-if="loading" label="Loading the books…" />
+  <KitErrorState v-else-if="failed" title="Couldn’t load the books" :message="failed.detail" @retry="load" />
+  <KitEmptyState v-else-if="books.length === 0" title="No books on this shelf" />
+  <BookList v-else :books="books" />
+</KitPagePanel>
+```
+
 ### Toasts
 
 Mount `KitToastHost` once, at the app's root, beside `KitConfirmHost`, and raise a toast after an action from anywhere, the app's global error handler included:
@@ -86,7 +123,9 @@ toast.success('Saved the shelf')
 toast.error('That didn’t save', problem.detail)
 ```
 
-A toast reports how a finished action went and goes; a condition the person must act on is an alert on the page, which stays. An app with a fixed bar along the top maps `--kit-toast-inset-top` to the bar's height.
+`useToast()` raises a toast in one of four tones, `success`, `error`, `warning` and `info`, each with a title and an optional detail, and gives back its id, which `dismiss()` takes to close it early. `onToast()` hears each toast as it is raised and gives back the call that stops it, for an app's own log or its tests, and `dismissAllToasts()` closes every one, as tests do between cases.
+
+A toast reports how a finished action went and goes; a condition the person must act on is a KitAlert on the page, which stays. An app with a fixed bar along the top maps `--kit-toast-inset-top` to the bar's height.
 
 ### Icons
 

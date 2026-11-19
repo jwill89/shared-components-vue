@@ -1,7 +1,7 @@
 {
   "name": "@jwill89/shared-components-vue",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Shared Vue 3 components on Reka UI, styled only through design tokens, for jwill89's front ends.",
   "license": "MIT",
@@ -29,7 +29,6 @@
     "dev": "vite --config playground/vite.config.ts",
     "build": "vite build && vue-tsc -p tsconfig.build.json",
     "build:playground": "vite build --config playground/vite.config.ts",
-    "prepare": "npm run build",
     "typecheck": "vue-tsc -b --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -47,6 +46,7 @@
     "reka-ui": "2.11.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@jwill89/lint-web": "file:shared/lint/web",
     "@jwill89/test-a11y": "file:shared/test/a11y",
     "@playwright/test": "^1.65.1",

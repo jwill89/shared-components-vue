@@ -28,7 +28,11 @@ function button(name: string): HTMLButtonElement {
 }
 
 /** A page holding a dialog, its open state and every submit kept, with a button to open it. */
-function page(props: Record<string, unknown>, slots: Record<string, () => unknown> = {}) {
+function page(
+  props: Record<string, unknown>,
+  // A slot that takes the form's id, as the body and `footer-start` do, or none.
+  slots: Record<string, (scope: { formId: string }) => unknown> = {},
+) {
   const open = ref(false)
   const submits = ref(0)
   const wrapper = kept(
@@ -175,6 +179,32 @@ describe('KitDialog', () => {
       button('Cancel').click()
       await settle()
       expect(open.value).toBe(false)
+      expect(submits.value).toBe(1)
+    })
+
+    it('takes other buttons at the footer’s start, an icon on its submit, and gives out its id', async () => {
+      const { submits } = page(
+        { submitLabel: 'Save the shelf' },
+        {
+          default: ({ formId }: { formId: string }) => h('p', { 'data-form': formId }, 'Fields'),
+          'footer-start': ({ formId }: { formId: string }) =>
+            h('button', { type: 'submit', form: formId, 'data-form': formId }, 'Save as new'),
+          'submit-icon': () => h('svg', { 'data-icon': 'floppy-disk' }),
+        },
+      )
+      button('Open').click()
+      await settle()
+      const form = dialog().querySelector('form')
+      expect(dialog().querySelector('[data-form] p, p[data-form]')?.getAttribute('data-form')).toBe(
+        form?.id,
+      )
+      const footer = dialog().querySelector('.kit-dialog__footer')
+      expect(footer?.firstElementChild?.classList).toContain('kit-dialog__footer-start')
+      expect(button('Save the shelf').querySelector('[data-icon="floppy-disk"]')).not.toBeNull()
+
+      // A button of the page's own that names the form sends it, as the submit button does.
+      form?.requestSubmit(button('Save as new'))
+      await settle()
       expect(submits.value).toBe(1)
     })
 

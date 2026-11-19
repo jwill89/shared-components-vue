@@ -12,7 +12,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
     test('every tone of toast holds its words at 7:1 and passes axe', async ({ page }) => {
       await page.goto('/')
-      for (const name of ['Show a success', 'Show an error', 'Show a warning', 'Show a note']) {
+      for (const name of ['Show a success', 'Show an error', 'Show a warning', 'Show some info']) {
         await page.getByRole('button', { name }).click()
       }
       const shown = page.locator('.kit-toast')
@@ -41,15 +41,16 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 test('a toast is read out from the page, an error at once', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Show a note' }).click()
+  await page.getByRole('button', { name: 'Show some info' }).click()
+  // The kit's live regions carry no role (KitAnnouncer.vue), so they are found by aria-live.
   await expect(
-    page.getByRole('status').filter({ hasText: 'The shelf is shared with Sam' }),
+    page.locator('[aria-live="polite"]', { hasText: 'The shelf is shared with Sam' }),
   ).toHaveCount(1)
   await page.getByRole('button', { name: 'Show an error' }).click()
   await expect(
-    page
-      .getByRole('alert')
-      .filter({ hasText: 'That didn’t save. The server said: the shelf was deleted.' }),
+    page.locator('[aria-live="assertive"]', {
+      hasText: 'That didn’t save. The server said: the shelf was deleted.',
+    }),
   ).toHaveCount(1)
 })
 
@@ -63,7 +64,7 @@ test('a toast raised in a dialog is read out from the dialog, and shows above it
 
   // Everything behind a modal dialog is hidden from screen readers, toasts included, so the
   // words are read from the dialog's own live region.
-  await expect(dialog.getByRole('status')).toHaveText('Copied the shelf’s link')
+  await expect(dialog.locator('[aria-live="polite"]')).toHaveText('Copied the shelf’s link')
 
   const toast = page.locator('.kit-toast', { hasText: 'Copied the shelf’s link' })
   await expect(toast).toBeVisible()

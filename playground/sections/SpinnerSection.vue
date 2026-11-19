@@ -1,12 +1,10 @@
 <script setup lang="ts">
 // KitSpinner alone, as a picture beside words that say what is loading, and with its own words.
-import { KitSpinner } from '@jwill89/shared-components-vue'
+import { KitPagePanel, KitSpinner } from '@jwill89/shared-components-vue'
 </script>
 
 <template>
-  <section class="playground-section" aria-labelledby="spinner-heading">
-    <h2 id="spinner-heading">Spinner</h2>
-
+  <KitPagePanel id="spinner" class="playground-section" title="Spinner">
     <h3>KitSpinner</h3>
     <p class="playground-note">It takes the size and color of the text around it.</p>
     <div class="playground-row">
@@ -14,7 +12,7 @@ import { KitSpinner } from '@jwill89/shared-components-vue'
       <KitSpinner label="Loading the books…" />
       <span class="spinner-large"><KitSpinner label="Loading the page…" /></span>
     </div>
-  </section>
+  </KitPagePanel>
 </template>
 
 <style scoped>

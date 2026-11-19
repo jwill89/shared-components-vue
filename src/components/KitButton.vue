@@ -9,11 +9,11 @@
 // `kit-button--icon-only` modifier.
 import KitSpinner from './KitSpinner.vue'
 
-export type KitButtonVariant = 'primary' | 'secondary' | 'danger' | 'quiet'
+export type KitButtonVariant = 'primary' | 'secondary' | 'danger' | 'quiet' | 'plain'
 
 withDefaults(
   defineProps<{
-    /** How much the action stands out: the page's main action is `primary`, an irreversible one `danger`, a minor one `quiet`. */
+    /** How much the action stands out: the page's main action is `primary`, an irreversible one `danger`, a minor one `quiet`, and a control's own chrome, such as a dialog's Close, `plain`. */
     variant?: KitButtonVariant
     /** The native button type; `submit` sends its form. */
     type?: 'button' | 'submit' | 'reset'
@@ -59,7 +59,8 @@ defineSlots<{
 /*
  * Each variant sets the fill, ink and edge the rules below draw with. A hover moves the fill
  * 15% toward the page's text color, which takes it away from the button's own words in either
- * scheme; a quiet button takes a 6% wash of the accent and an underline. contrast.ts
+ * scheme; a quiet button takes a 6% wash of the accent and an underline, a plain one the same of
+ * the text color. contrast.ts
  * (BUTTON_HOVER) holds the same numbers and contrast.spec.ts measures every hover at 7:1, so
  * the two change together.
  */
@@ -128,6 +129,19 @@ defineSlots<{
 
   .kit-button--quiet:hover:not(:disabled) {
     background: color-mix(in srgb, var(--kit-accent) 6%, transparent);
+    text-decoration: underline;
+  }
+
+  /* Quiet in the text color, not the accent: a control's own chrome (Close, Dismiss, Clear),
+     which belongs to what it sits in rather than standing out as an action of its own. */
+  .kit-button--plain {
+    --kit-button-fill: transparent;
+    --kit-button-ink: var(--kit-text);
+    --kit-button-edge: transparent;
+  }
+
+  .kit-button--plain:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--kit-text) 6%, transparent);
     text-decoration: underline;
   }
 

@@ -5,6 +5,10 @@ import { WCAG_22_AA, axeViolations } from '@jwill89/test-a11y'
 // slips below 7:1 fails here as well as in contrast.spec.ts.
 const AAA = [...WCAG_22_AA, 'wcag2aaa']
 
+// Without motion, a scheme switched mid-test is drawn at once, so axe never measures a button
+// halfway through its color transition.
+test.use({ reducedMotion: 'reduce' })
+
 for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`on a device in the ${colorScheme} scheme`, () => {
     test.use({ colorScheme })

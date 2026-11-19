@@ -1,7 +1,65 @@
 import axe from 'axe-core'
+import { h, reactive } from 'vue'
+import type { Component } from 'vue'
+import { mount } from '@vue/test-utils'
 import type { VueWrapper } from '@vue/test-utils'
+import KitFormField from '../components/KitFormField.vue'
+import type { KitFieldBinding } from '../components/KitFormField.vue'
 
 const cleanups: (() => void)[] = []
+
+/**
+ * A control inside a KitFormField, bound to it as a page binds it (`v-bind="field"`), its model
+ * kept in step as a page's v-model keeps it, attached to the document so focus and axe see it,
+ * and kept for `unmountKept`. `state.value` is the model as it stands.
+ */
+export function field(
+  control: Component,
+  value: unknown,
+  fieldProps: Record<string, unknown> = {},
+  controlProps: Record<string, unknown> = {},
+  controlSlots: Record<string, (...args: never[]) => unknown> = {},
+): { wrapper: VueWrapper; state: { value: unknown } } {
+  const state = reactive({ value })
+  const wrapper: VueWrapper = kept(
+    mount(KitFormField, {
+      props: { label: 'Name', ...fieldProps },
+      slots: {
+        default: (binding: KitFieldBinding) =>
+          h(
+            control,
+            {
+              ...binding,
+              ...controlProps,
+              modelValue: state.value,
+              'onUpdate:modelValue': (next: unknown) => {
+                state.value = next
+              },
+            },
+            controlSlots,
+          ),
+      },
+      attachTo: document.body,
+    }),
+  )
+  return { wrapper, state }
+}
+
+/** The options of the list that is open, as their words. */
+export function openOptions(): string[] {
+  return [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent.trim())
+}
+
+/** An option of the open list, by its words. */
+export function option(text: string): HTMLElement {
+  const found = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+    (candidate) => candidate.textContent.trim() === text,
+  )
+  if (!found) {
+    throw new Error(`No option "${text}" is open.`)
+  }
+  return found
+}
 
 /** Keeps a wrapper to unmount after the test, so one test's leftovers never reach the next. */
 export function kept<W extends VueWrapper>(wrapper: W): W {

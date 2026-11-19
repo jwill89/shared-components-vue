@@ -61,7 +61,8 @@ export const UNPAIRED: Readonly<Record<string, string>> = {
  * How far a button's hover moves from its rest. KitButton.vue writes the same numbers into
  * its color-mix() calls, so the two change together. A filled button's fill moves toward the
  * page's text color, which takes it away from its own words in either scheme; a quiet button
- * takes a faint wash of the accent over whatever surface it sits on.
+ * takes a faint wash of the accent over whatever surface it sits on, and a plain one the same of
+ * the text color.
  */
 export const BUTTON_HOVER = { filled: 0.15, quiet: 0.06 } as const
 
@@ -72,12 +73,26 @@ export const BUTTON_HOVER = { filled: 0.15, quiet: 0.06 } as const
  */
 export const TOAST_TINT = 0.1
 
-/** The tone each kind of toast is washed and marked with. */
+/**
+ * How much of its tone an alert, or a failed load's state, is washed with, over the raised
+ * surface. KitAlert.vue and KitErrorState.vue write the same number. It is fainter than a
+ * toast's, since an alert may hold muted words and links, which it keeps at AAA, and a button,
+ * whose border it keeps at 3:1.
+ */
+export const ALERT_TINT = 0.07
+
+/**
+ * How much of the accent the option under the keyboard or pointer, in an open list, is washed
+ * with. option-list.css writes the same number.
+ */
+export const OPTION_HIGHLIGHT = 0.12
+
+/** The tone each kind of toast or alert is washed and marked with. */
 const TOAST_TONES = [
   ['success', 'a success toast'],
   ['danger', 'an error toast'],
   ['warning', 'a warning toast'],
-  ['text-muted', 'a note toast'],
+  ['text-muted', 'an info toast'],
 ] as const
 
 /**
@@ -120,12 +135,37 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
     floor: 7,
     state: 'a quiet button’s hover',
   })),
+  ...SURFACES.map((base): TokenPair => ({
+    kind: 'text',
+    fg: 'text',
+    bg: { base, toward: 'text', weight: BUTTON_HOVER.quiet },
+    floor: 7,
+    state: 'a plain button’s hover',
+  })),
+  {
+    kind: 'text',
+    fg: 'text',
+    bg: { base: 'surface-raised', toward: 'accent', weight: OPTION_HIGHLIGHT },
+    floor: 7,
+    state: 'the highlighted option in an open list',
+  },
   ...TOAST_TONES.flatMap(([tone, state]): TokenPair[] => {
     const bg: Mix = { base: 'surface-raised', toward: tone, weight: TOAST_TINT }
     return [
       { kind: 'text', fg: 'text', bg, floor: 7, state },
       { kind: 'icon', fg: tone, bg, floor: 3, state: `${state}’s icon` },
       { kind: 'icon', fg: 'accent', bg, floor: 3, state: `${state}’s Dismiss button` },
+    ]
+  }),
+  ...TOAST_TONES.flatMap(([tone, toastState]): TokenPair[] => {
+    const bg: Mix = { base: 'surface-raised', toward: tone, weight: ALERT_TINT }
+    const state = toastState.replace('toast', 'alert')
+    return [
+      { kind: 'text', fg: 'text', bg, floor: 7, state },
+      { kind: 'text', fg: 'text-muted', bg, floor: 7, state },
+      { kind: 'text', fg: 'accent', bg, floor: 7, state: `a link in ${state}` },
+      { kind: 'icon', fg: tone, bg, floor: 3, state: `${state}’s icon` },
+      { kind: 'border', fg: 'control-border', bg, floor: 3, state: `a button in ${state}` },
     ]
   }),
 ]
@@ -153,9 +193,13 @@ export function backgroundCss(bg: TokenPair['bg']): string {
   return `color-mix(in srgb, var(--kit-${bg.base}) ${rest}%, var(--kit-${bg.toward}))`
 }
 
-/** Two colors mixed in sRGB, `weight` of the way from `a` to `b`, as color-mix() mixes them. */
+/**
+ * Two colors mixed in sRGB, `weight` of the way from `a` to `b`, as color-mix() mixes them,
+ * each channel rounded to a whole value as a browser rounds the color it draws. Unrounded, a
+ * pair can measure 7.01 here and 6.98 on screen.
+ */
 export function mixRgb(a: Rgb, b: Rgb, weight: number): Rgb {
-  const channel = (at: 0 | 1 | 2): number => a[at] * (1 - weight) + b[at] * weight
+  const channel = (at: 0 | 1 | 2): number => Math.round(a[at] * (1 - weight) + b[at] * weight)
   return [channel(0), channel(1), channel(2)]
 }
 
