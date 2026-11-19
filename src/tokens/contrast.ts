@@ -10,10 +10,11 @@ export type Rgb = readonly [red: number, green: number, blue: number]
 
 /**
  * A color made where it is used rather than stored as a token, as a hover is:
- * `color-mix(in srgb, var(--kit-<base>) <100 - weight * 100>%, var(--kit-<toward>))`.
+ * `color-mix(in srgb, var(--kit-<base>) <100 - weight * 100>%, var(--kit-<toward>))`. Its base
+ * is a mix itself where one wash lies over another, as a button's hover does over an alert's.
  */
 export interface Mix {
-  readonly base: string
+  readonly base: string | Mix
   readonly toward: string
   /** How far it moves toward `toward`, from 0 to 1. */
   readonly weight: number
@@ -69,18 +70,18 @@ export const BUTTON_HOVER = { filled: 0.15, quiet: 0.06 } as const
 
 /**
  * How much of its tone a toast is washed with, over the raised surface. KitToastList.vue writes
- * the same number. Each tone's toast holds its words at AAA on the wash, and its icon and its
- * Dismiss button's at 3:1.
+ * the same number. Each tone's toast holds its words, and its plain Dismiss button's at rest and
+ * on hover, at AAA on the wash, and its icon at 3:1.
  */
 export const TOAST_TINT = 0.1
 
 /**
  * How much of its tone an alert, or a failed load's state, is washed with, over the raised
  * surface. KitAlert.vue and KitErrorState.vue write the same number. It is fainter than a
- * toast's, since an alert may hold muted words and links, which it keeps at AAA, and a button,
- * whose border it keeps at 3:1.
+ * toast's, since an alert may hold muted words and links, which it keeps at AAA, and buttons,
+ * whose borders it keeps at 3:1 and a quiet or plain one's hover at AAA.
  */
-export const ALERT_TINT = 0.07
+export const ALERT_TINT = 0.06
 
 /**
  * How much of the accent the option under the keyboard or pointer, in an open list, is washed
@@ -155,7 +156,13 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
     return [
       { kind: 'text', fg: 'text', bg, floor: 7, state },
       { kind: 'icon', fg: tone, bg, floor: 3, state: `${state}’s icon` },
-      { kind: 'icon', fg: 'accent', bg, floor: 3, state: `${state}’s Dismiss button` },
+      {
+        kind: 'text',
+        fg: 'text',
+        bg: { base: bg, toward: 'text', weight: BUTTON_HOVER.quiet },
+        floor: 7,
+        state: `${state}’s Dismiss button’s hover`,
+      },
     ]
   }),
   ...TOAST_TONES.flatMap(([tone, toastState]): TokenPair[] => {
@@ -167,22 +174,39 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
       { kind: 'text', fg: 'accent', bg, floor: 7, state: `a link in ${state}` },
       { kind: 'icon', fg: tone, bg, floor: 3, state: `${state}’s icon` },
       { kind: 'border', fg: 'control-border', bg, floor: 3, state: `a button in ${state}` },
+      {
+        kind: 'text',
+        fg: 'accent',
+        bg: { base: bg, toward: 'accent', weight: BUTTON_HOVER.quiet },
+        floor: 7,
+        state: `a quiet button’s hover in ${state}`,
+      },
+      {
+        kind: 'text',
+        fg: 'text',
+        bg: { base: bg, toward: 'text', weight: BUTTON_HOVER.quiet },
+        floor: 7,
+        state: `a plain button’s hover in ${state}`,
+      },
     ]
   }),
 ]
 
-/** The tokens a pair's background is made from: one, or the two a mix takes. */
+/** The tokens a pair's background is made from: one, or every one its mixes take. */
 export function backgroundTokens(bg: TokenPair['bg']): string[] {
-  return typeof bg === 'string' ? [bg] : [bg.base, bg.toward]
+  return typeof bg === 'string' ? [bg] : [...backgroundTokens(bg.base), bg.toward]
+}
+
+/** A background in words: "--kit-accent, 15% toward --kit-text". */
+function describeBackground(bg: TokenPair['bg']): string {
+  return typeof bg === 'string'
+    ? `--kit-${bg}`
+    : `${describeBackground(bg.base)}, ${String(Math.round(bg.weight * 100))}% toward --kit-${bg.toward}`
 }
 
 /** A pair in words: "--kit-on-accent on --kit-accent, 15% toward --kit-text". */
 export function describePair({ fg, bg, state }: TokenPair): string {
-  const back =
-    typeof bg === 'string'
-      ? `--kit-${bg}`
-      : `--kit-${bg.base}, ${String(Math.round(bg.weight * 100))}% toward --kit-${bg.toward}`
-  return `--kit-${fg} on ${back}${state ? ` (${state})` : ''}`
+  return `--kit-${fg} on ${describeBackground(bg)}${state ? ` (${state})` : ''}`
 }
 
 /** A pair's background as CSS, through the tokens, as the component that uses it writes it. */
@@ -191,7 +215,7 @@ export function backgroundCss(bg: TokenPair['bg']): string {
     return `var(--kit-${bg})`
   }
   const rest = String(Math.round((1 - bg.weight) * 100))
-  return `color-mix(in srgb, var(--kit-${bg.base}) ${rest}%, var(--kit-${bg.toward}))`
+  return `color-mix(in srgb, ${backgroundCss(bg.base)} ${rest}%, var(--kit-${bg.toward}))`
 }
 
 /**

@@ -44,11 +44,14 @@ function token(name: string, scheme: 'light' | 'dark'): Rgb {
   return parseHex(value ?? '')
 }
 
-/** A pair's background in one scheme: its token's color, or the two mixed. */
+/**
+ * A pair's background in one scheme: its token's color, or its mix, worked out from the wash
+ * underneath up, each rounded to whole channels as a browser draws it.
+ */
 function background(bg: TokenPair['bg'], scheme: 'light' | 'dark'): Rgb {
   return typeof bg === 'string'
     ? token(bg, scheme)
-    : mixRgb(token(bg.base, scheme), token(bg.toward, scheme), bg.weight)
+    : mixRgb(background(bg.base, scheme), token(bg.toward, scheme), bg.weight)
 }
 
 describe('the default theme', () => {
@@ -100,6 +103,27 @@ describe('a pair in words and in CSS', () => {
       'color-mix(in srgb, var(--kit-accent) 85%, var(--kit-text))',
     )
     expect(backgroundTokens(hover.bg)).toEqual(['accent', 'text'])
+  })
+
+  it('names a wash over a wash from the one underneath up', () => {
+    const overAlert: TokenPair = {
+      kind: 'text',
+      fg: 'accent',
+      bg: {
+        base: { base: 'surface-raised', toward: 'warning', weight: 0.06 },
+        toward: 'accent',
+        weight: 0.06,
+      },
+      floor: 7,
+      state: 'a quiet button’s hover in a warning alert',
+    }
+    expect(describePair(overAlert)).toBe(
+      '--kit-accent on --kit-surface-raised, 6% toward --kit-warning, 6% toward --kit-accent (a quiet button’s hover in a warning alert)',
+    )
+    expect(backgroundCss(overAlert.bg)).toBe(
+      'color-mix(in srgb, color-mix(in srgb, var(--kit-surface-raised) 94%, var(--kit-warning)) 94%, var(--kit-accent))',
+    )
+    expect(backgroundTokens(overAlert.bg)).toEqual(['surface-raised', 'warning', 'accent'])
   })
 })
 

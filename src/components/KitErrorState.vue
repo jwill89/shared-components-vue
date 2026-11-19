@@ -50,7 +50,7 @@ defineSlots<{
     gap: var(--kit-space-xs);
     padding: var(--kit-space-xl) var(--kit-space-md);
     border-radius: var(--kit-radius-md);
-    background: color-mix(in srgb, var(--kit-surface-raised) 93%, var(--kit-danger));
+    background: color-mix(in srgb, var(--kit-surface-raised) 94%, var(--kit-danger));
     color: var(--kit-text);
     text-align: center;
   }

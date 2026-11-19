@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling, and the default theme holds WCAG AAA contrast in light and dark.
 
-The latest release, v0.3.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.3.1, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.3.0/jwill89-shared-components-vue-0.3.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.3.1/jwill89-shared-components-vue-0.3.1.tgz
 ```
 
 To take a later release, install its file the same way.

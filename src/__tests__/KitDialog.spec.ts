@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { createCommentVNode, defineComponent, h, nextTick, ref } from 'vue'
+import { createCommentVNode, defineComponent, h, nextTick, ref, type VNode } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import KitButton from '../components/KitButton.vue'
 import KitDialog from '../components/KitDialog.vue'
+import KitFormField from '../components/KitFormField.vue'
+import type { KitFieldBinding } from '../components/KitFormField.vue'
+import KitSegmentedControl from '../components/KitSegmentedControl.vue'
+import KitSelect from '../components/KitSelect.vue'
+import KitSwitch from '../components/KitSwitch.vue'
+import KitTextarea from '../components/KitTextarea.vue'
 import { axeFindings, kept, unmountKept } from './helpers'
 
 afterEach(unmountKept)
@@ -245,6 +251,74 @@ describe('KitDialog', () => {
       await settle()
       expect(dialog().querySelector('.kit-dialog__footer-start')).toBeNull()
       expect(dialog().querySelector('.kit-dialog__footer')).not.toBeNull()
+    })
+
+    describe('opens on its first field', () => {
+      /** A form whose first field is `first`, with a text box after it. */
+      function form(first: (field: KitFieldBinding) => VNode | VNode[], group = false): void {
+        page(
+          { submitLabel: 'Save' },
+          {
+            default: () => [
+              h(KitFormField, { label: 'Thread titles', group }, { default: first }),
+              h(
+                KitFormField,
+                { label: 'Opening message' },
+                {
+                  default: (field: KitFieldBinding) => h(KitTextarea, { ...field, modelValue: '' }),
+                },
+              ),
+            ],
+          },
+        )
+      }
+      const options = [
+        { value: 'name', label: 'The member’s name' },
+        { value: 'count', label: 'A running count' },
+      ]
+
+      it('when it is a text box', async () => {
+        page(
+          { submitLabel: 'Add the book' },
+          { default: () => h('label', ['Title ', h('input', { name: 'title' })]) },
+        )
+        button('Open').click()
+        await settle()
+        expect(document.activeElement).toBe(dialog().querySelector('input'))
+      })
+
+      it('when it is a select, drawn on a button', async () => {
+        form((field) => h(KitSelect, { ...field, options, modelValue: 'name' }))
+        button('Open').click()
+        await settle()
+        expect(document.activeElement?.getAttribute('role')).toBe('combobox')
+        expect(document.activeElement?.textContent).toContain('The member’s name')
+      })
+
+      it('when it is a switch', async () => {
+        form((field) => h(KitSwitch, { ...field, modelValue: true }))
+        button('Open').click()
+        await settle()
+        expect(document.activeElement?.getAttribute('role')).toBe('switch')
+      })
+
+      it('when it is a segmented control, on its chosen option', async () => {
+        form((field) => h(KitSegmentedControl, { ...field, options, modelValue: 'count' }), true)
+        button('Open').click()
+        await settle()
+        expect(document.activeElement?.getAttribute('aria-pressed')).toBe('true')
+        expect(document.activeElement?.textContent).toContain('A running count')
+      })
+
+      it('passing over a field that is disabled, and a button that is only an action', async () => {
+        form((field) => [
+          h(KitButton, null, () => 'Fill in for me'),
+          h(KitSelect, { ...field, options, modelValue: 'name', disabled: true }),
+        ])
+        button('Open').click()
+        await settle()
+        expect(document.activeElement).toBe(dialog().querySelector('textarea'))
+      })
     })
 
     it('waits while its save runs, and says when it can’t be undone', async () => {

@@ -50,9 +50,9 @@ defineSlots<{
 
 <style scoped>
 /*
- * The wash is 7% of the tone over the raised surface. contrast.ts (ALERT_TINT) holds the same
- * number, and contrast.spec.ts measures the words, muted words, links, icon and a button's
- * border on it.
+ * The wash is 6% of the tone over the raised surface. contrast.ts (ALERT_TINT) holds the same
+ * number, and contrast.spec.ts measures the words, muted words, links, icon, a button's border,
+ * and a quiet or plain button's hover on it.
  */
 @layer kit {
   .kit-alert {
@@ -64,7 +64,7 @@ defineSlots<{
     min-width: 0;
     padding: var(--kit-space-sm) var(--kit-space-md);
     border-radius: var(--kit-radius-md);
-    background: color-mix(in srgb, var(--kit-surface-raised) 93%, var(--kit-alert-tone));
+    background: color-mix(in srgb, var(--kit-surface-raised) 94%, var(--kit-alert-tone));
     color: var(--kit-text);
   }
 

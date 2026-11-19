@@ -5,20 +5,31 @@ import { contrastRatio, mixRgb, parseComputedColor } from '../src/tokens/contras
 // contrast.spec.ts measures the hovers from the tokens; this measures what the browser makes of
 // KitButton's own color-mix() calls, so the two can't drift apart.
 
+/** Each button measured on hover: its kind, and the name of the first one on the page. */
+const BUTTONS = [
+  ['a primary button', 'Primary'],
+  ['a secondary button', 'Secondary'],
+  ['a danger button', 'Danger'],
+  ['a quiet button', 'Quiet'],
+  ['a plain button', 'Plain'],
+  // Its hover lies over the warning alert's wash, not the page.
+  ['a quiet button in an alert', 'Move some books'],
+] as const
+
 for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`in the ${colorScheme} scheme`, () => {
     test.use({ colorScheme, reducedMotion: 'reduce' })
 
-    for (const name of ['Primary', 'Secondary', 'Danger', 'Quiet', 'Plain']) {
-      test(`a ${name.toLowerCase()} button holds 7:1 on hover`, async ({ page }) => {
+    for (const [kind, name] of BUTTONS) {
+      test(`${kind} holds 7:1 on hover`, async ({ page }) => {
         await page.goto('/')
         const button = page.getByRole('button', { name, exact: true }).first()
         const colors = (): Promise<{ ink: string; fill: string; page: string }> =>
           button.evaluate((element) => ({
             ink: getComputedStyle(element).color,
             fill: getComputedStyle(element).backgroundColor,
-            // What the button sits on: the first background behind it that is drawn at all, a
-            // panel's raised surface or the page's.
+            // What the button sits on: the first background behind it that is drawn at all, an
+            // alert's wash, a panel's raised surface or the page's.
             page: (() => {
               for (let behind = element.parentElement; behind; behind = behind.parentElement) {
                 const color = getComputedStyle(behind).backgroundColor
@@ -40,7 +51,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
         const surface = parseComputedColor(hovered.page)
         expect(ink && fill && surface, JSON.stringify(hovered)).toBeTruthy()
         if (ink && fill && surface) {
-          // A quiet button's hover is a faint wash, laid over the page behind it.
+          // A quiet or plain button's hover is a faint wash, laid over what is behind it.
           const shown = mixRgb(surface.rgb, fill.rgb, fill.alpha)
           expect(contrastRatio(ink.rgb, shown)).toBeGreaterThanOrEqual(7)
         }
