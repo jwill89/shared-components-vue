@@ -8,7 +8,7 @@
 // The `option` and `chip` slots draw an option's content (a role's color, a channel's kind); the
 // icons come from the `chevron`, `check`, `clear-icon` and `remove-icon` slots, drawn by the kit
 // when the app gives none. The list opens over the page, so its styles are the global
-// option-list ones.
+// option-list ones, and the chips are drawn as KitTagInput's are, from chips.css.
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import {
   ComboboxAnchor,
@@ -178,9 +178,9 @@ function remove(value: O['value']): void {
         </ComboboxContent>
       </ComboboxPortal>
     </ComboboxRoot>
-    <ul v-if="chosen.length" class="kit-combobox__chips">
-      <li v-for="option in chosen" :key="option.value" class="kit-combobox__chip">
-        <span class="kit-combobox__chip-label">
+    <ul v-if="chosen.length" class="kit-chips">
+      <li v-for="option in chosen" :key="option.value" class="kit-chip">
+        <span class="kit-chip__label">
           <slot name="chip" :option="option">{{ option.label }}</slot>
         </span>
         <KitIconButton
@@ -269,35 +269,6 @@ function remove(value: O['value']): void {
     background: transparent;
     color: inherit;
     cursor: pointer;
-  }
-
-  .kit-combobox__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--kit-space-xs);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .kit-combobox__chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--kit-space-2xs);
-    max-width: 100%;
-    padding-inline-start: var(--kit-space-sm);
-    border: var(--kit-control-border-width) solid var(--kit-control-border);
-    border-radius: var(--kit-radius-full);
-    background: var(--kit-surface-sunken);
-    color: var(--kit-text);
-  }
-
-  .kit-combobox__chip-label {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--kit-space-2xs);
-    min-width: 0;
-    overflow-wrap: anywhere;
   }
 }
 </style>

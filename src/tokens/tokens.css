@@ -44,10 +44,12 @@
     --kit-focus-ring-width: 3px;
     --kit-focus-ring-offset: 2px;
 
-    /* Elevation: what floats above the page, and the shade behind a modal. Toasts float over
-       a dialog, and a list or menu someone has just opened floats over both. */
+    /* Elevation: what floats above the page, and the shade behind a modal. A loading cover lies
+       over the page's own content, a dialog over it, toasts over a dialog, and a list, menu or
+       tooltip someone has just opened over them all. */
     --kit-shadow-overlay: 0 0.5rem 1.5rem rgb(0 0 0 / 25%);
     --kit-scrim: rgb(0 0 0 / 55%);
+    --kit-layer-cover: 40;
     --kit-layer-dialog: 50;
     --kit-layer-toast: 60;
     --kit-layer-popup: 70;
@@ -57,7 +59,8 @@
     --kit-duration-spin: 800ms;
 
     /* Widths: prose stays readable, and a dialog, a wide dialog for a long form, a menu, a
-       field on a row of its own, a number box, a toast and an open list stop at these. */
+       field on a row of its own, a number box, a toast, an open list and a tooltip stop at
+       these. */
     --kit-measure-prose: 70ch;
     --kit-width-dialog: 32rem;
     --kit-width-dialog-wide: 48rem;
@@ -67,6 +70,10 @@
     --kit-width-toast: 26rem;
     --kit-width-option-list: 30rem;
     --kit-height-option-list: 20rem;
+    --kit-width-tooltip: 20rem;
+
+    /* The room a Turnstile check takes before it draws: its frame's own height, in pixels. */
+    --kit-height-turnstile: 65px;
 
     /* Where the toast stack starts down the screen: an app with a fixed bar along the top maps
        this to the bar's height, so toasts never cover it. */

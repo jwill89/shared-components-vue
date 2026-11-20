@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-20
+
+The rest of the first wave: the tooltip, the loading overlay, the lightbox, the tag input and the Turnstile widget.
+
+### Added
+
+- KitTooltip, a short note on a control, shown on hover and on focus and gone on Escape, which adds to the control's name and never stands in for it. It needs Reka's `TooltipProvider` once at the app's root.
+- KitLoadingOverlay, a cover over a region while something it started must finish: the content can't be reached or pressed and is marked busy, a panel says what is under way, and focus that was inside waits on the panel and goes back afterwards.
+- KitLightbox, images one at a time as large as the screen allows, named by each image's description: the arrow keys and its buttons move through several, "Full size" shows one at its own size, and a bar holds the caption, the place among the rest and a link to the original.
+- KitTagInput, a list of short words typed into a field: Enter or a comma adds one, each shows as a chip with its own Remove button, and suggestions add one with a press.
+- KitTurnstileWidget, Cloudflare Turnstile's check against bots, its token the model. Cloudflare's script loads once for every widget, admitted by the page's nonce, and the widget says so when it can't load.
+- `--kit-layer-cover`, `--kit-width-tooltip` and `--kit-height-turnstile`, for an app that wants a loading cover, a tooltip or a Turnstile check placed or sized otherwise.
+
+### Changed
+
+- KitCombobox's chips are drawn as KitTagInput's are, with the classes `kit-chip` and `kit-chip__label`.
+
 ## [0.6.0] - 2026-11-19
 
 The name of every token the kit has, for an app's theme check.
@@ -104,6 +121,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.7.0]: https://github.com/jwill89/shared-components-vue/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/jwill89/shared-components-vue/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jwill89/shared-components-vue/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jwill89/shared-components-vue/compare/v0.3.1...v0.4.0

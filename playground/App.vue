@@ -3,6 +3,7 @@
 // in the scheme on screen, and every component in each of its states as each lands. The end-to-end suite runs
 // axe on it in both schemes, with the AAA rules on.
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
+import { TooltipProvider } from 'reka-ui'
 import {
   KitConfirmHost,
   KitPageHeader,
@@ -13,6 +14,7 @@ import ButtonSection from './sections/ButtonSection.vue'
 import ChoiceSection from './sections/ChoiceSection.vue'
 import DialogSection from './sections/DialogSection.vue'
 import FieldSection from './sections/FieldSection.vue'
+import OverlaySection from './sections/OverlaySection.vue'
 import SpinnerSection from './sections/SpinnerSection.vue'
 import StateSection from './sections/StateSection.vue'
 import ToastSection from './sections/ToastSection.vue'
@@ -49,42 +51,49 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
 </script>
 
 <template>
-  <main id="main-content" class="playground">
-    <!-- The page's own header and panels are the kit's, as an app's are. -->
-    <KitPageHeader
-      title="Playground"
-      description="Every component in each of its states, and every color pair the kit names, measured in the playground’s colors in the scheme on screen."
-      :crumbs="[
-        { label: 'shared-components-vue', to: 'https://github.com/jwill89/shared-components-vue' },
-      ]"
-    >
-      <template #actions>
-        <label class="playground__scheme">
-          Color scheme
-          <select v-model="scheme" class="playground__select">
-            <option value="device">Device</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-      </template>
-    </KitPageHeader>
+  <!-- Every tooltip needs Reka's provider, mounted once at the root, as in an app. -->
+  <TooltipProvider>
+    <main id="main-content" class="playground">
+      <!-- The page's own header and panels are the kit's, as an app's are. -->
+      <KitPageHeader
+        title="Playground"
+        description="Every component in each of its states, and every color pair the kit names, measured in the playground’s colors in the scheme on screen."
+        :crumbs="[
+          {
+            label: 'shared-components-vue',
+            to: 'https://github.com/jwill89/shared-components-vue',
+          },
+        ]"
+      >
+        <template #actions>
+          <label class="playground__scheme">
+            Color scheme
+            <select v-model="scheme" class="playground__select">
+              <option value="device">Device</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </template>
+      </KitPageHeader>
 
-    <ButtonSection />
-    <SpinnerSection />
-    <FieldSection />
-    <ChoiceSection />
-    <DialogSection />
-    <ToastSection />
-    <StateSection />
+      <ButtonSection />
+      <SpinnerSection />
+      <FieldSection />
+      <ChoiceSection />
+      <DialogSection />
+      <ToastSection />
+      <StateSection />
+      <OverlaySection />
 
-    <KitPagePanel id="pairs" class="playground-section" title="Color pairs">
-      <TokenPairs :key="shownScheme" />
-    </KitPagePanel>
-  </main>
-  <!-- Answers confirm() and shows the toasts, once each, at the root, as in an app. -->
-  <KitConfirmHost />
-  <KitToastHost />
+      <KitPagePanel id="pairs" class="playground-section" title="Color pairs">
+        <TokenPairs :key="shownScheme" />
+      </KitPagePanel>
+    </main>
+    <!-- Answers confirm() and shows the toasts, once each, at the root, as in an app. -->
+    <KitConfirmHost />
+    <KitToastHost />
+  </TooltipProvider>
 </template>
 
 <style scoped>

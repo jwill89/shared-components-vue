@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.6.0, has the buttons, the spinner, the form field and its text and number fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; and the select, the combobox, the switch and the segmented control; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.7.0, has the whole first wave: the buttons, the spinner, the form field and its text, number and tag fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the loading overlay, the lightbox and the Turnstile widget; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.6.0/jwill89-shared-components-vue-0.6.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.7.0/jwill89-shared-components-vue-0.7.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -107,6 +107,24 @@ Every control sits in a `KitFormField`, whose slot hands it the id its label nam
 </KitFormField>
 ```
 
+`KitTagInput` holds a list of short words, such as tags: Enter or a comma adds what was typed, each tag shows as a chip with its own Remove button, and `suggestions` show under them as buttons that add one with a press. `normalize` turns what was typed into the tag as the app keeps it, and `want-suggestions` tells the app the box has focus, the time to fetch them:
+
+```vue
+<KitFormField v-slot="field" label="Tags" hint="Up to ten.">
+  <KitTagInput v-model="tags" v-bind="field" :max="10" :normalize="(typed) => typed.trim().toLowerCase()" :suggestions="myTags" @want-suggestions="loadTags" />
+</KitFormField>
+```
+
+### Turnstile
+
+`KitTurnstileWidget` is Cloudflare Turnstile's check that whoever fills in a form isn't a bot. Its model is the token, `''` until the check passes and again once it expires; a token passes the server once, so the form calls the widget's `reset()` after every try. Cloudflare's script loads the first time a widget needs it, once for every widget on the page.
+
+```vue
+<KitTurnstileWidget ref="check" v-model="token" :site-key="siteKey" action="login" />
+```
+
+The page's Content-Security-Policy admits the script and its frame: `script-src` and `frame-src` name `https://challenges.cloudflare.com`, and the script carries the page's nonce, which the widget reads from the `<meta property="csp-nonce">` Vite writes when `html.cspNonce` is set, or takes from its `nonce` prop. `theme` draws it `light` or `dark` to match the page; `auto` follows the device. Where the script can't load, the widget says so in an alert, and the next widget tries again.
+
 ### Dialogs and confirm
 
 A form in a dialog takes a submit label, and the page closes the dialog once its save has worked:
@@ -171,6 +189,30 @@ toast.error('That didn’t save', problem.detail)
 `useToast()` raises a toast in one of four tones, `success`, `error`, `warning` and `info`, each with a title and an optional detail, and gives back its id, which `dismiss()` takes to close it early. `onToast()` hears each toast as it is raised and gives back the call that stops it, for an app's own log or its tests, and `dismissAllToasts()` closes every one, as tests do between cases.
 
 A toast reports how a finished action went and goes; a condition the person must act on is a KitAlert on the page, which stays. An app with a fixed bar along the top maps `--kit-toast-inset-top` to the bar's height.
+
+### Tooltips, covers and pictures
+
+`KitTooltip` puts a short note on the one control in its slot, shown on hover and on focus and gone on Escape. It adds to the control's name and never stands in for it, so an icon-only control still takes its own `label`. Every tooltip needs Reka's `TooltipProvider`, mounted once at the app's root around everything else; without it, a tooltip breaks the whole part of the page it sits in.
+
+```vue
+<KitTooltip text="Copies the link to this shelf">
+  <KitButton @click="copyLink">Copy the link</KitButton>
+</KitTooltip>
+```
+
+`KitLoadingOverlay` covers what it wraps while something must finish before it is used again, a save say: the content can't be reached or pressed, is marked busy, and lies under a panel that says what is under way. Focus that was inside waits on the panel and goes back afterwards. Wrap a page's content in it to cover the page.
+
+```vue
+<KitLoadingOverlay :active="saving" label="Saving your reading…">
+  <ReadingForm @save="save" />
+</KitLoadingOverlay>
+```
+
+`KitLightbox` shows images one at a time, as large as the screen allows, named by each image's own `alt`. Open it with `v-model:open` at the image `v-model:index` names; the arrow keys and its buttons move through several, "Full size" shows one at its own size, and a bar holds the caption, the place among the rest and a link to the original (`href`). An image's `sources` add the forms a `<picture>` offers, such as AVIF.
+
+```vue
+<KitLightbox v-model:open="viewing" v-model:index="at" :images="photos" />
+```
 
 ### Icons
 

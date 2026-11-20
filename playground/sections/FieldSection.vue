@@ -1,13 +1,17 @@
 <script setup lang="ts">
-// KitFormField with each of the kit's controls in it: a text box, a box of several lines and a
-// number box, each at rest, with a hint, required, in error and disabled.
+// KitFormField with each of the kit's controls in it: a text box, a box of several lines, a
+// number box and a tag input, each at rest, with a hint, required, in error and disabled; and the
+// Turnstile check a form asks for.
 import { ref } from 'vue'
 import {
+  KitButton,
   KitPagePanel,
   KitFormField,
   KitNumberField,
+  KitTagInput,
   KitTextField,
   KitTextarea,
+  KitTurnstileWidget,
 } from '@jwill89/shared-components-vue'
 
 const title = ref('The Left Hand of Darkness')
@@ -20,6 +24,13 @@ const blurb = ref('A world where people are neither man nor woman, '.repeat(3).t
 const copies = ref<number | undefined>(2)
 const year = ref<number | undefined>(1969)
 const rating = ref<number | undefined>(undefined)
+const tags = ref(['fiction', 'signed'])
+const moods = ref<string[]>([])
+const lockedTags = ref(['first edition'])
+const tagSuggestions = ['fiction', 'poetry', 'history', 'signed', 'gift', 'to read', 'favourite']
+const lower = (typed: string): string => typed.trim().toLowerCase()
+const checking = ref(false)
+const token = ref('')
 </script>
 
 <template>
@@ -82,6 +93,40 @@ const rating = ref<number | undefined>(undefined)
         <KitNumberField v-model="rating" v-bind="field" :min="1" :max="5" disabled />
       </KitFormField>
     </div>
+
+    <h3>KitTagInput</h3>
+    <div class="field-grid">
+      <KitFormField v-slot="field" label="Tags" hint="Up to five; Enter or a comma adds one.">
+        <KitTagInput
+          v-model="tags"
+          v-bind="field"
+          :max="5"
+          :max-length="30"
+          :normalize="lower"
+          :suggestions="tagSuggestions"
+          placeholder="Add a tag…"
+        />
+      </KitFormField>
+      <KitFormField v-slot="field" label="Moods" error="Add at least one mood.">
+        <KitTagInput v-model="moods" v-bind="field" />
+      </KitFormField>
+      <KitFormField v-slot="field" label="Locked tags" hint="Set by the shelf’s owner.">
+        <KitTagInput v-model="lockedTags" v-bind="field" disabled />
+      </KitFormField>
+    </div>
+
+    <h3>KitTurnstileWidget</h3>
+    <p class="playground-note">
+      Cloudflare’s own check, with its published test key that always passes. It loads Cloudflare’s
+      script, so it waits for a press.
+    </p>
+    <KitButton v-if="!checking" @click="checking = true">Show the check</KitButton>
+    <template v-else>
+      <KitTurnstileWidget v-model="token" site-key="1x00000000000000000000AA" action="playground" />
+      <p class="playground-note">
+        {{ token ? 'Passed: the form may be sent.' : 'Not passed yet.' }}
+      </p>
+    </template>
   </KitPagePanel>
 </template>
 

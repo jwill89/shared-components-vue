@@ -10,6 +10,7 @@ import {
   toastManager,
   useToast,
 } from '../composables/useToast'
+import { soon } from '../../shared/test/web/wait.js'
 import { axeFindings, kept, unmountKept } from './helpers'
 
 afterEach(() => {
@@ -184,7 +185,7 @@ describe('KitToastHost', () => {
     useToast().warning('Nearly full')
     await settle()
     // Reka adds its announcer a couple of frames after the toast.
-    await vi.waitFor(() => {
+    await soon(() => {
       expect(
         document.querySelectorAll('.kit-toast [role="alert"], [role="alert"][data-hidden]').length,
       ).toBeGreaterThan(0)

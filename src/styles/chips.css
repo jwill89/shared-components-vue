@@ -1,0 +1,43 @@
+/*
+ * The chips a KitCombobox's choices and a KitTagInput's tags show as, below the box they came
+ * from, each with its own Remove button: one look for both, so a choice and a tag read alike.
+ * Global and in the kit's layer, as option-list.css is; bundle.ts gathers it into style.css.
+ */
+@layer kit {
+  .kit-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kit-space-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .kit-chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kit-space-2xs);
+    max-width: 100%;
+    padding-inline-start: var(--kit-space-sm);
+    border: var(--kit-control-border-width) solid var(--kit-control-border);
+    border-radius: var(--kit-radius-full);
+    background: var(--kit-surface-sunken);
+    color: var(--kit-text);
+  }
+
+  /* A tag the keyboard has marked in a KitTagInput (Backspace or the arrows), which the next
+     Backspace or Delete removes. */
+  .kit-chip[data-state='active'] {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: var(--kit-focus-ring-offset);
+  }
+
+  .kit-chip__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kit-space-2xs);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

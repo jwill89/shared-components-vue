@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { WCAG_22_AA, axeViolations } from '@jwill89/test-a11y'
 
 // What jsdom can't show: a dialog as a browser runs it. Focus moves in and is held there,
@@ -23,15 +23,38 @@ for (const colorScheme of ['light', 'dark'] as const) {
   })
 }
 
+/**
+ * Turns the mouse wheel over the page, and waits until the page has had the wheel and drawn
+ * twice since: by then any scroll it makes has begun, however slowly the machine runs, so a page
+ * that hasn't moved is one the wheel can't move. There is no event for a scroll that doesn't
+ * happen, and a fixed wait would be too short on a busy runner.
+ */
+async function turnWheel(page: Page): Promise<void> {
+  const wheeled = await page.evaluateHandle(() => ({
+    done: new Promise<void>((resolve) => {
+      window.addEventListener('wheel', () => resolve(), { once: true, capture: true })
+    }),
+  }))
+  await page.mouse.wheel(0, 600)
+  await wheeled.evaluate(({ done }) => done)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      }),
+  )
+}
+
 test('a dialog holds focus, locks the page, closes on Escape and gives focus back', async ({
   page,
 }) => {
   await page.goto('/')
   const scrollY = (): Promise<number> => page.evaluate(() => window.scrollY)
-  // With no dialog open, the wheel moves the page, so a still page below means the lock held.
+  // With no dialog open, the wheel moves the page by the time turnWheel returns, so a still page
+  // below means the lock held, not that the scroll hadn't begun.
   await page.mouse.move(10, 300)
-  await page.mouse.wheel(0, 600)
-  await expect.poll(scrollY).toBeGreaterThan(0)
+  await turnWheel(page)
+  expect(await scrollY()).toBeGreaterThan(0)
 
   const opener = page.getByRole('button', { name: 'About this shelf' })
   await opener.focus()
@@ -51,10 +74,8 @@ test('a dialog holds focus, locks the page, closes on Escape and gives focus bac
   await expect(copy).toBeFocused()
 
   // The page behind doesn't move under the wheel. (A script can still scroll it; a person can't.)
-  // Nothing happening has no event to wait for, so the check waits as long as a scroll takes.
   const before = await scrollY()
-  await page.mouse.wheel(0, 600)
-  await page.waitForTimeout(400)
+  await turnWheel(page)
   expect(await scrollY()).toBe(before)
 
   await page.keyboard.press('Escape')

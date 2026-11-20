@@ -109,8 +109,9 @@ describe('the colors an app sets', () => {
 
   it('are every token the components draw with that the kit leaves unset, and the page’s own', () => {
     const unset = [...read].filter((name) => !declared.has(name)).map((name) => name.slice(6))
-    // The page's background is the app's to draw: the components sit on it and never draw it.
-    expect([...unset, 'surface'].sort()).toEqual([...COLOR_TOKENS])
+    // The page's background is the app's to draw, and every component sits on it, whether or
+    // not one draws with it too.
+    expect([...new Set([...unset, 'surface'])].sort()).toEqual([...COLOR_TOKENS])
   })
 
   it('are none of them set by the kit', () => {

@@ -88,7 +88,7 @@ test('a combobox narrows as the person types, and keeps several choices as chips
   await expect(genre).toHaveValue('')
 
   const tags = page.getByRole('combobox', { name: 'Tags' })
-  const chips = page.locator('.kit-combobox__chip')
+  const chips = page.locator('.kit-combobox .kit-chip')
   await expect(chips).toHaveText(['Fantasy', 'Travel'])
   await page.getByRole('button', { name: 'Remove Fantasy' }).click()
   await expect(chips).toHaveText(['Travel'])

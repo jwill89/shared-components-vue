@@ -158,6 +158,7 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
     floor: 7,
     state: 'the highlighted option in an open list',
   },
+  { kind: 'text', fg: 'surface', bg: 'text', floor: 7, state: 'a tooltip’s words' },
   ...TOAST_TONES.flatMap(([tone, state]): TokenPair[] => {
     const bg: Mix = { base: 'surface-raised', toward: tone, weight: TOAST_TINT }
     return [
@@ -203,7 +204,7 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
  * Every color token the kit draws with, each by its name without the --kit- prefix: each pair's,
  * and each in UNPAIRED. An app sets every one: where one is unset, nothing is drawn with it (no
  * fill, border or focus ring), and words take the color around them. `surface` is the page's own
- * background, which no component draws but every one sits on: the app draws its page in it.
+ * background, which every component sits on: the app draws its page in it.
  */
 export const COLOR_TOKENS: readonly string[] = [
   ...new Set([
@@ -245,6 +246,7 @@ const VALUED_TOKENS = [
   'focus-ring-offset',
   'shadow-overlay',
   'scrim',
+  'layer-cover',
   'layer-dialog',
   'layer-toast',
   'layer-popup',
@@ -259,6 +261,8 @@ const VALUED_TOKENS = [
   'width-toast',
   'width-option-list',
   'height-option-list',
+  'width-tooltip',
+  'height-turnstile',
   'toast-inset-top',
 ] as const
 

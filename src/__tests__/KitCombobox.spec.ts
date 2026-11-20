@@ -102,10 +102,7 @@ describe('KitCombobox', () => {
       { chip: ({ option: chosen }: { option: { label: string } }) => h('b', chosen.label) },
     )
     await flushPromises()
-    expect(wrapper.findAll('.kit-combobox__chip').map((chip) => chip.text())).toEqual([
-      'Fantasy',
-      'History',
-    ])
+    expect(wrapper.findAll('.kit-chip').map((chip) => chip.text())).toEqual(['Fantasy', 'History'])
     expect(await axeFindings(wrapper)).toEqual([])
 
     await wrapper.get('button[aria-label="Remove Fantasy"]').trigger('click')
@@ -126,7 +123,7 @@ describe('KitCombobox', () => {
       { options: genres, multiple: true },
     )
     await flushPromises()
-    expect(wrapper.get('.kit-combobox__chip-label').text()).toBe('Mystery')
+    expect(wrapper.get('.kit-chip__label').text()).toBe('Mystery')
   })
 
   it('draws each option through the app’s own slot', async () => {
