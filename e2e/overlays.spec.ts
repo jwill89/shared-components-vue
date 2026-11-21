@@ -29,12 +29,16 @@ for (const colorScheme of ['light', 'dark'] as const) {
 test('a tooltip opens on focus too, and describes its control', async ({ page }) => {
   await page.goto('/')
   const button = page.getByRole('button', { name: 'Open the shelf' })
-  // Reka closes a tooltip when the page scrolls, as focus scrolls a control below the fold into
-  // view; a person tabs to a control they can see.
-  await button.scrollIntoViewIfNeeded()
-  await button.focus()
   const tooltip = page.getByRole('tooltip')
-  await expect(tooltip).toHaveText('Opens the shelf on a page of its own')
+  // Reka closes a tooltip whenever the page scrolls, and a page still settling can scroll just
+  // after the focus (CI's runner did, now and then), so the focus is tried again until its note
+  // shows. A person tabs to a control they can see, so it is brought into view first.
+  await button.scrollIntoViewIfNeeded()
+  await expect(async () => {
+    await button.blur()
+    await button.focus()
+    await expect(tooltip).toHaveText('Opens the shelf on a page of its own', { timeout: 1000 })
+  }).toPass({ timeout: 5000 })
   await expect(button).toHaveAccessibleDescription('Opens the shelf on a page of its own')
   await page.keyboard.press('Escape')
   await expect(tooltip).toBeHidden()
