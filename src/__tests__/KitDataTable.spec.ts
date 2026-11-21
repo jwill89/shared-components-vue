@@ -327,6 +327,22 @@ describe('KitDataTable, told more', () => {
     expect(none.wrapper.find('[data-icon="search"]').exists()).toBe(true)
   })
 
+  it('says under its empty and nothing-matching titles what the page gives', async () => {
+    const empty = table({
+      rows: [],
+      emptyTitle: 'No staff figures yet',
+      emptyMessage: 'Each ticket answered, resolved or closed counts here.',
+    })
+    await nextTick()
+    expect(empty.wrapper.text()).toContain('Each ticket answered, resolved or closed counts here.')
+    unmountKept()
+
+    const none = table({ searchable: true, noMatchMessage: 'Try a room’s name instead.' })
+    await nextTick()
+    await none.wrapper.get('input[type="search"]').setValue('nothing like it')
+    expect(none.wrapper.text()).toContain('Try a room’s name instead.')
+  })
+
   it('says it is empty in the kit’s words when the page gives none of its own', async () => {
     const { wrapper } = table({ rows: [], emptyTitle: 'No shelves yet' })
     await nextTick()

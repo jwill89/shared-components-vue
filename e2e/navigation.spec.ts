@@ -95,6 +95,23 @@ test('a menu’s plain items line up with its label, and a choice’s words afte
   expect(choice).toBeGreaterThan(label)
 })
 
+test('a field in a popover draws at the size of every other field, and a help note small', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const size = (element: Element): number => parseFloat(getComputedStyle(element).fontSize)
+  const elsewhere = await page.getByLabel('Title', { exact: true }).evaluate(size)
+
+  await page.getByRole('button', { name: 'Give it a nickname' }).click()
+  const inPopover = await page.getByLabel('Nickname', { exact: true }).evaluate(size)
+  expect(inPopover).toBe(elsewhere)
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: 'About the waitlist' }).click()
+  const note = await page.getByText('People who asked for a copy').evaluate(size)
+  expect(note).toBeLessThan(elsewhere)
+})
+
 test('a date picker stands as tall as a text box beside it', async ({ page }) => {
   await page.goto('/')
   const height = (element: Element): number => element.getBoundingClientRect().height

@@ -62,8 +62,12 @@ defineSlots<{
     border-radius: var(--kit-radius-md);
     background: var(--kit-surface-raised);
     color: var(--kit-text);
+
+    /* The body's own text, whatever the control it opens from sits in (a heading, say), so a
+       field inside draws at the size every other field does. */
     font-family: var(--kit-font-body);
-    font-size: var(--kit-text-size-sm);
+    font-size: var(--kit-text-size-base);
+    font-weight: normal;
     line-height: var(--kit-line-height-prose);
     box-shadow: var(--kit-shadow-overlay);
   }

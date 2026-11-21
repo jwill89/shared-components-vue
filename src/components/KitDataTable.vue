@@ -65,7 +65,11 @@ const props = withDefaults(
     loadingLabel?: string
     errorTitle?: string
     emptyTitle?: string
+    /** A line under the empty state's title, on what goes here or how to add the first. */
+    emptyMessage?: string
     noMatchTitle?: string
+    /** A line under the nothing-matching state's title, on what to search for instead. */
+    noMatchMessage?: string
     searchLabel?: string
     /** What the table's pages are, as their navigation is named; "Pages of" its label by default. */
     pagesLabel?: string
@@ -85,7 +89,9 @@ const props = withDefaults(
     loadingLabel: 'Loading…',
     errorTitle: 'Couldn’t load the list',
     emptyTitle: 'Nothing here yet',
+    emptyMessage: undefined,
     noMatchTitle: 'Nothing matches the search',
+    noMatchMessage: undefined,
     searchLabel: 'Search',
     pagesLabel: undefined,
     countText: (matching: number, total: number) => `${String(matching)} of ${String(total)}`,
@@ -425,13 +431,13 @@ const columnSpan = computed(() => props.columns.length + (props.selectable ? 1 :
                 </template>
               </KitErrorState>
               <slot v-else-if="shows === 'empty'" name="empty">
-                <KitEmptyState :title="emptyTitle">
+                <KitEmptyState :title="emptyTitle" :message="emptyMessage">
                   <template v-if="filled($slots['empty-icon'])" #icon>
                     <slot name="empty-icon" />
                   </template>
                 </KitEmptyState>
               </slot>
-              <KitEmptyState v-else :title="noMatchTitle">
+              <KitEmptyState v-else :title="noMatchTitle" :message="noMatchMessage">
                 <template v-if="filled($slots['no-match-icon'])" #icon>
                   <slot name="no-match-icon" />
                 </template>

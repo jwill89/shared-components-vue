@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-11-20
+
+A line under an empty table's title, and fields in a popover drawn at the size of every other field.
+
+### Added
+
+- KitDataTable's `emptyMessage` and `noMatchMessage`, a line under its empty and nothing-matching states' titles.
+
+### Fixed
+
+- A field in a KitPopover draws at the size of every other field, where it took the popover's small text; the popover is drawn at the body's size, whatever its control sits in, and a KitHelpTip's note stays small.
+
 ## [0.9.0] - 2026-11-20
 
 A menu that leaves the page as it is, a table whose rows have headers and stay while it reloads, a popover a form field can open, and a date picker as tall as the fields beside it.
@@ -155,6 +167,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.10.0]: https://github.com/jwill89/shared-components-vue/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/jwill89/shared-components-vue/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/jwill89/shared-components-vue/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/jwill89/shared-components-vue/compare/v0.6.0...v0.7.0

@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.9.0, has the first wave and the second: the buttons, the spinner, the form field and its text, number, tag and date fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.10.0, has the first wave and the second: the buttons, the spinner, the form field and its text, number, tag and date fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.9.0/jwill89-shared-components-vue-0.9.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.10.0/jwill89-shared-components-vue-0.10.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -247,7 +247,7 @@ A toast reports how a finished action went and goes; a condition the person must
 </KitDataTable>
 ```
 
-Each column is a `KitColumn`: its `key` and `label`, whether it is `sortable`, a `sortValue` where it sorts by something other than what it shows, a `text` where it shows something other than the field, `hideLabel` for a heading only screen readers need, such as a column of buttons, and `rowHeader` for the column that names each row, whose cells a screen reader reads with the others. A list read again while it has rows keeps them, marked busy; the states' icons come from the `empty-icon`, `no-match-icon` and `error-icon` slots. For a list too large to send whole, give the table one page and the count of every row as `total`: it then leaves searching, sorting and paging to the server and its models say what to fetch. The standards give a table the whole list, so a list paged this way is a departure the app records.
+Each column is a `KitColumn`: its `key` and `label`, whether it is `sortable`, a `sortValue` where it sorts by something other than what it shows, a `text` where it shows something other than the field, `hideLabel` for a heading only screen readers need, such as a column of buttons, and `rowHeader` for the column that names each row, whose cells a screen reader reads with the others. A list read again while it has rows keeps them, marked busy; the empty and nothing-matching states take a title and a line under it (`emptyTitle` and `emptyMessage`, `noMatchTitle` and `noMatchMessage`), and the states' icons come from the `empty-icon`, `no-match-icon` and `error-icon` slots. For a list too large to send whole, give the table one page and the count of every row as `total`: it then leaves searching, sorting and paging to the server and its models say what to fetch. The standards give a table the whole list, so a list paged this way is a departure the app records.
 
 ### Tooltips, covers and pictures
 
@@ -259,7 +259,7 @@ Each column is a `KitColumn`: its `key` and `label`, whether it is `sortable`, a
 </KitTooltip>
 ```
 
-`KitPopover` opens a small panel from the control in its `trigger` slot, for a note or a few controls of that control's own. It opens on a press, so it works on a phone where a tooltip can't, may hold links and buttons, and is named by its control's words. Where its trigger is a form field's control, such as a color swatch, give it the field's `id`, so the field's label names it. `KitHelpTip` is the help affordance built on it: a question mark beside a title, named "About" and its `topic`, opening a short note.
+`KitPopover` opens a small panel from the control in its `trigger` slot, for a note or a few controls of that control's own. It opens on a press, so it works on a phone where a tooltip can't, may hold links and buttons, and is named by its control's words. It may hold a field, drawn at the size of every other field, whatever its control sits in. Where its trigger is a form field's control, such as a color swatch, give it the field's `id`, so the field's label names it. `KitHelpTip` is the help affordance built on it: a question mark beside a title, named "About" and its `topic`, opening a short note.
 
 ```vue
 <h2>Waitlist <KitHelpTip topic="the waitlist"><p>People who asked for a copy, in order.</p></KitHelpTip></h2>

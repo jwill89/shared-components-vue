@@ -29,7 +29,7 @@ const name = computed(() => `About ${props.topic}`)
         <slot name="icon"><span class="kit-help-tip__mark">?</span></slot>
       </KitIconButton>
     </template>
-    <slot />
+    <div class="kit-help-tip__note"><slot /></div>
   </KitPopover>
 </template>
 
@@ -38,6 +38,19 @@ const name = computed(() => `About ${props.topic}`)
   .kit-help-tip__mark {
     font-weight: var(--kit-font-weight-strong);
     line-height: var(--kit-line-height-heading);
+  }
+
+  /* A note reads small, as a hint does; the popover around it keeps the body's size. */
+  .kit-help-tip__note {
+    font-size: var(--kit-text-size-sm);
+  }
+
+  .kit-help-tip__note > :deep(:first-child) {
+    margin-top: 0;
+  }
+
+  .kit-help-tip__note > :deep(:last-child) {
+    margin-bottom: 0;
   }
 }
 </style>

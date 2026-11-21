@@ -45,6 +45,7 @@ function look(index: number): void {
 }
 
 const shelfName = ref('Living room')
+const nickname = ref('The tall one')
 const navigating = ref(false)
 const saving = ref(false)
 
@@ -81,6 +82,12 @@ function save(): void {
         <template #trigger><KitButton>Who can see this shelf?</KitButton></template>
         <p>Only the people you lend to, and only while a loan is open.</p>
         <p><a href="#overlays">How sharing works</a></p>
+      </KitPopover>
+      <KitPopover>
+        <template #trigger><KitButton>Give it a nickname</KitButton></template>
+        <KitFormField v-slot="field" label="Nickname">
+          <KitTextField v-model="nickname" v-bind="field" />
+        </KitFormField>
       </KitPopover>
       <span class="playground-inline">
         Waitlist
