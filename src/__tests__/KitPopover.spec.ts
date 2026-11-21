@@ -30,22 +30,29 @@ async function press(target: HTMLElement): Promise<void> {
   await nextTick()
 }
 
+/** A popover with its trigger and content, after what goes before it on the page. */
+function popover(
+  props: Record<string, unknown>,
+  trigger: () => unknown,
+  content: () => unknown,
+  before: () => unknown = () => null,
+): void {
+  kept(
+    mount(
+      defineComponent({
+        setup: () => () => [before(), h(KitPopover, props, { trigger, default: content })],
+      }),
+      { attachTo: document.body },
+    ),
+  )
+}
+
 describe('KitPopover', () => {
   it('opens on a press as a panel named by its control, and closes on Escape', async () => {
-    kept(
-      mount(
-        defineComponent({
-          setup: () => () =>
-            h(KitPopover, null, {
-              trigger: () => h(KitButton, null, () => 'Who can see this shelf?'),
-              default: () => [
-                h('p', 'Only the people you lend to.'),
-                h('a', { href: '#rules' }, 'The rules'),
-              ],
-            }),
-        }),
-        { attachTo: document.body },
-      ),
+    popover(
+      {},
+      () => h(KitButton, null, () => 'Who can see this shelf?'),
+      () => [h('p', 'Only the people you lend to.'), h('a', { href: '#rules' }, 'The rules')],
     )
     await nextTick()
     expect(panel()).toBeNull()
@@ -68,6 +75,28 @@ describe('KitPopover', () => {
       expect(panel()).toBeNull()
     })
     expect(opener.getAttribute('aria-expanded')).toBe('false')
+  })
+})
+
+describe('KitPopover as a field’s control', () => {
+  it('gives its trigger the field’s id, so the field’s label names it', async () => {
+    popover(
+      { id: 'shelf-color' },
+      () => h('button', { type: 'button' }, 'Teal'),
+      () => h('p', 'Pick a color.'),
+      () => h('label', { for: 'shelf-color' }, 'Shelf color'),
+    )
+    await nextTick()
+    const swatch = button('Teal')
+    expect(swatch.id).toBe('shelf-color')
+    await press(swatch)
+    const shown = await soon(() => {
+      const found = panel()
+      expect(found).not.toBeNull()
+      return found
+    })
+    expect(shown?.getAttribute('aria-labelledby')).toBe('shelf-color')
+    expect(await axeFindings(document.body)).toEqual([])
   })
 })
 

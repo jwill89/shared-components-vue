@@ -6,6 +6,8 @@ export interface KitColumn<T> {
   label: string
   /** Whether the heading is for screen readers alone, as a column of buttons' is. */
   hideLabel?: boolean
+  /** Whether its cell names the row, as a screen reader reads with each other cell in it. */
+  rowHeader?: boolean
   sortable?: boolean
   /** What it shows as text, where that isn't the row's field: a formatted date, say. */
   text?: (row: T) => string

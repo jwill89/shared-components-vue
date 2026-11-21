@@ -105,6 +105,31 @@ describe('KitMenu', () => {
     expect(await axeFindings(menu)).toEqual([])
   })
 
+  it('leaves the page behind as it is, unless it is modal', async () => {
+    const aside = document.createElement('p')
+    aside.textContent = 'The rest of the page.'
+    document.body.append(aside)
+    page()
+    await openMenu()
+    expect(aside.getAttribute('aria-hidden')).toBeNull()
+    unmountKept()
+    aside.remove()
+
+    const behind = document.createElement('p')
+    behind.textContent = 'The rest of the page.'
+    document.body.append(behind)
+    kept(
+      mount(KitMenu, {
+        props: { label: 'Shelf actions', modal: true },
+        slots: { default: () => h(KitMenuItem, null, () => 'Rename') },
+        attachTo: document.body,
+      }),
+    )
+    await openMenu()
+    expect(behind.getAttribute('aria-hidden')).toBe('true')
+    behind.remove()
+  })
+
   it('runs an item when it is chosen, and closes', async () => {
     const { renamed } = page()
     await openMenu()

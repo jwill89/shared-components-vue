@@ -1,10 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
-import { AxeBuilder } from '@axe-core/playwright'
 import { WCAG_22_AA, axeViolations } from '@jwill89/test-a11y'
 
 // What jsdom can't show: the second wave's components as a browser runs them, by keyboard, and
-// axe on each while it is open, in both schemes, with the AAA rules on. An open menu hides the
-// page behind it from screen readers, as an open list does, so axe runs on the menu alone.
+// axe on each while it is open, in both schemes, with the AAA rules on. A menu leaves the page
+// behind it as it is, so axe runs on the whole page with one open.
 
 const AAA = [...WCAG_22_AA, 'wcag2aaa']
 
@@ -39,12 +38,11 @@ for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`in the ${colorScheme} scheme`, () => {
     test.use({ colorScheme })
 
-    test('an open menu passes axe', async ({ page }) => {
+    test('an open menu passes axe, on the whole page', async ({ page }) => {
       await page.goto('/')
       await page.getByRole('button', { name: 'Shelf actions' }).click()
       await expect(page.getByRole('menu', { name: 'Shelf actions' })).toBeVisible()
-      const found = await new AxeBuilder({ page }).include('[role="menu"]').withTags(AAA).analyze()
-      expect(found.violations.map((v) => v.id)).toEqual([])
+      expect(await axeViolations(page, { tags: AAA })).toEqual([])
     })
 
     for (const { what, open } of OPENS) {
@@ -80,6 +78,29 @@ test('a menu runs its item by keyboard and gives focus back', async ({ page }) =
   await page.keyboard.press('Enter')
   await expect(page.locator('.kit-toast', { hasText: 'Shelf copied' })).toBeVisible()
   await expect(button).toBeFocused()
+})
+
+test('a menu’s plain items line up with its label, and a choice’s words after its check', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Shelf actions' }).click()
+  const menu = page.getByRole('menu', { name: 'Shelf actions' })
+  const start = (element: Element): number =>
+    element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingLeft)
+  const label = await menu.getByText('Order', { exact: true }).evaluate(start)
+  const item = await menu.getByRole('menuitem', { name: 'Copy the shelf' }).evaluate(start)
+  const choice = await menu.getByRole('menuitemradio', { name: 'By author' }).evaluate(start)
+  expect(item).toBe(label)
+  expect(choice).toBeGreaterThan(label)
+})
+
+test('a date picker stands as tall as a text box beside it', async ({ page }) => {
+  await page.goto('/')
+  const height = (element: Element): number => element.getBoundingClientRect().height
+  const picker = await page.locator('.kit-date-picker').first().evaluate(height)
+  const box = await page.getByLabel('Title', { exact: true }).evaluate(height)
+  expect(picker).toBe(box)
 })
 
 test('pagination moves by its buttons and goes straight to a page typed', async ({ page }) => {

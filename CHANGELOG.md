@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-11-20
+
+A menu that leaves the page as it is, a table whose rows have headers and stay while it reloads, a popover a form field can open, and a date picker as tall as the fields beside it.
+
+### Added
+
+- KitDataTable's `rowHeader` column, whose cells name their rows, as a screen reader reads with every other cell; and the `empty-icon`, `no-match-icon` and `error-icon` slots for its states' icons.
+- KitPopover's `id`, which gives its trigger a form field's id, so the field's label names a trigger that is the field's control.
+- KitMenu's `modal`, which hides the page from screen readers and holds focus in the menu while it is open.
+
+### Changed
+
+- KitMenu leaves the page as it is while open, where it hid the page from screen readers and so failed axe; its plain items line up with its label, the check's room kept for a choice's items.
+
+### Fixed
+
+- KitDataTable keeps its rows while it reads the list again, marked busy with a line that says it is loading, where it swapped them for the loading state.
+- KitDatePicker stands as tall as a text box beside it, where it was 2 px taller.
+
 ## [0.8.0] - 2026-11-20
 
 The second wave: tabs, popovers and the help tip, menus, pagination, the drawer, the date picker and the data table.
@@ -136,6 +155,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.9.0]: https://github.com/jwill89/shared-components-vue/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/jwill89/shared-components-vue/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/jwill89/shared-components-vue/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/jwill89/shared-components-vue/compare/v0.5.0...v0.6.0

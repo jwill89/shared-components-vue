@@ -263,6 +263,12 @@ const browserLocale = typeof navigator === 'undefined' ? 'en' : navigator.langua
     cursor: pointer;
   }
 
+  /* The field's button keeps its full touch target by lying over the box's borders, so the box is
+     the height of a text box beside it rather than a border's width either side taller. */
+  .kit-date-picker__open {
+    margin-block: calc(-1 * var(--kit-control-border-width));
+  }
+
   .kit-calendar__step:focus-visible {
     outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
     outline-offset: calc(-1 * var(--kit-focus-ring-width));

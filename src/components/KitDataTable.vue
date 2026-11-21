@@ -9,9 +9,11 @@
 // a press sorts ascending, then descending, then, where `clearableSort`, as the list came. Each
 // cell is the row's field as text, or its column's `text`, or the `cell-<key>` slot's. A table
 // wider than its panel scrolls inside it, and the frame takes focus then, so the keyboard can
-// scroll it too. Loading, failed, empty and nothing matching are four states, each in the table's
-// place under its headings. `selectable` adds a box to each row, and one that selects every row
-// the search matches, on every page.
+// scroll it too. Loading, failed, empty and nothing matching are four states, each in the rows'
+// place under the headings, their icons from the slots; a list read again while it has rows keeps
+// them, marked busy, with a line that says so. A column marked `rowHeader` names each row, its cells
+// row headings a screen reader reads with the others. `selectable` adds a box to each row, and one
+// that selects every row the search matches, on every page.
 import { computed, onBeforeUnmount, onMounted, ref, useId, useTemplateRef, watch } from 'vue'
 import {
   columnFilteringFeature,
@@ -30,6 +32,7 @@ import KitErrorState from './KitErrorState.vue'
 import KitGlyph from './KitGlyph.vue'
 import KitLoadingState from './KitLoadingState.vue'
 import KitPagination from './KitPagination.vue'
+import KitSpinner from './KitSpinner.vue'
 import KitTextField from './KitTextField.vue'
 import { compareValues, fieldOf, textOf } from './dataTable'
 import type { KitColumn, KitSort } from './dataTable'
@@ -107,6 +110,10 @@ defineSlots<
     foot?: () => unknown
     /** The icon that says which way a column sorts, given the way or none. */
     'sort-icon'?: (props: { direction: KitSort['direction'] | null }) => unknown
+    /** The icons of the empty, nothing-matching and failed states, the kit's by default. */
+    'empty-icon'?: () => unknown
+    'no-match-icon'?: () => unknown
+    'error-icon'?: () => unknown
   } & Record<string, ((props: { row: T; value: unknown }) => unknown) | undefined>
 >()
 
@@ -237,7 +244,7 @@ clamp(pageCount.value)
 
 type Shows = 'loading' | 'failed' | 'empty' | 'no-match' | 'rows'
 const shows = computed<Shows>(() => {
-  if (props.loading) {
+  if (props.loading && shown.value.length === 0) {
     return 'loading'
   }
   if (props.error !== undefined) {
@@ -248,6 +255,9 @@ const shows = computed<Shows>(() => {
   }
   return search.value.trim() === '' ? 'empty' : 'no-match'
 })
+
+/** A list read again while it has rows: they stay, and a line says it is loading. */
+const reloading = computed(() => props.loading && shows.value === 'rows')
 
 // Sorting: a press goes ascending, then descending, then back to as the list came or round.
 function sortedBy(column: KitColumn<T>): KitSort['direction'] | null {
@@ -284,8 +294,8 @@ function nameOf(row: T): string {
   if (props.rowLabel) {
     return props.rowLabel(row)
   }
-  const first = props.columns[0]
-  return first ? cellText(first, row) : String(keyOf(row))
+  const named = props.columns.find((column) => column.rowHeader) ?? props.columns[0]
+  return named ? cellText(named, row) : String(keyOf(row))
 }
 
 function toggleRow(row: T): void {
@@ -341,6 +351,9 @@ const columnSpan = computed(() => props.columns.length + (props.selectable ? 1 :
         }}
       </p>
     </div>
+    <p v-if="reloading" class="kit-data-table__reloading">
+      <KitSpinner :label="loadingLabel" />
+    </p>
     <div
       ref="frame"
       class="kit-data-table__frame"
@@ -406,11 +419,23 @@ const columnSpan = computed(() => props.columns.length + (props.selectable ? 1 :
                 :title="errorTitle"
                 :message="error"
                 @retry="emit('retry')"
-              />
+              >
+                <template v-if="filled($slots['error-icon'])" #icon>
+                  <slot name="error-icon" />
+                </template>
+              </KitErrorState>
               <slot v-else-if="shows === 'empty'" name="empty">
-                <KitEmptyState :title="emptyTitle" />
+                <KitEmptyState :title="emptyTitle">
+                  <template v-if="filled($slots['empty-icon'])" #icon>
+                    <slot name="empty-icon" />
+                  </template>
+                </KitEmptyState>
               </slot>
-              <KitEmptyState v-else :title="noMatchTitle" />
+              <KitEmptyState v-else :title="noMatchTitle">
+                <template v-if="filled($slots['no-match-icon'])" #icon>
+                  <slot name="no-match-icon" />
+                </template>
+              </KitEmptyState>
             </td>
           </tr>
           <template v-else>
@@ -424,16 +449,21 @@ const columnSpan = computed(() => props.columns.length + (props.selectable ? 1 :
                   @change="toggleRow(row)"
                 />
               </td>
-              <td
+              <component
+                :is="column.rowHeader ? 'th' : 'td'"
                 v-for="column in columns"
                 :key="column.key"
+                :scope="column.rowHeader ? 'row' : undefined"
                 class="kit-data-table__cell"
-                :class="`kit-data-table__cell--${column.align ?? 'start'}`"
+                :class="[
+                  `kit-data-table__cell--${column.align ?? 'start'}`,
+                  { 'kit-data-table__row-header': column.rowHeader },
+                ]"
               >
                 <slot :name="`cell-${column.key}`" :row="row" :value="fieldOf(row, column.key)">
                   {{ cellText(column, row) }}
                 </slot>
-              </td>
+              </component>
             </tr>
           </template>
         </tbody>
@@ -521,6 +551,15 @@ const columnSpan = computed(() => props.columns.length + (props.selectable ? 1 :
     font-size: var(--kit-text-size-sm);
     font-weight: var(--kit-font-weight-strong);
     white-space: nowrap;
+  }
+
+  /* A row's name: its own cell, bold, as a heading reads. */
+  .kit-data-table__row-header {
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-data-table__reloading {
+    margin: 0;
   }
 
   .kit-data-table__cell--start {

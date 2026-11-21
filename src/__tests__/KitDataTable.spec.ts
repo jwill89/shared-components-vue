@@ -280,6 +280,53 @@ describe('KitDataTable, told more', () => {
     expect(state.selected).toEqual([])
   })
 
+  it('names each row by its row-header column, read with every other cell in it', async () => {
+    const named: KitColumn<Shelf>[] = [
+      { key: 'room', label: 'Room' },
+      { key: 'name', label: 'Shelf', rowHeader: true },
+      { key: 'books', label: 'Books', align: 'end' },
+    ]
+    const { wrapper } = table({ columns: named, selectable: true })
+    await nextTick()
+    const header = wrapper.get('tbody tr th[scope="row"]')
+    expect(header.text()).toBe('Shelf 10')
+    expect(wrapper.findAll('tbody tr')[0]?.findAll('td.kit-data-table__cell')).toHaveLength(2)
+    expect(wrapper.find('input[aria-label="Select Shelf 10"]').exists()).toBe(true)
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('keeps its rows while it reads the list again, marked busy, and says it is loading', async () => {
+    const { wrapper, names } = table({ loading: true })
+    await nextTick()
+    expect(names()).toHaveLength(5)
+    expect(wrapper.get('table').attributes('aria-busy')).toBe('true')
+    expect(wrapper.get('.kit-data-table__reloading [role="status"]').text()).toBe('Loading…')
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('draws its states’ icons from the page’s slots', async () => {
+    const failed = table(
+      { error: 'Down for upkeep.' },
+      { 'error-icon': () => h('svg', { 'data-icon': 'plug' }) },
+    )
+    await nextTick()
+    expect(failed.wrapper.find('[data-icon="plug"]').exists()).toBe(true)
+    unmountKept()
+
+    const empty = table({ rows: [] }, { 'empty-icon': () => h('svg', { 'data-icon': 'shelf' }) })
+    await nextTick()
+    expect(empty.wrapper.find('[data-icon="shelf"]').exists()).toBe(true)
+    unmountKept()
+
+    const none = table(
+      { searchable: true },
+      { 'no-match-icon': () => h('svg', { 'data-icon': 'search' }) },
+    )
+    await nextTick()
+    await none.wrapper.get('input[type="search"]').setValue('nothing like it')
+    expect(none.wrapper.find('[data-icon="search"]').exists()).toBe(true)
+  })
+
   it('says it is empty in the kit’s words when the page gives none of its own', async () => {
     const { wrapper } = table({ rows: [], emptyTitle: 'No shelves yet' })
     await nextTick()

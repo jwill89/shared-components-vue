@@ -60,6 +60,12 @@
     overflow-wrap: anywhere;
   }
 
+  /* A menu's plain item has no check to make room for, so it lines up with the menu's label and
+     its line; a radio item keeps the column, as a select's option does. */
+  .kit-menu .kit-option-list__item:not([role='menuitemradio']) {
+    padding-inline-start: var(--kit-space-sm);
+  }
+
   .kit-option-list__item[data-highlighted] {
     outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
     outline-offset: calc(-1 * var(--kit-focus-ring-width));

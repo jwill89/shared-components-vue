@@ -4,19 +4,23 @@
 // links and buttons. Open, it takes focus, and Escape or a press outside closes it and gives focus
 // back to its control. A screen reader names it by its control's words as it opens, as Reka names
 // it, so those words say what it holds ("Who can see this shelf?"). Open state is its own, or the
-// page's through `v-model:open`.
+// page's through `v-model:open`. Where its trigger is a form field's control, a color swatch say,
+// `id` gives the trigger the field's id, so the field's label names it.
 //
 // Like KitTooltip, it is drawn beside its control rather than at the end of the page, inside the
 // page's landmarks, and Reka floats it over the page; its class lands on an element of Reka's own,
 // so its styles are in an unscoped block.
 import { PopoverArrow, PopoverContent, PopoverRoot, PopoverTrigger } from 'reka-ui'
+import PopoverTriggerId from './popoverTrigger'
 
 withDefaults(
   defineProps<{
+    /** The trigger's id, where it is a form field's control: from KitFormField. */
+    id?: string
     side?: 'top' | 'right' | 'bottom' | 'left'
     align?: 'start' | 'center' | 'end'
   }>(),
-  { side: 'bottom', align: 'center' },
+  { id: undefined, side: 'bottom', align: 'center' },
 )
 
 const open = defineModel<boolean>('open', { default: false })
@@ -31,7 +35,9 @@ defineSlots<{
 
 <template>
   <PopoverRoot v-model:open="open">
-    <PopoverTrigger as-child><slot name="trigger" /></PopoverTrigger>
+    <PopoverTriggerId :id="id">
+      <PopoverTrigger as-child><slot name="trigger" /></PopoverTrigger>
+    </PopoverTriggerId>
     <PopoverContent
       class="kit-popover"
       :side="side"
