@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-11-20
+
+The second wave: tabs, popovers and the help tip, menus, pagination, the drawer, the date picker and the data table.
+
+### Added
+
+- KitTabs, a page in parts with a row of tabs over the chosen one's part: the arrow keys move along the row and Enter chooses, so passing a tab opens nothing. The chosen tab is raised, edged and underlined, not only colored.
+- KitPopover, a small panel opened by a press of the control beside it, for a note or a few controls of its own, named by its control's words; and KitHelpTip, a question mark beside a title, named "About" and its topic, that opens a short note.
+- KitMenu, the actions a row has no room for behind one button, with KitMenuItem, KitMenuLabel, KitMenuSeparator, and KitMenuRadioGroup with KitMenuRadioItem for a choice of one. It reads like an open select's list, and an action that can't be undone is drawn in the danger color.
+- KitPagination, the pages of a long list: Previous, the page numbers around the one shown with the first and last always there, Next, and past a few pages a box that goes straight to one. It shows nothing for a single page.
+- KitDrawer, a modal the full height of the screen against one side, with its title and footer in view while its body scrolls.
+- KitDatePicker, a date typed in its parts or picked from a calendar, as `YYYY-MM-DD`, held between `min` and `max`, in a `group` KitFormField.
+- KitDataTable, the one table a list of records sits in: given the whole list it searches, sorts and pages it itself; a sortable heading is a button that says which way it sorts; loading, failed, empty and nothing matching show in the rows' place; `selectable` selects rows across the pages; and wider than its panel, it scrolls inside its frame. Given one page and the count of every row, it leaves all three to the server. The `KitColumn` and `KitSort` types come with it.
+- `--kit-width-popover` and `--kit-width-drawer`, for an app that sizes a popover or a drawer otherwise.
+
 ## [0.7.0] - 2026-11-20
 
 The rest of the first wave: the tooltip, the loading overlay, the lightbox, the tag input and the Turnstile widget.
@@ -121,6 +136,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.8.0]: https://github.com/jwill89/shared-components-vue/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/jwill89/shared-components-vue/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/jwill89/shared-components-vue/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/jwill89/shared-components-vue/compare/v0.4.0...v0.5.0

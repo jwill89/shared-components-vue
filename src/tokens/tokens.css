@@ -59,8 +59,8 @@
     --kit-duration-spin: 800ms;
 
     /* Widths: prose stays readable, and a dialog, a wide dialog for a long form, a menu, a
-       field on a row of its own, a number box, a toast, an open list and a tooltip stop at
-       these. */
+       field on a row of its own, a number box, a toast, an open list, a tooltip, a
+       popover and a drawer stop at these. */
     --kit-measure-prose: 70ch;
     --kit-width-dialog: 32rem;
     --kit-width-dialog-wide: 48rem;
@@ -71,6 +71,8 @@
     --kit-width-option-list: 30rem;
     --kit-height-option-list: 20rem;
     --kit-width-tooltip: 20rem;
+    --kit-width-popover: 22rem;
+    --kit-width-drawer: 28rem;
 
     /* The room a Turnstile check takes before it draws: its frame's own height, in pixels. */
     --kit-height-turnstile: 65px;

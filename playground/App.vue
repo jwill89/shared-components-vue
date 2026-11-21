@@ -14,9 +14,11 @@ import ButtonSection from './sections/ButtonSection.vue'
 import ChoiceSection from './sections/ChoiceSection.vue'
 import DialogSection from './sections/DialogSection.vue'
 import FieldSection from './sections/FieldSection.vue'
+import NavigationSection from './sections/NavigationSection.vue'
 import OverlaySection from './sections/OverlaySection.vue'
 import SpinnerSection from './sections/SpinnerSection.vue'
 import StateSection from './sections/StateSection.vue'
+import TableSection from './sections/TableSection.vue'
 import ToastSection from './sections/ToastSection.vue'
 import TokenPairs from './TokenPairs.vue'
 
@@ -84,6 +86,8 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
       <DialogSection />
       <ToastSection />
       <StateSection />
+      <NavigationSection />
+      <TableSection />
       <OverlaySection />
 
       <KitPagePanel id="pairs" class="playground-section" title="Color pairs">

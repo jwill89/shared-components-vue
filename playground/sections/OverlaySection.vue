@@ -1,14 +1,18 @@
 <script setup lang="ts">
-// KitTooltip on a button and on an icon button; KitLoadingOverlay over a form while a pretend save
-// runs; and KitLightbox over three pictures, opened at whichever is pressed.
+// KitTooltip on a button and on an icon button; KitPopover and KitHelpTip; KitLoadingOverlay over a
+// form while a pretend save runs; KitDrawer at either side; and KitLightbox over three pictures,
+// opened at whichever is pressed.
 import { ref } from 'vue'
 import {
   KitButton,
+  KitDrawer,
   KitFormField,
+  KitHelpTip,
   KitIconButton,
   KitLightbox,
   KitLoadingOverlay,
   KitPagePanel,
+  KitPopover,
   KitTextField,
   KitTooltip,
 } from '@jwill89/shared-components-vue'
@@ -41,6 +45,7 @@ function look(index: number): void {
 }
 
 const shelfName = ref('Living room')
+const navigating = ref(false)
 const saving = ref(false)
 
 function save(): void {
@@ -65,6 +70,50 @@ function save(): void {
       <KitTooltip text="Opens the shelf on a page of its own" side="bottom">
         <KitIconButton label="Open the shelf"><PlaygroundIcon name="arrow" /></KitIconButton>
       </KitTooltip>
+    </div>
+
+    <h3>KitPopover and KitHelpTip</h3>
+    <p class="playground-note">
+      Opened by a press, so they work on a phone; Escape or a press outside closes them.
+    </p>
+    <div class="playground-row">
+      <KitPopover>
+        <template #trigger><KitButton>Who can see this shelf?</KitButton></template>
+        <p>Only the people you lend to, and only while a loan is open.</p>
+        <p><a href="#overlays">How sharing works</a></p>
+      </KitPopover>
+      <span class="playground-inline">
+        Waitlist
+        <KitHelpTip topic="the waitlist">
+          <p>People who asked for a copy, in the order they asked. The first is offered it next.</p>
+        </KitHelpTip>
+      </span>
+    </div>
+
+    <h3>KitDrawer</h3>
+    <p class="playground-note">
+      A record’s history at the end of the line; the navigation at its start, as on a phone.
+    </p>
+    <div class="playground-row">
+      <KitDrawer title="History" description="Every change to this shelf, newest first.">
+        <template #trigger><KitButton>Show the history</KitButton></template>
+        <ol class="overlay-history">
+          <li>Renamed to “Living room”, an hour ago.</li>
+          <li>Two books added, yesterday.</li>
+          <li>Made, on Monday.</li>
+        </ol>
+        <template #footer><KitButton>Load older changes</KitButton></template>
+      </KitDrawer>
+      <KitDrawer v-model:open="navigating" title="Pages" side="start">
+        <template #trigger><KitButton>Show the pages</KitButton></template>
+        <nav aria-label="Playground">
+          <ul class="overlay-history">
+            <li><a href="#buttons" @click="navigating = false">Buttons</a></li>
+            <li><a href="#fields" @click="navigating = false">Fields</a></li>
+            <li><a href="#overlays" @click="navigating = false">Tooltips and covers</a></li>
+          </ul>
+        </nav>
+      </KitDrawer>
     </div>
 
     <h3>KitLoadingOverlay</h3>
@@ -106,6 +155,13 @@ function save(): void {
   padding: var(--kit-space-md);
   border: var(--kit-control-border-width) solid var(--kit-hairline);
   border-radius: var(--kit-radius-md);
+}
+
+.overlay-history {
+  display: grid;
+  gap: var(--kit-space-xs);
+  margin: 0;
+  padding-inline-start: var(--kit-space-lg);
 }
 
 .overlay-pictures {

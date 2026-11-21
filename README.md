@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.7.0, has the whole first wave: the buttons, the spinner, the form field and its text, number and tag fields, the dialog with its confirm form, and the toast; the page header and panel, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the loading overlay, the lightbox and the Turnstile widget; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.8.0, has the first wave and the second: the buttons, the spinner, the form field and its text, number, tag and date fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.7.0/jwill89-shared-components-vue-0.7.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.8.0/jwill89-shared-components-vue-0.8.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -115,6 +115,14 @@ Every control sits in a `KitFormField`, whose slot hands it the id its label nam
 </KitFormField>
 ```
 
+`KitDatePicker` takes a date typed in its parts or picked from a calendar. Its model is the date as `YYYY-MM-DD`, or `''` for none, and `min` and `max` take the same, so one picker can bound another, as a loan's due date is held after the day it was lent. Its parts are one group, so it sits in a `group` field, whose caption names it as a label can't:
+
+```vue
+<KitFormField v-slot="field" label="Due by" group>
+  <KitDatePicker v-model="dueBy" v-bind="field" :min="lentOn" />
+</KitFormField>
+```
+
 ### Turnstile
 
 `KitTurnstileWidget` is Cloudflare Turnstile's check that whoever fills in a form isn't a bot. Its model is the token, `''` until the check passes and again once it expires; a token passes the server once, so the form calls the widget's `reset()` after every try. Cloudflare's script loads the first time a widget needs it, once for every widget on the page.
@@ -158,6 +166,15 @@ if (await confirm({ title: 'Delete this shelf?', message: 'Its 12 books go back 
 }
 ```
 
+`KitDrawer` is a modal the full height of the screen against one side, for what belongs beside the page rather than in its way: a record's history, a list's filters, the navigation on a phone. It holds focus and closes as a dialog does, stands at the end of the line unless `side="start"`, and keeps its title and `footer` in view while its body scrolls.
+
+```vue
+<KitDrawer title="History">
+  <template #trigger><KitButton>History</KitButton></template>
+  <AuditList :entries="entries" />
+</KitDrawer>
+```
+
 ### Pages, alerts and states
 
 Every page opens with `KitPageHeader` and puts its content in `KitPagePanel`s. A list says it is loading, empty or failed with `KitLoadingState`, `KitEmptyState` and `KitErrorState`, never one for another, and a condition the person must act on is a `KitAlert` where it applies:
@@ -190,6 +207,48 @@ toast.error('That didn’t save', problem.detail)
 
 A toast reports how a finished action went and goes; a condition the person must act on is a KitAlert on the page, which stays. An app with a fixed bar along the top maps `--kit-toast-inset-top` to the bar's height.
 
+### Tabs, menus and pages
+
+`KitTabs` splits one page into parts, a row of tabs over the chosen one's part, each part the slot named by its tab's key. The arrow keys move along the row and Enter chooses. The page holds the chosen key, so it can keep it in the address. A row of links to other pages is navigation, not tabs.
+
+```vue
+<KitTabs v-model="part" label="Shelf" :tabs="[{ key: 'books', label: 'Books' }, { key: 'loans', label: 'Loans' }]">
+  <template #books><BookList /></template>
+  <template #loans><LoanList /></template>
+</KitTabs>
+```
+
+`KitMenu` holds the actions a row has no room for, behind one button named by `label`: `KitMenuItem`s, with `KitMenuLabel`, `KitMenuSeparator`, and a `KitMenuRadioGroup` of `KitMenuRadioItem`s for a choice of one, such as a theme. An item that can't be undone is `danger`. A row's own actions stay buttons at its end, never in a menu.
+
+```vue
+<KitMenu label="Account">
+  <KitMenuItem @select="openSettings">Settings</KitMenuItem>
+  <KitMenuItem danger @select="signOut">Sign out</KitMenuItem>
+</KitMenu>
+```
+
+`KitPagination` is the pages of a long list: Previous, the page numbers around the one shown, and Next, with a box that goes straight to a page past `jumpFrom` pages. Its model is the page, from 1, which the page keeps in the address with the list's search and order; with one page it shows nothing.
+
+```vue
+<KitPagination v-model:page="page" :page-count="pageCount" label="Pages of books" />
+```
+
+### Tables
+
+`KitDataTable` is the one table a list of records sits in. Give it the whole list: it searches, sorts and pages it itself, so a sort orders every row, not the page on screen. Search, sort and page are models the page keeps in its address, as the standards ask, and a new search or sort starts at page one. A sortable column's heading is a button and says which way it sorts. A cell is the row's field, its column's `text`, or the `cell-<key>` slot's; loading, failed, empty and nothing matching each show in the rows' place; `selectable` adds a box to each row and one that selects every matching row on every page. Wider than its panel, it scrolls inside its frame.
+
+```vue
+<KitDataTable
+  v-model:search="query.search" v-model:sort="query.sort" v-model:page="query.page"
+  :rows="books" :columns="columns" row-key="id" label="Books" :page-size="25" searchable
+  :loading="loading" :error="problem?.detail" @retry="load"
+>
+  <template #cell-actions="{ row }"><KitButton variant="quiet" @click="open(row)">Open <span class="visually-hidden">{{ row.title }}</span></KitButton></template>
+</KitDataTable>
+```
+
+Each column is a `KitColumn`: its `key` and `label`, whether it is `sortable`, a `sortValue` where it sorts by something other than what it shows, a `text` where it shows something other than the field, and `hideLabel` for a heading only screen readers need, such as a column of buttons. For a list too large to send whole, give the table one page and the count of every row as `total`: it then leaves searching, sorting and paging to the server and its models say what to fetch. The standards give a table the whole list, so a list paged this way is a departure the app records.
+
 ### Tooltips, covers and pictures
 
 `KitTooltip` puts a short note on the one control in its slot, shown on hover and on focus and gone on Escape. It adds to the control's name and never stands in for it, so an icon-only control still takes its own `label`. Every tooltip needs Reka's `TooltipProvider`, mounted once at the app's root around everything else; without it, a tooltip breaks the whole part of the page it sits in.
@@ -198,6 +257,12 @@ A toast reports how a finished action went and goes; a condition the person must
 <KitTooltip text="Copies the link to this shelf">
   <KitButton @click="copyLink">Copy the link</KitButton>
 </KitTooltip>
+```
+
+`KitPopover` opens a small panel from the control in its `trigger` slot, for a note or a few controls of that control's own. It opens on a press, so it works on a phone where a tooltip can't, may hold links and buttons, and is named by its control's words. `KitHelpTip` is the help affordance built on it: a question mark beside a title, named "About" and its `topic`, opening a short note.
+
+```vue
+<h2>Waitlist <KitHelpTip topic="the waitlist"><p>People who asked for a copy, in order.</p></KitHelpTip></h2>
 ```
 
 `KitLoadingOverlay` covers what it wraps while something must finish before it is used again, a save say: the content can't be reached or pressed, is marked busy, and lies under a panel that says what is under way. Focus that was inside waits on the panel and goes back afterwards. Wrap a page's content in it to cover the page.

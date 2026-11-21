@@ -65,9 +65,23 @@ Your apps already contain the same components several times over. The first wave
 | KitTagInput | Reka TagsInput | TarotGen.io's TagInput, the only one on TagsInput | TagInput in TarotGen.io and Home Library |
 | KitTurnstileWidget | Cloudflare's script, loaded once for every instance | Senpan's, TarotGen.io's or the Gallery's | The same widget in Senpan, TarotGen.io and the Gallery |
 
-The first release, v0.1.0, holds the first six rows but KitLoadingOverlay: the jobs repeated most, and the pieces the rest build on (a dialog's buttons, a field's wrapper). MathBot moved onto it as the pilot while the rest of the wave was built. v0.2.0 adds the next four rows, and what the pilot asked for: a plain button for minor actions, more room in a dialog's footer, a way for an app's tests to see its toasts, and live regions that no test mistakes for an alert. v0.3.0 answers what MathBot's move onto v0.2.0 found: a slot that takes the submit button's place, an info tone an app can color, and no empty box where a slot's content is switched off. v0.3.1 answers what the move onto v0.3.0 found: a form dialog that opens on its first field whatever kind it is, and a quiet button that keeps AAA contrast on hover in an alert. v0.4.0 ships the kit's color pairs as their own entry, so an app's tests measure its colors with the weights the components write rather than copies of them. v0.5.0 drops the default colors: every color token is the app's to set, and the kit names them all. v0.6.0 names every other token too, so an app checks its theme without reading the kit's stylesheet. v0.7.0 finishes the wave with the tooltip, lightbox, tag input, Turnstile widget and loading overlay.
+The first release, v0.1.0, holds the first six rows but KitLoadingOverlay: the jobs repeated most, and the pieces the rest build on (a dialog's buttons, a field's wrapper). MathBot moved onto it as the pilot while the rest of the wave was built. v0.2.0 adds the next four rows, and what the pilot asked for: a plain button for minor actions, more room in a dialog's footer, a way for an app's tests to see its toasts, and live regions that no test mistakes for an alert. v0.3.0 answers what MathBot's move onto v0.2.0 found: a slot that takes the submit button's place, an info tone an app can color, and no empty box where a slot's content is switched off. v0.3.1 answers what the move onto v0.3.0 found: a form dialog that opens on its first field whatever kind it is, and a quiet button that keeps AAA contrast on hover in an alert. v0.4.0 ships the kit's color pairs as their own entry, so an app's tests measure its colors with the weights the components write rather than copies of them. v0.5.0 drops the default colors: every color token is the app's to set, and the kit names them all. v0.6.0 names every other token too, so an app checks its theme without reading the kit's stylesheet. v0.7.0 finishes the wave with the tooltip, lightbox, tag input, Turnstile widget and loading overlay. v0.8.0 brings the second wave: tabs, popovers and the help tip, menus, pagination, the drawer, the date picker, and the data table on TanStack Table.
 
-The second wave covers the bigger pieces: a data table (PrimeVue DataTable today, plus Kindred's StackTable and Senpan's TanStack table), drawers, menus, a date picker, pagination, popovers and tabs. MathBot's BaseTabs, the Gallery's AppMenu and PaginationBar, and Kindred's HelpTip, which is a popover rather than a tooltip, wait for it. The Markdown editor comes beside it, as its own piece (see The Markdown editor).
+The second wave covers the bigger pieces. Counts are files that use a component, as of November 20.
+
+| Component | Built on | Starts from | Replaces today |
+| --- | --- | --- | --- |
+| KitTabs | Reka Tabs | MathBot's BaseTabs | Hand-made tab rows. Home Library's LibraryTabs is a row of links to other pages, which is navigation, not tabs |
+| KitPopover, KitHelpTip | Reka Popover | Kindred's HelpTip, on PrimeVue's Popover | PrimeVue Popover (Kindred) |
+| KitMenu and its items | Reka DropdownMenu | The Gallery's AppMenu and AppMenuItem, already on Reka, and its ThemeMenu for a choice of one | The Gallery's AppMenu and ThemeMenu |
+| KitPagination | Reka Pagination | The Gallery's PaginationBar, with its jump to a page; Senpan's, which shows nothing for one page | Senpan's PaginationBar (7 files); PrimeVue's paginator (Home Library, 8 files) |
+| KitDrawer | Reka Dialog | Kindred's HistoryDrawer, on PrimeVue's Drawer | PrimeVue Drawer (Kindred) |
+| KitDatePicker | Reka DatePicker | No app has a calendar worth porting; the model is Home Library's and MathBot's `YYYY-MM-DD` | PrimeVue DatePicker (Kindred, 4 files); native date inputs (Home Library, MathBot, TarotGen.io, Senpan) |
+| KitDataTable | TanStack Table (decided 2026-11-20) | Senpan's DataTable, with its toolbar and pager; TarotGen.io's SortableTh for the sort header's button and `aria-sort` | PrimeVue DataTable (Kindred, 32 files; Home Library, 22); Senpan's DataTable (13); TarotGen.io's sortable tables (8) |
+
+The table's first cut holds what most lists use: sortable columns, a search with its count, pages, selection across the pages, a row's own actions in a column of its own, and the four states. Expandable rows, facet filters, group rows, a CSV of the rows matching, resizable columns, and Kindred's rows as labelled cards on a phone follow as the apps that use them move onto it.
+
+A date range, a time and a date with a time aren't in the first cut: a range is two pickers, one bounding the other, as Home Library's loans and TarotGen.io's filters already are, and times stay native inputs until an app asks for more. The Markdown editor comes beside the wave, as its own piece (see The Markdown editor).
 
 Components that belong to one app stay in that app, such as Senpan's bingo board, TarotGen.io's spread editor and Home Library's book cover.
 
@@ -163,7 +177,10 @@ MirageGO is left out for now (decided 2026-11-18). It stays outside shared-tooli
 
 ## Open questions
 
-- **Data table.** Build it on TanStack Table, which Senpan already uses, in the second wave; or keep PrimeVue's DataTable in Home Library and Kindred until last.
+None open. Decided 2026-11-20:
+
+- **Data table.** It is built on TanStack Table (`@tanstack/vue-table`, MIT), which Senpan already uses, as a dependency of the kit kept outside its bundle, with the kit's own markup: a sortable heading holds a button and carries `aria-sort`.
+- **A list paged on the server.** The table takes the whole list by default, as the standards ask. It also takes one page the server gives (`total`), for a list too large to send whole, such as the Gallery's tags, TarotGen.io's readings and Kindred's audit log; an app that uses it records the list as a departure in its own `AGENTS.md`.
 
 ## Sources
 

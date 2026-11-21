@@ -5,6 +5,7 @@
 import { ref } from 'vue'
 import {
   KitButton,
+  KitDatePicker,
   KitPagePanel,
   KitFormField,
   KitNumberField,
@@ -29,6 +30,8 @@ const moods = ref<string[]>([])
 const lockedTags = ref(['first edition'])
 const tagSuggestions = ['fiction', 'poetry', 'history', 'signed', 'gift', 'to read', 'favourite']
 const lower = (typed: string): string => typed.trim().toLowerCase()
+const lentOn = ref('2026-11-02')
+const dueBy = ref('')
 const checking = ref(false)
 const token = ref('')
 </script>
@@ -112,6 +115,19 @@ const token = ref('')
       </KitFormField>
       <KitFormField v-slot="field" label="Locked tags" hint="Set by the shelf’s owner.">
         <KitTagInput v-model="lockedTags" v-bind="field" disabled />
+      </KitFormField>
+    </div>
+
+    <h3>KitDatePicker</h3>
+    <p class="playground-note">
+      Typed in its parts or picked from the calendar; the due date is held after the lending date.
+    </p>
+    <div class="field-grid">
+      <KitFormField v-slot="field" label="Lent on" group required>
+        <KitDatePicker v-model="lentOn" v-bind="field" />
+      </KitFormField>
+      <KitFormField v-slot="field" label="Due by" group hint="After the day it was lent.">
+        <KitDatePicker v-model="dueBy" v-bind="field" :min="lentOn" />
       </KitFormField>
     </div>
 

@@ -158,7 +158,20 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
     floor: 7,
     state: 'the highlighted option in an open list',
   },
-  { kind: 'text', fg: 'surface', bg: 'text', floor: 7, state: 'a tooltip’s words' },
+  {
+    kind: 'icon',
+    fg: 'danger',
+    bg: { base: 'surface-raised', toward: 'accent', weight: OPTION_HIGHLIGHT },
+    floor: 3,
+    state: 'a danger item’s icon, highlighted in an open menu',
+  },
+  {
+    kind: 'text',
+    fg: 'surface',
+    bg: 'text',
+    floor: 7,
+    state: 'a tooltip’s words, and the page shown in a pagination',
+  },
   ...TOAST_TONES.flatMap(([tone, state]): TokenPair[] => {
     const bg: Mix = { base: 'surface-raised', toward: tone, weight: TOAST_TINT }
     return [
@@ -262,6 +275,8 @@ const VALUED_TOKENS = [
   'width-option-list',
   'height-option-list',
   'width-tooltip',
+  'width-popover',
+  'width-drawer',
   'height-turnstile',
   'toast-inset-top',
 ] as const

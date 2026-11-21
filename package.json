@@ -1,7 +1,7 @@
 {
   "name": "@jwill89/shared-components-vue",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "description": "Shared Vue 3 components on Reka UI, styled only through design tokens, for jwill89's front ends.",
   "license": "MIT",
@@ -48,6 +48,8 @@
     "vue": "^3.5.45"
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.4",
+    "@tanstack/vue-table": "^9.3.1",
     "reka-ui": "2.11.0"
   },
   "devDependencies": {

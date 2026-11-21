@@ -1,10 +1,22 @@
 <script setup lang="ts">
 // The kit's own drawn marks, for a button or a list when the app gives no icon of its own: a
 // cross to close or remove, a chevron that shows a list opens, a check beside a chosen option, a
-// plus to add, and arrows to the previous and the next.
+// plus to add, arrows to the previous and the next, three dots for a menu of more, a calendar that
+// opens a date's, and a column's sort: either way, up, or down.
 // Each takes the size and color of the text around it, and is hidden from screen readers, since
 // the control it sits in names what it does.
-export type KitGlyphName = 'cross' | 'chevron' | 'check' | 'plus' | 'previous' | 'next'
+export type KitGlyphName =
+  | 'cross'
+  | 'chevron'
+  | 'check'
+  | 'plus'
+  | 'previous'
+  | 'next'
+  | 'more'
+  | 'calendar'
+  | 'sort'
+  | 'sort-ascending'
+  | 'sort-descending'
 
 defineProps<{
   name: KitGlyphName
@@ -18,6 +30,11 @@ const shapes: Record<KitGlyphName, string> = {
   plus: 'M7 2h2v5h5v2H9v5H7V9H2V7h5z',
   previous: 'M10.6 2.6 5.2 8l5.4 5.4-1.1 1.1L3 8l6.5-6.5z',
   next: 'M5.4 2.6 10.8 8l-5.4 5.4 1.1 1.1L13 8 6.5 1.5z',
+  more: 'M8 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm0 5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm0 5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z',
+  calendar: 'M5 1h1.5v2h3V1H11v2h3v12H2V3h3zM3.5 6.5v7h9v-7z',
+  sort: 'M8 2l4 4.5H4zm0 12-4-4.5h8z',
+  'sort-ascending': 'M8 3l5 6.5H3z',
+  'sort-descending': 'M8 13 3 6.5h10z',
 }
 </script>
 
@@ -30,6 +47,7 @@ const shapes: Record<KitGlyphName, string> = {
     aria-hidden="true"
     :data-glyph="name"
   >
-    <path :d="shapes[name]" />
+    <!-- Even-odd, so a shape drawn inside another, as the calendar's page is, is cut out of it. -->
+    <path :d="shapes[name]" fill-rule="evenodd" />
   </svg>
 </template>

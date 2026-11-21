@@ -1,7 +1,8 @@
 /*
- * The open list of a KitSelect or KitCombobox. Reka draws it at the end of the page, outside the
- * component, where a component's scoped styles can't reach, so its styles are here, global and
- * in the kit's layer; bundle.ts gathers them into style.css with the tokens.
+ * The open list of a KitSelect or KitCombobox, and a KitMenu's, which reads alike. Reka draws it
+ * at the end of the page, outside the component, where a component's scoped styles can't reach,
+ * so its styles are here, global and in the kit's layer; bundle.ts gathers them into style.css
+ * with the tokens.
  *
  * The option under the keyboard or the pointer is washed 12% with the accent and ringed;
  * contrast.ts (OPTION_HIGHLIGHT) holds the same number, and contrast.spec.ts measures the words
@@ -76,6 +77,32 @@
     display: inline-flex;
     justify-content: center;
     width: 1rem;
+  }
+
+  .kit-option-list__icon {
+    display: inline-flex;
+    flex: none;
+  }
+
+  /* A menu's action that can't be undone, in the danger color. Highlighted, its words take the
+     text color, which keeps AAA on the wash where the danger color falls short, and its icon
+     keeps the danger color, which an icon's 3:1 allows. */
+  .kit-option-list__item--danger {
+    color: var(--kit-danger);
+  }
+
+  .kit-option-list__item--danger[data-highlighted] {
+    color: var(--kit-text);
+  }
+
+  .kit-option-list__item--danger .kit-option-list__icon {
+    color: var(--kit-danger);
+  }
+
+  .kit-option-list__separator {
+    height: var(--kit-control-border-width);
+    margin: var(--kit-space-2xs) 0;
+    background: var(--kit-hairline);
   }
 
   .kit-option-list__empty {

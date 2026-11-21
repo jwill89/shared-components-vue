@@ -163,6 +163,25 @@ describe('KitTurnstileWidget', () => {
     expect(document.querySelectorAll(SCRIPT)).toHaveLength(1)
   })
 
+  it('uses Cloudflare’s script where the page already has it, and adds none', async () => {
+    const { api } = cloudflare()
+    ;(window as { turnstile?: TurnstileApi }).turnstile = api
+    widget()
+    await soon(() => {
+      expect(api.render).toHaveBeenCalledOnce()
+    })
+    expect(document.querySelector(SCRIPT)).toBeNull()
+  })
+
+  it('counts a script that loads without Turnstile’s API as failed, and lets the next try', async () => {
+    widget()
+    await flushPromises()
+    script().dispatchEvent(new Event('load'))
+    await soon(() => {
+      expect(document.querySelector('.kit-turnstile-widget [role="alert"]')).not.toBeNull()
+    })
+  })
+
   it('draws nothing for a form that went while the script loaded', async () => {
     const { api } = cloudflare()
     const { unmount } = widget()

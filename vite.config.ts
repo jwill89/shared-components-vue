@@ -5,10 +5,10 @@ import { vitestDefaults } from './shared/test/web/vitest.js'
 
 // The package build (`npm run build`): Vite's library mode bundles src/bundle.ts (the exports
 // and the tokens) into one ES module and every style, the tokens' and the components', into one
-// stylesheet that an app imports once. Vue and Reka UI stay imports, so an app's copy of each is
-// the one that runs. src/tokens/contrast.ts is a second entry, `/contrast`, which an app's tests
-// import to measure the kit's color pairs in its own colors; it imports nothing, so it shares no
-// code with the first. vue-tsc writes the type declarations after it, from the two entries'
+// stylesheet that an app imports once. Vue, Reka UI, the date library Reka and the date picker
+// share, and TanStack Table stay imports, so an app's copy of each is the one that runs. src/tokens/contrast.ts is a
+// second entry, `/contrast`, which an app's tests import to measure the kit's color pairs in its
+// own colors; it imports nothing, so it shares no code with the first. vue-tsc writes the type declarations after it, from the two entries'
 // sources (tsconfig.build.json).
 //
 // Nothing is lowered or minified here: the app's own build does both for the browsers it
@@ -30,7 +30,7 @@ export default defineConfig({
       cssFileName: 'style',
     },
     rolldownOptions: {
-      external: ['vue', /^reka-ui(\/|$)/],
+      external: ['vue', /^reka-ui(\/|$)/, /^@internationalized\//, /^@tanstack\//],
     },
     sourcemap: true,
   },
