@@ -17,6 +17,10 @@ export default defineConfig({
         replacement: fileURLToPath(new URL('../src/index.ts', import.meta.url)),
       },
       {
+        find: /^@jwill89\/shared-components-vue\/editor$/,
+        replacement: fileURLToPath(new URL('../src/editor/index.ts', import.meta.url)),
+      },
+      {
         find: /^@jwill89\/shared-components-vue\/style\.css$/,
         replacement: fileURLToPath(new URL('./kit-source.css', import.meta.url)),
       },

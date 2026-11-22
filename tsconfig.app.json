@@ -8,7 +8,8 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["vite/client"],
     "paths": {
-      "@jwill89/shared-components-vue": ["./src/index.ts"]
+      "@jwill89/shared-components-vue": ["./src/index.ts"],
+      "@jwill89/shared-components-vue/editor": ["./src/editor/index.ts"]
     }
   },
   "include": [

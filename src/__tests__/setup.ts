@@ -19,6 +19,21 @@ if (typeof Element !== 'undefined') {
   if (!('scrollIntoView' in Element.prototype)) {
     Object.assign(Element.prototype, { scrollIntoView: () => undefined })
   }
+  // ProseMirror measures the text's ranges as it scrolls the cursor into view, and jsdom's
+  // ranges have no measure to give.
+  if (!('getClientRects' in Range.prototype)) {
+    Object.assign(Range.prototype, {
+      getClientRects: () => Object.assign([], { item: () => null }),
+      getBoundingClientRect: () => new DOMRect(),
+    })
+  }
+  // ProseMirror makes a paste event of its own when a spec pastes text, and jsdom has no
+  // ClipboardEvent to make it with.
+  if (!('ClipboardEvent' in globalThis)) {
+    globalThis.ClipboardEvent = class extends Event {
+      readonly clipboardData = null
+    }
+  }
   // axe asks for a canvas while it looks at icons, and jsdom has none to give.
   Object.assign(HTMLCanvasElement.prototype, { getContext: () => null })
   if (!('hasPointerCapture' in Element.prototype)) {

@@ -1,7 +1,7 @@
 {
   "name": "@jwill89/shared-components-vue",
   "private": true,
-  "version": "0.10.0",
+  "version": "0.11.0",
   "type": "module",
   "description": "Shared Vue 3 components on Reka UI, styled only through design tokens, for jwill89's front ends.",
   "license": "MIT",
@@ -23,6 +23,10 @@
     "./contrast": {
       "types": "./dist/tokens/contrast.d.ts",
       "default": "./dist/tokens/contrast.js"
+    },
+    "./editor": {
+      "types": "./dist/editor/index.d.ts",
+      "default": "./dist/editor.js"
     },
     "./style.css": "./dist/style.css"
   },
@@ -50,10 +54,18 @@
   "dependencies": {
     "@internationalized/date": "^3.12.4",
     "@tanstack/vue-table": "^9.3.1",
+    "@tiptap/core": "3.35.0",
+    "@tiptap/extensions": "3.35.0",
+    "@tiptap/markdown": "3.35.0",
+    "@tiptap/pm": "3.35.0",
+    "@tiptap/starter-kit": "3.35.0",
+    "@tiptap/suggestion": "3.35.0",
+    "marked": "^17.0.6",
     "reka-ui": "2.11.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
+    "@discord/markdown-wasm": "0.16.0",
     "@jwill89/lint-web": "file:shared/lint/web",
     "@jwill89/test-a11y": "file:shared/test/a11y",
     "@playwright/test": "^1.65.1",

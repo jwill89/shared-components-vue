@@ -13,6 +13,7 @@ import {
 import ButtonSection from './sections/ButtonSection.vue'
 import ChoiceSection from './sections/ChoiceSection.vue'
 import DialogSection from './sections/DialogSection.vue'
+import EditorSection from './sections/EditorSection.vue'
 import FieldSection from './sections/FieldSection.vue'
 import NavigationSection from './sections/NavigationSection.vue'
 import OverlaySection from './sections/OverlaySection.vue'
@@ -89,6 +90,7 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
       <NavigationSection />
       <TableSection />
       <OverlaySection />
+      <EditorSection />
 
       <KitPagePanel id="pairs" class="playground-section" title="Color pairs">
         <TokenPairs :key="shownScheme" />

@@ -10,6 +10,9 @@
 // Like KitTooltip, it is drawn beside its control rather than at the end of the page, inside the
 // page's landmarks, and Reka floats it over the page; its class lands on an element of Reka's own,
 // so its styles are in an unscoped block.
+//
+// As it closes, focus goes back to its control. `closeAutoFocus` comes first, and a page that
+// sends focus elsewhere, such as back to the text a popover's form has just changed, prevents it.
 import { PopoverArrow, PopoverContent, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import PopoverTriggerId from './popoverTrigger'
 
@@ -22,6 +25,11 @@ withDefaults(
   }>(),
   { id: undefined, side: 'bottom', align: 'center' },
 )
+
+const emit = defineEmits<{
+  /** Focus is about to go back to the control; prevent it to send focus elsewhere. */
+  closeAutoFocus: [event: Event]
+}>()
 
 const open = defineModel<boolean>('open', { default: false })
 
@@ -44,6 +52,7 @@ defineSlots<{
       :align="align"
       :side-offset="6"
       :collision-padding="8"
+      @close-auto-focus="emit('closeAutoFocus', $event)"
     >
       <div class="kit-popover__body"><slot /></div>
       <PopoverArrow class="kit-popover__arrow" :width="12" :height="6" />

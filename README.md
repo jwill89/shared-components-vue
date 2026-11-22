@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.10.0, has the first wave and the second: the buttons, the spinner, the form field and its text, number, tag and date fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.11.0, has the first wave and the second, and the Markdown editor: the buttons, the spinner, the form field and its text, number, tag and date fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.10.0/jwill89-shared-components-vue-0.10.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.11.0/jwill89-shared-components-vue-0.11.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -277,6 +277,43 @@ Each column is a `KitColumn`: its `key` and `label`, whether it is `sortable`, a
 
 ```vue
 <KitLightbox v-model:open="viewing" v-model:index="at" :images="photos" />
+```
+
+### Markdown and Discord
+
+`KitMarkdownEditor` is the one Markdown editor: formatted text on screen, Markdown in its model. It is the package's `/editor` entry, apart from the rest, so load it on first use and a page with no editor never carries TipTap:
+
+```ts
+const KitMarkdownEditor = defineAsyncComponent(() =>
+  import('@jwill89/shared-components-vue/editor').then((m) => m.KitMarkdownEditor),
+)
+```
+
+```vue
+<KitFormField v-slot="field" label="About the shelf" group>
+  <KitMarkdownEditor v-model="about" v-bind="field" :limit="5000" />
+</KitFormField>
+```
+
+It sits in a `group` field, whose caption names it, since a label's `for` reaches only a form control. A toolbar of what it can write sits above the text, and Markdown typed straight in (a line started with `#`, `>` or `-` and a space, `**bold**`) takes its form as it is typed; pasted text is read as Markdown, and copied text is written as Markdown. Its `limit` counts the Markdown it writes, which is what a server counts. A tool's icon comes through its `tool-<name>` slot (`tool-bold`, `tool-heading-2`, `tool-link`); a tool with none draws a sign of its own.
+
+`dialect` says which Markdown it writes. `commonmark`, the default, is for an app's own pages; its toolbar offers headings 2 and 3 unless `headings` says otherwise. `discord` writes Discord's own: `__` is underline, with a button of its own, and bold is always `**`; spoilers, subtext and a quote to the end of the message; every line is its own. Discord's mentions, channels, roles, emoji, times and commands show by the `names` the app gives, and as `@`, `#`, `:` or `/` is typed the editor asks `suggest(kind, query)` for what matches, so a server's members are searched rather than listed whole; the one chosen goes in as its token. The Time tool puts in a time from a date, a time of day and how Discord should show it. `profile` narrows a dialect for one field: `inline` takes marks only, on one line, for an embed's title or a field's name, and `plain` takes no Markdown at all, for a footer.
+
+```vue
+<KitFormField v-slot="field" label="Announcement" group>
+  <KitMarkdownEditor
+    v-model="message" v-bind="field" dialect="discord" :limit="2000"
+    :names="{ members, roles, channels, emoji }" :suggest="searchServer"
+  />
+</KitFormField>
+```
+
+An app's own pieces go in `extensions`, each a TipTap extension with its Markdown, and its toolbar tool where it has one; in the CommonMark dialect the editor reads and writes each by its own Markdown. One of the app's that takes a kit piece's name, `paragraph` say, takes its place.
+
+`KitDiscordPreview` draws Discord's Markdown as Discord does, by the same `names`, read by the same grammar as the editor's Discord dialect, so the two agree. `inline` reads marks only, on one line, as Discord does in an embed's title.
+
+```vue
+<KitDiscordPreview :text="message" :names="{ members, roles, channels }" />
 ```
 
 ### Icons

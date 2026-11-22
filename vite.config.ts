@@ -24,13 +24,22 @@ export default defineConfig({
         index: fileURLToPath(new URL('./src/bundle.ts', import.meta.url)),
         // Beside its declaration, which vue-tsc writes at dist/tokens/contrast.d.ts.
         'tokens/contrast': fileURLToPath(new URL('./src/tokens/contrast.ts', import.meta.url)),
+        // The Markdown editor, which an app loads on first use, so TipTap stays out of the rest.
+        editor: fileURLToPath(new URL('./src/editor/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
       cssFileName: 'style',
     },
     rolldownOptions: {
-      external: ['vue', /^reka-ui(\/|$)/, /^@internationalized\//, /^@tanstack\//],
+      external: [
+        'vue',
+        /^reka-ui(\/|$)/,
+        /^@internationalized\//,
+        /^@tanstack\//,
+        /^@tiptap\//,
+        'marked',
+      ],
     },
     sourcemap: true,
   },

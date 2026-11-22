@@ -13,7 +13,7 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.build.tsbuildinfo",
     "paths": {}
   },
-  "files": ["src/index.ts", "src/tokens/contrast.ts"],
+  "files": ["src/index.ts", "src/tokens/contrast.ts", "src/editor/index.ts"],
   "include": ["src/**/*.d.ts"],
   "exclude": ["src/__tests__/**"]
 }

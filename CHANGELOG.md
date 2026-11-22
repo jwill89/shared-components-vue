@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-11-22
+
+The Markdown editor, with a dialect for Discord, and a preview of Discord's Markdown.
+
+### Added
+
+- KitMarkdownEditor, the one Markdown editor, in an entry of its own, `@jwill89/shared-components-vue/editor`, so a page with no editor never carries it. Formatted text on screen and Markdown in its model, with a toolbar of what its dialect can write, Markdown typed straight in taking its form, and pasted text read as Markdown. Its `commonmark` dialect writes text escaped only where it would otherwise read as Markdown, so `snake_case`, `&` and `<` stay as typed. Its `discord` dialect writes Discord's own Markdown: an Underline button and `__` for underline, bold always as `**`, spoilers, subtext and a quote to the end of the message, every line its own; mentions, channels, roles, emoji, times and commands shown by the names the app gives, suggested as `@`, `#`, `:` or `/` is typed, and a time put in from a date, a time of day and how Discord should show it. The `inline` profile takes marks only, on one line, for an embed's title, and the `plain` profile no Markdown at all, for its footer. An app adds its own pieces, each with its Markdown and its tool. It sits in a `group` KitFormField, and its `limit` counts the Markdown it writes.
+- KitDiscordPreview, Discord's Markdown drawn as Discord draws it, by the same names, a role's mention with a dot of the role's color; `inline` reads marks only, as Discord does in an embed's title. The `KitDiscordNames` type comes with it.
+- KitPopover's `closeAutoFocus` event, which comes as focus goes back to its control, and which a page prevents to send focus elsewhere.
+
 ## [0.10.0] - 2026-11-20
 
 A line under an empty table's title, and fields in a popover drawn at the size of every other field.
@@ -167,6 +177,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.11.0]: https://github.com/jwill89/shared-components-vue/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/jwill89/shared-components-vue/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/jwill89/shared-components-vue/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/jwill89/shared-components-vue/compare/v0.7.0...v0.8.0

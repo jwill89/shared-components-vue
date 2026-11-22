@@ -12,10 +12,13 @@ updates:
     groups:
       npm-minor:
         patterns: ['*']
-        # Reka UI is pinned and shipped to every app, so each new version comes on its own
-        # pull request, read before it lands.
-        exclude-patterns: ['reka-ui']
+        # Reka UI and TipTap are pinned and shipped to every app, so each new version comes on
+        # its own pull request, read before it lands.
+        exclude-patterns: ['reka-ui', '@tiptap/*']
         update-types: [minor, patch]
+      # Every TipTap package stays on one version, so they move together.
+      tiptap:
+        patterns: ['@tiptap/*']
     ignore:
       # Held on purpose: TypeScript stays on 6.x until vue-tsc and typescript-eslint support
       # TypeScript 7.1.

@@ -12,6 +12,13 @@ export type { KitColumn, KitSort } from './components/dataTable'
 export { default as KitConfirmHost } from './components/KitConfirmHost.vue'
 export { default as KitDatePicker } from './components/KitDatePicker.vue'
 export { default as KitDialog } from './components/KitDialog.vue'
+export { default as KitDiscordPreview } from './components/KitDiscordPreview.vue'
+export type {
+  KitDiscordLookup,
+  KitDiscordNames,
+  KitDiscordRole,
+  KitDiscordTimeStyle,
+} from './discord/tokens'
 export { default as KitDrawer } from './components/KitDrawer.vue'
 export { default as KitEmptyState } from './components/KitEmptyState.vue'
 export { default as KitErrorState } from './components/KitErrorState.vue'
