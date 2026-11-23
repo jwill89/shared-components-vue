@@ -20,7 +20,7 @@ jobs:
   # docs always, and every job when CI's own files, shared/ or the Taskfile change
   # (changes.yml). `task shared:ci:changes` shows what a push would run.
   changes:
-    uses: jwill89/shared-tooling/.github/workflows/changes.yml@v2.19.2
+    uses: jwill89/shared-tooling/.github/workflows/changes.yml@v2.19.3
     permissions:
       contents: read
       actions: read
@@ -35,7 +35,7 @@ jobs:
   web:
     needs: changes
     if: fromJSON(needs.changes.outputs.areas).kit
-    uses: jwill89/shared-tooling/.github/workflows/web.yml@v2.19.2
+    uses: jwill89/shared-tooling/.github/workflows/web.yml@v2.19.3
     with:
       dir: .
       scripts: lint format:check typecheck build test:coverage
@@ -47,19 +47,19 @@ jobs:
   e2e:
     needs: [changes, web]
     if: fromJSON(needs.changes.outputs.areas).kit
-    uses: jwill89/shared-tooling/.github/workflows/e2e.yml@v2.19.2
+    uses: jwill89/shared-tooling/.github/workflows/e2e.yml@v2.19.3
     with:
       dir: .
 
   docs:
-    uses: jwill89/shared-tooling/.github/workflows/docs.yml@v2.19.2
+    uses: jwill89/shared-tooling/.github/workflows/docs.yml@v2.19.3
 
   # OSV-Scanner over the lockfile. An osv-scanner.toml beside it passes over the advisories
   # that reach only lint, test or build tooling.
   osv:
     needs: changes
     if: fromJSON(needs.changes.outputs.areas).lockfiles
-    uses: jwill89/shared-tooling/.github/workflows/osv.yml@v2.19.2
+    uses: jwill89/shared-tooling/.github/workflows/osv.yml@v2.19.3
 
   # On a push to main, after the gate passes, tag and release the kit's version if it has no
   # release yet: tag v<version> (package.json), notes from that version's CHANGELOG section,
@@ -113,7 +113,7 @@ jobs:
   report:
     needs: [changes, web, e2e, docs, osv, release]
     if: failure()
-    uses: jwill89/shared-tooling/.github/workflows/report.yml@v2.19.2
+    uses: jwill89/shared-tooling/.github/workflows/report.yml@v2.19.3
     permissions:
       contents: read
       actions: read
