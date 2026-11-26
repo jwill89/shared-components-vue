@@ -9,6 +9,13 @@ export interface KitSelectOption {
   disabled?: boolean
 }
 
+/** A color a KitColorField offers, with its name for a screen reader. */
+export interface KitColorPreset {
+  /** The color, as `#rrggbb`. */
+  value: string
+  name: string
+}
+
 /** One choice in a KitCombobox, under the heading `group` when it has one. */
 export interface KitComboboxOption extends KitSelectOption {
   group?: string

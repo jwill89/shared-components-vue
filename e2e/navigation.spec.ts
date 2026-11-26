@@ -100,7 +100,10 @@ test('a field in a popover draws at the size of every other field, and a help no
 }) => {
   await page.goto('/')
   const size = (element: Element): number => parseFloat(getComputedStyle(element).fontSize)
-  const elsewhere = await page.getByLabel('Title', { exact: true }).evaluate(size)
+  const elsewhere = await page
+    .locator('#fields')
+    .getByLabel('Title', { exact: true })
+    .evaluate(size)
 
   await page.getByRole('button', { name: 'Give it a nickname' }).click()
   const inPopover = await page.getByLabel('Nickname', { exact: true }).evaluate(size)
@@ -116,7 +119,7 @@ test('a date picker stands as tall as a text box beside it', async ({ page }) =>
   await page.goto('/')
   const height = (element: Element): number => element.getBoundingClientRect().height
   const picker = await page.locator('.kit-date-picker').first().evaluate(height)
-  const box = await page.getByLabel('Title', { exact: true }).evaluate(height)
+  const box = await page.locator('#fields').getByLabel('Title', { exact: true }).evaluate(height)
   expect(picker).toBe(box)
 })
 

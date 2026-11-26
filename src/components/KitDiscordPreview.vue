@@ -182,8 +182,11 @@ const Body = computed(() =>
     padding-inline-start: var(--kit-space-lg);
   }
 
+  /* Code and a spoiler are edged as well as washed, so they show inside an embed, whose own
+     surface is the wash's. */
   .kit-discord-preview__code,
   .kit-discord-preview__code-block {
+    border: var(--kit-control-border-width) solid var(--kit-control-border);
     border-radius: var(--kit-radius-sm);
     background: var(--kit-surface-sunken);
     font-family: var(--kit-font-code);
@@ -229,6 +232,7 @@ const Body = computed(() =>
      says what they are, and tells a screen reader in words. */
   .kit-discord-preview__spoiler {
     padding: 0 var(--kit-space-2xs);
+    border: var(--kit-control-border-width) dashed var(--kit-control-border);
     border-radius: var(--kit-radius-sm);
     background: var(--kit-surface-sunken);
   }

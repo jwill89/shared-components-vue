@@ -5,6 +5,7 @@ export { default as KitAlert } from './components/KitAlert.vue'
 export type { KitAlertTone } from './components/KitAlert.vue'
 export { default as KitButton } from './components/KitButton.vue'
 export type { KitButtonVariant } from './components/KitButton.vue'
+export { default as KitColorField } from './components/KitColorField.vue'
 export { default as KitCombobox } from './components/KitCombobox.vue'
 export { default as KitConfirmDialog } from './components/KitConfirmDialog.vue'
 export { default as KitDataTable } from './components/KitDataTable.vue'
@@ -12,7 +13,16 @@ export type { KitColumn, KitSort } from './components/dataTable'
 export { default as KitConfirmHost } from './components/KitConfirmHost.vue'
 export { default as KitDatePicker } from './components/KitDatePicker.vue'
 export { default as KitDialog } from './components/KitDialog.vue'
+export { default as KitDiscordEmbedPreview } from './components/KitDiscordEmbedPreview.vue'
+export { default as KitDiscordMessagePreview } from './components/KitDiscordMessagePreview.vue'
 export { default as KitDiscordPreview } from './components/KitDiscordPreview.vue'
+export { DISCORD_COLORS, DISCORD_EMBED_LIMITS, discordEmbedLength } from './discord/embed'
+export type {
+  KitDiscordEmbed,
+  KitDiscordEmbedField,
+  KitDiscordPicture,
+  KitDiscordPictureChoice,
+} from './discord/embed'
 export type {
   KitDiscordLookup,
   KitDiscordNames,
@@ -55,7 +65,7 @@ export { default as KitTextField } from './components/KitTextField.vue'
 export { default as KitToastHost } from './components/KitToastHost.vue'
 export { default as KitTooltip } from './components/KitTooltip.vue'
 export { default as KitTurnstileWidget } from './components/KitTurnstileWidget.vue'
-export type { KitComboboxOption, KitSelectOption } from './components/options'
+export type { KitColorPreset, KitComboboxOption, KitSelectOption } from './components/options'
 export { confirm } from './composables/useConfirmQueue'
 export type { KitConfirmation } from './composables/useConfirmQueue'
 export { dismissAllToasts, onToast, useToast } from './composables/useToast'

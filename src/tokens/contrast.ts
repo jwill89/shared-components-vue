@@ -271,6 +271,7 @@ const VALUED_TOKENS = [
   'width-menu',
   'width-field',
   'width-number-field',
+  'width-color-field',
   'width-toast',
   'width-option-list',
   'height-option-list',

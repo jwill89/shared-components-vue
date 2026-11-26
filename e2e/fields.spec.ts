@@ -34,7 +34,7 @@ test('each control fits inside its field, with no reset stylesheet to lean on', 
 test('a text box and a box of several lines show the focus ring', async ({ page }) => {
   await page.goto('/')
   for (const label of ['Title', 'Notes']) {
-    const box = page.getByLabel(label, { exact: true })
+    const box = page.locator('#fields').getByLabel(label, { exact: true })
     await box.focus()
     expect(await outline(box)).toEqual(RING)
   }

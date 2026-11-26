@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-11-26
+
+Discord's embeds: an editor, in the shape Discord's API takes, a preview of one, and a preview of the whole message; and a color field.
+
+### Added
+
+- KitDiscordEmbedEditor, in the `/editor` entry, which edits one embed as a `v-model` in the shape Discord's API takes (`KitDiscordEmbed`): its title and link, words, author with their link and picture, color, large and small pictures, fields side by side or not, and footer with its picture and time. Its words and each field's value are written in the Markdown editor's Discord dialect, its title and field names on one line; each part counts against Discord's limit, and the embed against its 6,000 characters. The app passes the pictures to choose from, by URL as Discord takes them, and what a check found wrong, by each part's place in Discord's shape.
+- KitDiscordEmbedPreview, one embed drawn as Discord draws it: its bar of color, author, title and link, words, fields in Discord's rows, pictures, footer and time; and KitDiscordMessagePreview, the whole message from a bot, with Discord's App tag, its text, its embeds and the pictures under them. `picture` turns a URL no browser shows, such as an upload's, into what to draw.
+- KitColorField, a color as `#rrggbb` picked from an area, a hue, the presets offered or a hex typed, with `DISCORD_COLORS`, Discord's own, to offer; and `--kit-width-color-field`, how wide its button grows.
+- `DISCORD_EMBED_LIMITS` and `discordEmbedLength()`, to check an embed against Discord's limits as the editor counts it.
+
+### Changed
+
+- KitDiscordPreview edges code and spoilers as well as washing them, so they show inside an embed, whose own surface is the same as the wash.
+
 ## [0.11.0] - 2026-11-22
 
 The Markdown editor, with a dialect for Discord, and a preview of Discord's Markdown.
@@ -177,6 +192,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.12.0]: https://github.com/jwill89/shared-components-vue/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/jwill89/shared-components-vue/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/jwill89/shared-components-vue/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/jwill89/shared-components-vue/compare/v0.8.0...v0.9.0

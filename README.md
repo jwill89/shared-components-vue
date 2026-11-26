@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.11.0, has the first wave and the second, and the Markdown editor: the buttons, the spinner, the form field and its text, number, tag and date fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.12.0, has the first wave and the second, the Markdown editor and Discord's embeds: the buttons, the spinner, the form field and its text, number, tag, date and color fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; the embed editor and the embed and message previews; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.11.0/jwill89-shared-components-vue-0.11.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.12.0/jwill89-shared-components-vue-0.12.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -120,6 +120,14 @@ Every control sits in a `KitFormField`, whose slot hands it the id its label nam
 ```vue
 <KitFormField v-slot="field" label="Due by" group>
   <KitDatePicker v-model="dueBy" v-bind="field" :min="lentOn" />
+</KitFormField>
+```
+
+`KitColorField` takes a color as `#rrggbb`, or `''` for none. Its button shows the color's swatch and hex, and opens a picker with an area for saturation and brightness, a hue slider, the `presets` offered (`DISCORD_COLORS` is Discord's own) and the hex to type; while there is a color, a button beside it clears it. The color is the app's data, a role's or an embed's, never one of the kit's:
+
+```vue
+<KitFormField v-slot="field" label="Role color">
+  <KitColorField v-model="color" v-bind="field" :presets="DISCORD_COLORS" presets-label="Discord’s colors" />
 </KitFormField>
 ```
 
@@ -314,6 +322,24 @@ An app's own pieces go in `extensions`, each a TipTap extension with its Markdow
 
 ```vue
 <KitDiscordPreview :text="message" :names="{ members, roles, channels }" />
+```
+
+`KitDiscordEmbedEditor`, in the `/editor` entry with the Markdown editor, edits one embed in the shape Discord's API takes (`KitDiscordEmbed`), so an app posts what it holds as it is: the title and its link, the words, the author with their link and picture, the color, a large and a small picture, the fields, side by side or not, and the footer with its picture and time. Each part counts against Discord's own limit, and the whole embed against its 6,000 characters. Pictures are URLs, as Discord takes them (`attachment://file.png` for an upload); the app passes the ones to choose from, and the parts that take a picture show with them. `errors` holds what a check of the embed found wrong, by each part's place in Discord's shape (`title`, `author.name`, `fields[0].value`):
+
+```vue
+<KitDiscordEmbedEditor
+  v-model="message.embeds[0]" label="Embed 1" :pictures="uploads"
+  :names="names" :suggest="searchServer" :errors="problems"
+/>
+```
+
+`KitDiscordMessagePreview` draws the message as Discord will: the bot with Discord's App tag, the text, each embed as `KitDiscordEmbedPreview` draws one (its bar of color, its fields in Discord's rows, its pictures and footer), and the pictures under them. Since a URL such as `attachment://file.png` is no browser's, `picture` turns one into what to draw and what it shows; a web address it doesn't know is drawn as it is. An embed with no color takes `accentColor`, the bot's own in the server.
+
+```vue
+<KitDiscordMessagePreview
+  sender="Shelf bot" :avatar="botAvatar" :content="message.content" :embeds="message.embeds"
+  :names="names" :accent-color="accent" :picture="(url) => uploadsByUrl[url]"
+/>
 ```
 
 ### Icons

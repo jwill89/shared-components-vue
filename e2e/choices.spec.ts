@@ -84,7 +84,7 @@ test('a combobox narrows as the person types, and keeps several choices as chips
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
   await expect(genre).toHaveValue('History')
-  await page.getByRole('button', { name: 'Clear' }).click()
+  await page.getByRole('button', { name: 'Clear', exact: true }).click()
   await expect(genre).toHaveValue('')
 
   const tags = page.getByRole('combobox', { name: 'Tags' })
