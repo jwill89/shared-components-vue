@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.12.0, has the first wave and the second, the Markdown editor and Discord's embeds: the buttons, the spinner, the form field and its text, number, tag, date and color fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; the embed editor and the embed and message previews; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.13.0, has the first wave and the second, the Markdown editor, Discord's embeds and the table's next features: the buttons, the spinner, the form field and its text, number, tag, date and color fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table, with rows that open, filters, groups, a CSV, column widths and cards, and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; the embed editor and the embed and message previews; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.12.0/jwill89-shared-components-vue-0.12.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.13.0/jwill89-shared-components-vue-0.13.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -256,6 +256,26 @@ A toast reports how a finished action went and goes; a condition the person must
 ```
 
 Each column is a `KitColumn`: its `key` and `label`, whether it is `sortable`, a `sortValue` where it sorts by something other than what it shows, a `text` where it shows something other than the field, `hideLabel` for a heading only screen readers need, such as a column of buttons, and `rowHeader` for the column that names each row, whose cells a screen reader reads with the others. A list read again while it has rows keeps them, marked busy; the empty and nothing-matching states take a title and a line under it (`emptyTitle` and `emptyMessage`, `noMatchTitle` and `noMatchMessage`), and the states' icons come from the `empty-icon`, `no-match-icon` and `error-icon` slots. For a list too large to send whole, give the table one page and the count of every row as `total`: it then leaves searching, sorting and paging to the server and its models say what to fetch. The standards give a table the whole list, so a list paged this way is a departure the app records.
+
+The rest is asked for, and a table that asks for none of it is drawn as before:
+
+- **Rows that open**: a `detail` slot shows more under a row, opened by a button of its own in the row's first cell, named "Details" and the row's name (`detailLabel`), its chevron from the `expand-icon` slot. The rows open are `v-model:expanded`, by their keys.
+- **Filters**: a column marked `filter` offers its values over the table, each with how many rows hold it among those the search and the other filters leave, as `v-model:filters`, and a new choice starts at page one. A column whose rows hold several values gives them as `values`. Given the whole list, a choice no row holds any more lets go. With a server's page, the server's counts come as `facets`, and the filters go to the server with the search.
+- **Groups**: `groupBy` names the field rows are kept together by, each group under a heading row, which the `group` slot draws, and sorted within it. Rows with nothing in the field come last, under `noGroupText`.
+- **A CSV**: `csv`, the file's name, adds a button that saves every row matching, in the order shown, each column as its `csv` or its text; `csv: false` leaves a column out, as one with `hideLabel` and no `csv` is. Words a spreadsheet would run as a formula are kept as text. With a server's page, the button sends `download`, and the page fetches every row and hands them to the table's `exportCsv(rows)`. `toCsv()` and `downloadCsv()` make and save one elsewhere.
+- **Column widths**: `resizable` gives each heading an edge to drag, which the arrow keys also move (Shift by more, Home puts it back), and a "Column widths" panel that does the same by buttons. The widths are `v-model:widths`, in pixels, for a page to keep.
+- **Cards**: `stackBelow`, a length in `px`, `rem` or `em`, shows each row as a card, every cell under its heading's name, where the table is narrower than that.
+
+```vue
+<KitDataTable
+  v-model:search="query.search" v-model:sort="query.sort" v-model:page="query.page"
+  v-model:filters="query.filters" v-model:expanded="open" v-model:widths="widths"
+  :rows="loans" :columns="columns" row-key="id" label="Lending" group-by="room"
+  csv="lending" searchable resizable stack-below="40rem"
+>
+  <template #detail="{ row }"><p>{{ row.note }}</p></template>
+</KitDataTable>
+```
 
 ### Tooltips, covers and pictures
 

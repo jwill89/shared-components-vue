@@ -1,6 +1,8 @@
 <script setup lang="ts">
 // KitDataTable over forty books: searched, sorted and paged by the table itself, with a box to
-// select rows and a row's own action at its end, and each of its other states in turn.
+// select rows and a row's own action at its end, and each of its other states in turn. A second
+// table, over a smaller library, has the rest asked for: rows that open, filters with their counts,
+// groups, a CSV, columns to resize, and rows as cards where the panel is narrow.
 import { computed, ref } from 'vue'
 import {
   KitButton,
@@ -54,6 +56,58 @@ const states = [
 const rows = computed(() => (shown.value === 'empty' ? [] : books))
 
 const toast = useToast()
+
+interface Loan {
+  id: number
+  title: string
+  author: string
+  room: string
+  subjects: string[]
+  year: number
+  note: string
+}
+
+const subjects = [['fantasy'], ['science fiction'], ['science fiction', 'classic'], ['essays']]
+const loans: Loan[] = Array.from({ length: 24 }, (_, index) => ({
+  id: index + 1,
+  title: `Book ${String(index + 1)}`,
+  author: authors[(index * 3) % authors.length] ?? 'Unknown',
+  // Every seventh book is still to be put away, so one group has no name.
+  room: index % 7 === 6 ? '' : (shelves[index % shelves.length] ?? 'Study'),
+  subjects: subjects[index % subjects.length] ?? [],
+  year: 1970 + ((index * 11) % 50),
+  note: `Lent ${String((index % 5) + 1)} times; last back on a ${['Monday', 'Friday'][index % 2] ?? 'Monday'}.`,
+}))
+
+const loanColumns: KitColumn<Loan>[] = [
+  { key: 'title', label: 'Title', sortable: true, rowHeader: true },
+  { key: 'author', label: 'Author', sortable: true },
+  { key: 'room', label: 'Room', filter: true, text: (loan) => loan.room || 'Not put away' },
+  {
+    key: 'subjects',
+    label: 'Subjects',
+    filter: true,
+    values: (loan) => loan.subjects,
+    text: (loan) => loan.subjects.join(', '),
+  },
+  { key: 'year', label: 'Year', sortable: true, align: 'end', sortValue: (loan) => loan.year },
+]
+
+const loanSearch = ref('')
+const loanSort = ref<KitSort | null>(null)
+const loanPage = ref(1)
+const loanFilters = ref<Record<string, string>>({})
+const expanded = ref<(string | number)[]>([])
+const widths = ref<Record<string, number>>({})
+
+type Grouping = 'none' | 'room' | 'author'
+const grouping = ref<Grouping>('none')
+const groupings = [
+  { value: 'none', label: 'None' },
+  { value: 'room', label: 'Room' },
+  { value: 'author', label: 'Author' },
+] satisfies { value: Grouping; label: string }[]
+const groupBy = computed(() => (grouping.value === 'none' ? undefined : grouping.value))
 </script>
 
 <template>
@@ -89,10 +143,49 @@ const toast = useToast()
         </KitButton>
       </template>
     </KitDataTable>
+
+    <h3>KitDataTable, with the rest asked for</h3>
+    <p class="playground-note">
+      A row’s button opens its detail; Room and Subjects filter, each choice with how many rows hold
+      it; Group by keeps rows together; Download as CSV saves the rows matching; each heading’s edge
+      drags, or takes the arrow keys, and Column widths does the same by button. Narrower than
+      40rem, each row is a card. {{ expanded.length }} open.
+    </p>
+    <KitFormField v-slot="field" label="Group by" group>
+      <KitSegmentedControl v-model="grouping" v-bind="field" :options="groupings" />
+    </KitFormField>
+    <KitDataTable
+      v-model:search="loanSearch"
+      v-model:sort="loanSort"
+      v-model:page="loanPage"
+      v-model:filters="loanFilters"
+      v-model:expanded="expanded"
+      v-model:widths="widths"
+      :rows="loans"
+      :columns="loanColumns"
+      row-key="id"
+      label="Lending"
+      :page-size="8"
+      :group-by="groupBy"
+      no-group-text="Not put away"
+      search-label="Search lending"
+      csv="lending"
+      searchable
+      resizable
+      stack-below="40rem"
+    >
+      <template #detail="{ row }">
+        <p class="table-detail">{{ row.title }}, {{ row.year }}. {{ row.note }}</p>
+      </template>
+    </KitDataTable>
   </KitPagePanel>
 </template>
 
 <style scoped>
+.table-detail {
+  margin: 0;
+}
+
 .table-hidden {
   position: absolute;
   width: 1px;

@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-11-26
+
+The table's next features: rows that open, filters with their counts, groups, a CSV of the rows matching, columns to resize, and rows as cards.
+
+### Added
+
+- KitDataTable's rows that open: a `detail` slot shows more under a row, opened by a button of its own in the row's first cell, with the rows open as `v-model:expanded` and the button's chevron from the `expand-icon` slot.
+- KitDataTable's filters: a column marked `filter` offers its values over the table, each with how many rows hold it among those the search and the other filters leave, as `v-model:filters`; `values` gives a column whose rows hold several, and `facets` the counts a server made for its page. A choice no row holds any more lets go.
+- KitDataTable's groups: `groupBy` keeps rows that share a field together, under a heading row the `group` slot can draw, and sorts within each group.
+- KitDataTable's CSV: `csv`, the file's name, adds a button that saves every row matching, in the order shown, each column as its `csv` or its text, with words a spreadsheet would run as a formula kept as text. With a server's page the button sends `download`, and `exportCsv(rows)` saves the rows the page fetched. `toCsv()`, `csvCell()` and `downloadCsv()`, with the `KitCsvValue` and `KitFacet` types, make and save one elsewhere.
+- KitDataTable's column widths: `resizable` gives each heading an edge to drag or move by the arrow keys, and a "Column widths" panel of buttons that does the same, as `v-model:widths`.
+- KitDataTable's cards: `stackBelow` shows each row as a card, every cell under its heading's name, where the table is narrower than the length given.
+- The labels the new parts read, each with its default: `anyText`, `noGroupText`, `csvLabel`, `widthsLabel` and `detailLabel`; and the `csv-icon` slot.
+
+### Fixed
+
+- KitDataTable's headings' line runs under the selection boxes' column too, where it was a row's lighter line.
+
 ## [0.12.0] - 2026-11-26
 
 Discord's embeds: an editor, in the shape Discord's API takes, a preview of one, and a preview of the whole message; and a color field.
@@ -192,6 +210,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.13.0]: https://github.com/jwill89/shared-components-vue/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/jwill89/shared-components-vue/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/jwill89/shared-components-vue/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/jwill89/shared-components-vue/compare/v0.9.0...v0.10.0
