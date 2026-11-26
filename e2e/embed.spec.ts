@@ -47,7 +47,8 @@ test('a title typed and a field added show in the preview as Discord sets them',
   await page.goto('/#embeds')
   const title = embeds(page).getByRole('textbox', { name: 'Title', exact: true })
   await title.click()
-  await page.keyboard.press('End')
+  // The end of the title, not of the line on screen: the title wraps where the fonts make it.
+  await page.keyboard.press('Control+End')
   await page.keyboard.type(' tonight', { delay: 10 })
   await expect(embeds(page).locator('.kit-discord-embed__title')).toContainText('Darkness tonight')
 
