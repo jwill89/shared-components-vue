@@ -52,6 +52,7 @@ interface State {
   search: string
   sort: KitSort | null
   page: number
+  pageSize: number | undefined
   filters: Record<string, string>
   expanded: (string | number)[]
   widths: Record<string, number>
@@ -64,6 +65,7 @@ function table(props: Record<string, unknown> = {}, slots: Record<string, unknow
     search: '',
     sort: null,
     page: 1,
+    pageSize: props.pageSize as number | undefined,
     filters: {},
     expanded: [],
     widths: {},
@@ -87,6 +89,8 @@ function table(props: Record<string, unknown> = {}, slots: Record<string, unknow
               'onUpdate:sort': (next: KitSort | null) => (state.sort = next),
               page: state.page,
               'onUpdate:page': (next: number) => (state.page = next),
+              pageSize: state.pageSize,
+              'onUpdate:pageSize': (next: number | undefined) => (state.pageSize = next),
               filters: state.filters,
               'onUpdate:filters': (next: Record<string, string>) => (state.filters = next),
               expanded: state.expanded,
@@ -464,5 +468,43 @@ describe('KitDataTable’s cards', () => {
     expect(wide.wrapper.find('.is-stacked').exists()).toBe(false)
     expect(unread.wrapper.find('.is-stacked').exists()).toBe(false)
     expect(bare.wrapper.get('table').attributes('role')).toBe('table')
+  })
+})
+
+describe('KitDataTable’s pages and toolbar', () => {
+  it('offers a choice of rows on a page, which starts the pages again from the first', async () => {
+    const { wrapper, state, titles } = table({ pageSizes: [2, 4], pageSize: 2 })
+    state.page = 2
+    await flushPromises()
+    expect(titles()).toEqual(['Ubik', '=SUM(A1)'])
+    const size = filterSelect(wrapper, 'Rows on a page')
+    expect((size.props() as { options: unknown }).options).toEqual([
+      { value: 2, label: '2' },
+      { value: 4, label: '4' },
+    ])
+    size.vm.$emit('update:modelValue', 4)
+    await flushPromises()
+    expect(state.pageSize).toBe(4)
+    expect(state.page).toBe(1)
+    expect(titles()).toEqual(['Dune', 'Emma', 'Ubik', '=SUM(A1)'])
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('shows its pages over the rows as well, each navigation named apart', async () => {
+    const { wrapper } = table({ pageSize: 2, pagesAbove: true })
+    await flushPromises()
+    const navs = wrapper.findAll('nav')
+    expect(navs.map((nav) => nav.attributes('aria-label'))).toEqual([
+      'Pages of Books',
+      'Pages of Books, under the rows',
+    ])
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('puts the app’s own buttons in its toolbar', () => {
+    const { wrapper } = table({}, { toolbar: () => h('button', { type: 'button' }, 'Add a book') })
+    expect(wrapper.get('.kit-data-table__toolbar .kit-data-table__actions button').text()).toBe(
+      'Add a book',
+    )
   })
 })

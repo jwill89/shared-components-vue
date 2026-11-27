@@ -18,11 +18,11 @@ function picker(value: string, props: Record<string, unknown> = {}, fieldProps =
 }
 
 function parts(root: Element): string[] {
-  return [...root.querySelectorAll('.kit-date-picker__part')].map((part) => part.textContent.trim())
+  return [...root.querySelectorAll('.kit-date-field__part')].map((part) => part.textContent.trim())
 }
 
 async function openCalendar(root: Element): Promise<HTMLElement> {
-  const open = root.querySelector<HTMLButtonElement>('.kit-date-picker__open')
+  const open = root.querySelector<HTMLButtonElement>('.kit-date-field__open')
   open?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }))
   open?.click()
   await flushPromises()
@@ -83,7 +83,7 @@ describe('KitDatePicker', () => {
     await nextTick()
     expect(
       wrapper
-        .findAll('.kit-date-picker__part')
+        .findAll('.kit-date-field__part')
         .every((part) => part.attributes('data-placeholder') !== undefined),
     ).toBe(true)
   })
@@ -95,10 +95,61 @@ describe('KitDatePicker', () => {
     expect(group.classes()).toContain('is-invalid')
     expect(
       wrapper
-        .findAll('.kit-date-picker__part')
+        .findAll('.kit-date-field__part')
         .every((part) => part.attributes('aria-invalid') === 'true'),
     ).toBe(true)
     const described = document.getElementById(group.attributes('aria-describedby') ?? '')
     expect(described?.textContent).toContain('Say when it was lent.')
+  })
+
+  it('takes a time with `time`, showing a moment in its zone and naming the zone', async () => {
+    const { wrapper, state } = picker('2026-06-13T20:00:00.000Z', {
+      time: true,
+      timeZone: 'Europe/London',
+    })
+    await nextTick()
+    expect(parts(wrapper.element)).toEqual(['13', '06', '2026', '21', '00'])
+    const group = wrapper.get('.kit-date-picker')
+    const zone = wrapper.get('.kit-date-field__zone')
+    expect(zone.text()).toBe('BST')
+    expect(group.attributes('aria-describedby')).toBe(zone.attributes('id'))
+    expect(await axeFindings(wrapper)).toEqual([])
+
+    const hour = wrapper.findAll('.kit-date-field__part')[3]
+    hour?.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    await nextTick()
+    expect(state.value).toBe('2026-06-13T21:00:00Z')
+  })
+
+  it('writes nothing once a part is cleared', async () => {
+    const { wrapper, state } = picker('2026-11-20')
+    await nextTick()
+    const day = wrapper.findAll('.kit-date-field__part')[0]?.element
+    for (const press of ['Backspace', 'Backspace']) {
+      day?.dispatchEvent(new KeyboardEvent('keydown', { key: press, bubbles: true }))
+    }
+    await nextTick()
+    expect(state.value).toBe('')
+  })
+
+  it('shows a moment in the browser’s own zone where the page names none', async () => {
+    const { wrapper } = picker('2026-06-13T20:00:00Z', { time: true })
+    await nextTick()
+    const hour = new Date('2026-06-13T20:00:00Z').getHours()
+    expect(parts(wrapper.element)[3]).toBe(String(hour).padStart(2, '0'))
+    expect(wrapper.get('.kit-date-field__zone').text()).not.toBe('')
+  })
+
+  it('reads a moment without an offset as none, and starts its parts in its zone', async () => {
+    const { wrapper, state } = picker('2026-06-13T20:00', { time: true, timeZone: 'Asia/Tokyo' })
+    await nextTick()
+    const all = wrapper.findAll('.kit-date-field__part')
+    expect(all.every((part) => part.attributes('data-placeholder') !== undefined)).toBe(true)
+    for (const part of all) {
+      part.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+      await nextTick()
+    }
+    // Every part filled from midnight in Tokyo, nine hours ahead of UTC, makes a moment there.
+    expect(String(state.value)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00Z$/)
   })
 })

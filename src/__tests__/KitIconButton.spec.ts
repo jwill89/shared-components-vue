@@ -52,4 +52,29 @@ describe('KitIconButton', () => {
     expect(wrapper.attributes('disabled')).toBeDefined()
     expect(wrapper.classes()).toContain('kit-button--danger')
   })
+
+  it('is a toggle given `pressed`, its label the same either way and its icon told which', async () => {
+    const wrapper = kept(
+      mount(KitIconButton, {
+        props: { label: 'Favourite', pressed: false },
+        slots: {
+          default: ({ pressed }: { pressed: boolean }) =>
+            h('svg', { 'data-icon': pressed ? 'heart-solid' : 'heart' }),
+        },
+        attachTo: document.body,
+      }),
+    )
+    expect(wrapper.attributes('aria-pressed')).toBe('false')
+    expect(wrapper.find('[data-icon="heart"]').exists()).toBe(true)
+    await wrapper.setProps({ pressed: true })
+    expect(wrapper.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.attributes('aria-label')).toBe('Favourite')
+    expect(wrapper.find('[data-icon="heart-solid"]').exists()).toBe(true)
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('is no toggle without `pressed`', () => {
+    const wrapper = kept(mount(KitIconButton, { props: { label: 'Delete' } }))
+    expect(wrapper.attributes('aria-pressed')).toBeUndefined()
+  })
 })

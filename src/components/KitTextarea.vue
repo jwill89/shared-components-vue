@@ -4,7 +4,11 @@
 // over, since the server refuses it rather than cutting it short. A screen reader hears the
 // count when the box is focused, and is told as the remainder runs low, not at every key.
 // Any other textarea attribute (placeholder, name, autocomplete) passes through to the box.
-import { computed, useId } from 'vue'
+//
+// Given `grow`, the box grows with its text from `rows` lines up to `maxRows`, then scrolls, so
+// what is typed is never hidden behind a scroll bar in a box with room to spare. The browser
+// grows it where it can (`field-sizing: content`); elsewhere the box is measured as it changes.
+import { computed, nextTick, onBeforeUnmount, onMounted, useId, useTemplateRef, watch } from 'vue'
 import { formatCount } from '../format'
 
 const props = withDefaults(
@@ -15,9 +19,22 @@ const props = withDefaults(
     invalid?: boolean
     /** The most characters the value may hold, as the server checks it; no count without one. */
     limit?: number
+    /** Its height in lines, or the least it is, where it grows. */
     rows?: number
+    /** Grows with its text. */
+    grow?: boolean
+    /** The most lines it grows to before it scrolls. */
+    maxRows?: number
   }>(),
-  { id: undefined, describedBy: undefined, invalid: false, limit: Infinity, rows: 4 },
+  {
+    id: undefined,
+    describedBy: undefined,
+    invalid: false,
+    limit: Infinity,
+    rows: 4,
+    grow: false,
+    maxRows: 12,
+  },
 )
 
 const model = defineModel<string>({ required: true })
@@ -41,6 +58,49 @@ const count = computed(() => {
   const shown = `${formatCount(used.value)} / ${formatCount(props.limit)}`
   return over.value ? `${shown} (${formatCount(-left.value)} over)` : shown
 })
+const box = useTemplateRef<HTMLTextAreaElement>('box')
+
+// Where the browser can't size the box to its text, it is measured: its height let go, then set
+// to what its text takes, at each change of the text and of the box's width.
+const measured = typeof CSS === 'undefined' || !CSS.supports('field-sizing', 'content')
+let width = 0
+let watcher: ResizeObserver | undefined
+
+function fit(): void {
+  const element = box.value
+  if (!props.grow || !measured || !element) {
+    return
+  }
+  const edges = element.offsetHeight - element.clientHeight
+  element.style.height = 'auto'
+  element.style.height = `${String(element.scrollHeight + edges)}px`
+}
+
+watch(
+  () => [model.value, props.grow],
+  () => {
+    void nextTick(fit)
+  },
+)
+
+onMounted(() => {
+  fit()
+  if (measured && typeof ResizeObserver !== 'undefined' && box.value) {
+    watcher = new ResizeObserver(([entry]) => {
+      const now = entry?.contentRect.width ?? 0
+      if (now !== width) {
+        width = now
+        fit()
+      }
+    })
+    watcher.observe(box.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  watcher?.disconnect()
+})
+
 const announcement = computed(() => {
   if (left.value > warnAt) {
     return ''
@@ -56,8 +116,13 @@ const announcement = computed(() => {
     <textarea
       v-bind="$attrs"
       :id="id"
+      ref="box"
       v-model="model"
       class="kit-textarea__box"
+      :class="{ 'is-growing': grow }"
+      :style="
+        grow ? { '--kit-textarea-rows': rows, '--kit-textarea-max-rows': maxRows } : undefined
+      "
       :rows="rows"
       :aria-describedby="describedBy"
       :aria-invalid="invalid || over || undefined"
@@ -90,6 +155,20 @@ const announcement = computed(() => {
     font: inherit;
     line-height: var(--kit-line-height-prose);
     resize: vertical;
+  }
+
+  /* Growing, the box is as tall as its text, between its rows and its most, which take in its
+     space and edges; the browser sizes it where it can, and the script where it can't. */
+  .kit-textarea__box.is-growing {
+    --kit-textarea-rows: 4;
+    --kit-textarea-max-rows: 12;
+    --kit-textarea-edges: calc(2 * var(--kit-space-xs) + 2 * var(--kit-control-border-width));
+
+    min-height: calc(var(--kit-textarea-rows) * 1lh + var(--kit-textarea-edges));
+    max-height: calc(var(--kit-textarea-max-rows) * 1lh + var(--kit-textarea-edges));
+    overflow-y: auto;
+    resize: none;
+    field-sizing: content;
   }
 
   /* The browser's own placeholder grey falls short of AAA; the muted text color holds 7:1. */

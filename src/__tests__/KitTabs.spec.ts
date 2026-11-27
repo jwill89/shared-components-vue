@@ -95,4 +95,22 @@ describe('KitTabs', () => {
     expect(icon.element.closest('[aria-hidden="true"]')).not.toBeNull()
     expect(wrapper.findAll('[role="tab"]')[1]?.text()).toBe('Loans')
   })
+  it('shows a tab’s count after its words, read with them', () => {
+    const wrapper = kept(
+      mount(KitTabs, {
+        props: {
+          tabs: [
+            { key: 'readings', label: 'Readings', count: 1234 },
+            { key: 'drafts', label: 'Drafts' },
+          ],
+          label: 'Journal',
+          modelValue: 'readings',
+        },
+        slots: { readings: () => h('p', 'All of them.'), drafts: () => h('p', 'None.') },
+      }),
+    )
+    const tabs = wrapper.findAll('[role="tab"]')
+    expect(tabs.map((tab) => tab.text())).toEqual(['Readings 1,234', 'Drafts'])
+    expect(tabs[0]?.get('.kit-tabs__count').text()).toBe('1,234')
+  })
 })

@@ -6,6 +6,10 @@
 // by the keyboard as well as the pointer. Escape or a press outside closes it and gives focus
 // back to the button. While there is a color, a button beside the field clears it.
 //
+// Given `alpha`, the color may be see-through: the model is `#rrggbbaa`, the picker adds an
+// opacity slider, and the field shows how opaque the color is beside its hex where it isn't
+// wholly. A whole `#rrggbb` the page passes reads as wholly opaque.
+//
 // The color is the app's data, such as a role's or an embed's, never the kit's: the swatches
 // draw it, and the kit's own marks on them are neutral black and white, which hold on any color.
 // The icons come from the `chevron`, `check` and `clear` slots, the kit's own marks without them.
@@ -47,6 +51,8 @@ const props = withDefaults(
     /** What the clear button does, in words: "Clear the color". */
     clearLabel?: string
     disabled?: boolean
+    /** Whether the color may be see-through, as `#rrggbbaa`. */
+    alpha?: boolean
   }>(),
   {
     id: undefined,
@@ -57,6 +63,7 @@ const props = withDefaults(
     noneText: 'None',
     clearLabel: 'Clear the color',
     disabled: false,
+    alpha: false,
   },
 )
 
@@ -71,26 +78,54 @@ defineSlots<{
 }>()
 
 const WHOLE = /^#[0-9a-f]{6}$/i
+const SEE_THROUGH = /^#[0-9a-f]{8}$/i
+
+/** A color as the field keeps it: `#rrggbb`, or with `alpha`, `#rrggbbaa`; undefined for none. */
+function kept(value: string): string | undefined {
+  const lower = value.toLowerCase()
+  if (!props.alpha) {
+    return WHOLE.test(lower.slice(0, 7)) ? lower.slice(0, 7) : undefined
+  }
+  if (SEE_THROUGH.test(lower)) {
+    return lower
+  }
+  return WHOLE.test(lower) ? `${lower}ff` : undefined
+}
 
 /** The color, once it is a whole one; undefined for none. */
-const color = computed(() => (WHOLE.test(model.value) ? model.value.toLowerCase() : undefined))
+const color = computed(() =>
+  WHOLE.test(model.value) || (props.alpha && SEE_THROUGH.test(model.value))
+    ? kept(model.value)
+    : undefined,
+)
 
 // The picker always works on a color: with none chosen it starts from the first preset, or
 // black, and only a change made in it sets the model.
 const working = computed({
-  get: () => color.value ?? props.presets[0]?.value ?? '#000000',
+  get: () => color.value ?? kept(props.presets[0]?.value ?? '#000000') ?? '#000000',
   set: (value: string | Color) => {
     take(typeof value === 'string' ? value : colorToHex(value))
   },
 })
 
 /** The preset the model is, when it is one. */
-const preset = computed(() => props.presets.find((p) => p.value === color.value)?.value)
+const preset = computed(() => props.presets.find((p) => kept(p.value) === color.value)?.value)
 
-/** Takes a color from the picker as `#rrggbb`, leaving any transparency typed with it. */
+/** The color in words on the field: its hex, and how opaque it is where it isn't wholly. */
+const shownValue = computed(() => {
+  if (!color.value) {
+    return undefined
+  }
+  const opacity = props.alpha ? parseInt(color.value.slice(7, 9), 16) / 255 : 1
+  return opacity < 1
+    ? `${color.value.slice(0, 7)}, ${String(Math.round(opacity * 100))}% opaque`
+    : color.value.slice(0, 7)
+})
+
+/** Takes a color from the picker, as the field keeps it. */
 function take(value: string): void {
-  const hex = value.toLowerCase().slice(0, 7)
-  if (WHOLE.test(hex) && hex !== model.value) {
+  const hex = kept(value)
+  if (hex !== undefined && hex !== model.value) {
     model.value = hex
   }
 }
@@ -127,7 +162,7 @@ function clear(): void {
           :disabled="disabled"
         >
           <ColorSwatch class="kit-color-field__swatch" :color="color" aria-hidden="true" />
-          <span :id="valueId" class="kit-color-field__value">{{ color ?? noneText }}</span>
+          <span :id="valueId" class="kit-color-field__value">{{ shownValue ?? noneText }}</span>
           <span class="kit-color-field__chevron" aria-hidden="true">
             <slot name="chevron"><KitGlyph name="chevron" /></slot>
           </span>
@@ -148,6 +183,16 @@ function clear(): void {
         <ColorSliderRoot
           v-model="working"
           channel="hue"
+          color-space="hsb"
+          class="kit-color-picker__slider"
+        >
+          <ColorSliderTrack class="kit-color-picker__track" />
+          <ColorSliderThumb class="kit-color-picker__thumb" />
+        </ColorSliderRoot>
+        <ColorSliderRoot
+          v-if="alpha"
+          v-model="working"
+          channel="alpha"
           color-space="hsb"
           class="kit-color-picker__slider"
         >

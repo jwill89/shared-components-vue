@@ -1,15 +1,61 @@
 <script setup lang="ts">
 // KitMarkdownEditor in each dialect and profile, loaded on first use from the package's `/editor`
 // entry as an app loads it, each beside the Markdown it stores; and KitDiscordPreview drawing the
-// Discord message as Discord will, by the same names the editor shows its mentions by.
-import { defineAsyncComponent, ref } from 'vue'
+// Discord message as Discord will, by the same names the editor shows its mentions by; and an
+// app's own extension, whose tools stand in a group of their own, one shown only in a list and
+// one a menu of snippets.
+import { defineAsyncComponent, ref, shallowRef } from 'vue'
 import { KitDiscordPreview, KitFormField, KitPagePanel } from '@jwill89/shared-components-vue'
 import type { KitDiscordNames } from '@jwill89/shared-components-vue'
-import type { KitDiscordSuggestion } from '@jwill89/shared-components-vue/editor'
+import type {
+  KitDiscordSuggestion,
+  KitEditorExtension,
+} from '@jwill89/shared-components-vue/editor'
+import type { Editor } from '@tiptap/core'
 
 const KitMarkdownEditor = defineAsyncComponent(() =>
   import('@jwill89/shared-components-vue/editor').then((m) => m.KitMarkdownEditor),
 )
+
+// An app's own piece, made once TipTap has loaded, before the editor that takes it mounts.
+const snippets = shallowRef<KitEditorExtension[]>([])
+const NotesEditor = defineAsyncComponent(async () => {
+  const [editor, { Extension }] = await Promise.all([
+    import('@jwill89/shared-components-vue/editor'),
+    import('@tiptap/core'),
+  ])
+  const snippet = (label: string, words: string) => ({
+    label,
+    run: (e: Editor) => e.chain().focus().insertContent(words).run(),
+  })
+  snippets.value = [
+    {
+      extension: Extension.create({ name: 'playgroundSnippets' }),
+      tools: [
+        {
+          name: 'leave-list',
+          label: 'Leave the list',
+          glyph: '⇤',
+          applies: (e) => e.isActive('listItem'),
+          run: (e) => e.chain().focus().liftListItem('listItem').run(),
+        },
+        {
+          name: 'snippet',
+          label: 'Insert a snippet',
+          glyph: '+',
+          icon: 'plus',
+          menu: () => [
+            snippet('Opening hours', 'Open ten until six, Monday to Saturday.'),
+            snippet('Lending rules', 'Three weeks a loan, and one renewal.'),
+          ],
+        },
+      ],
+    },
+  ]
+  return editor.KitMarkdownEditor
+})
+
+const notes = ref('- Signed copies on the left\n- Loans come back to the top\n\nAsk at the desk.')
 
 /** A drawn emoji to stand in for a server's own: a round face in one hue, as an SVG data URL. */
 function emoji(hue: number): string {
@@ -126,6 +172,20 @@ function suggest(kind: KitDiscordSuggestion['kind'], query: string): KitDiscordS
     <p class="editor-title-preview">
       Title as Discord shows it: <KitDiscordPreview :text="title" inline />
     </p>
+
+    <h3>An app’s own extension</h3>
+    <p class="playground-note">
+      Its tools stand apart: Leave the list shows only in a list, and Insert a snippet opens a menu.
+    </p>
+    <div class="editor-pair">
+      <KitFormField v-slot="field" label="Shelf notes" group>
+        <NotesEditor v-model="notes" v-bind="field" :extensions="snippets" />
+      </KitFormField>
+      <figure class="editor-stored">
+        <figcaption>What it stores</figcaption>
+        <pre data-testid="notes-markdown">{{ notes }}</pre>
+      </figure>
+    </div>
   </KitPagePanel>
 </template>
 

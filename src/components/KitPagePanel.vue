@@ -2,7 +2,9 @@
 // The one panel a page's content sits in: a raised surface with an optional heading (a
 // section named by it), a line under the heading, buttons at the heading's end, and a footer
 // set apart by a rule. Panels sit under the page's h1, so their headings are h2 unless one
-// nests in another, which takes `level` 3.
+// nests in another, which takes `level` 3. As on the page header, the `help` slot takes a
+// KitHelpTip beside the heading, the `icon` slot an icon before it, and `eyebrow` a short line
+// over it.
 import { useId } from 'vue'
 import { filled } from './slots'
 
@@ -12,8 +14,10 @@ withDefaults(
     description?: string
     /** The heading's level: 2, or 3 for a panel inside a panel. */
     level?: 2 | 3
+    /** A short line over the heading: the kind of thing the panel holds. */
+    eyebrow?: string
   }>(),
-  { title: undefined, description: undefined, level: 2 },
+  { title: undefined, description: undefined, level: 2, eyebrow: undefined },
 )
 
 defineSlots<{
@@ -21,6 +25,10 @@ defineSlots<{
   /** Buttons at the heading's end. */
   actions?: () => unknown
   footer?: () => unknown
+  /** A KitHelpTip beside the heading. */
+  help?: () => unknown
+  /** An icon before the heading, from the app's own set. */
+  icon?: () => unknown
 }>()
 
 const headingId = useId()
@@ -30,14 +38,16 @@ const headingId = useId()
   <section class="kit-page-panel" :aria-labelledby="title ? headingId : undefined">
     <header v-if="title || filled($slots.actions)" class="kit-page-panel__header">
       <div class="kit-page-panel__words">
-        <component
-          :is="`h${String(level)}`"
-          v-if="title"
-          :id="headingId"
-          class="kit-page-panel__title"
-        >
-          {{ title }}
-        </component>
+        <p v-if="eyebrow && title" class="kit-page-panel__eyebrow">{{ eyebrow }}</p>
+        <div v-if="title" class="kit-page-panel__heading">
+          <span v-if="filled($slots.icon)" class="kit-page-panel__icon" aria-hidden="true">
+            <slot name="icon" />
+          </span>
+          <component :is="`h${String(level)}`" :id="headingId" class="kit-page-panel__title">
+            {{ title }}
+          </component>
+          <span v-if="filled($slots.help)" class="kit-page-panel__help"><slot name="help" /></span>
+        </div>
         <p v-if="description" class="kit-page-panel__description">{{ description }}</p>
       </div>
       <div v-if="filled($slots.actions)" class="kit-page-panel__actions">
@@ -78,7 +88,27 @@ const headingId = useId()
     min-width: 0;
   }
 
+  .kit-page-panel__eyebrow {
+    margin: 0 0 var(--kit-space-2xs);
+    color: var(--kit-text-muted);
+    font-size: var(--kit-text-size-sm);
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-page-panel__heading {
+    display: flex;
+    align-items: center;
+    gap: var(--kit-space-xs);
+  }
+
+  .kit-page-panel__icon,
+  .kit-page-panel__help {
+    display: inline-flex;
+    flex: none;
+  }
+
   .kit-page-panel__title {
+    min-width: 0;
     margin: 0;
     font-family: var(--kit-font-heading);
     font-size: var(--kit-text-size-lg);

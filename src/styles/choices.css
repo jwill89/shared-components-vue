@@ -1,0 +1,30 @@
+/*
+ * The layout KitCheckboxGroup and KitRadioGroup share: their boxes in a column, or side by side
+ * as many to a line as fit when `inline`, and each heading's run apart from the next, its
+ * heading in the muted color over it.
+ */
+@layer kit {
+  .kit-choice-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--kit-space-sm);
+    min-width: 0;
+  }
+
+  .kit-choice-group__options {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .kit-choice-group.is-inline .kit-choice-group__options {
+    flex-flow: row wrap;
+    column-gap: var(--kit-space-lg);
+  }
+
+  .kit-choice-group__heading {
+    display: block;
+    color: var(--kit-text-muted);
+    font-size: var(--kit-text-size-sm);
+    font-weight: var(--kit-font-weight-strong);
+  }
+}

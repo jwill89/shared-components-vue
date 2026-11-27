@@ -68,7 +68,9 @@ export const UNPAIRED: Readonly<Record<string, string>> = {
 
 /**
  * How far a button's hover moves from its rest. KitButton.vue writes the same numbers into
- * its color-mix() calls, so the two change together. A filled button's fill moves toward the
+ * its color-mix() calls, so the two change together, and so do what is drawn as a plain button:
+ * the buttons of KitDisclosure and KitAccordion (disclosure.css), KitFileField's zone, and
+ * KitNavList's links and buttons. A filled button's fill moves toward the
  * page's text color, which takes it away from its own words in either scheme; a quiet button
  * takes a faint wash of the accent over whatever surface it sits on, and a plain one the same of
  * the text color.
@@ -77,14 +79,15 @@ export const BUTTON_HOVER = { filled: 0.15, quiet: 0.06 } as const
 
 /**
  * How much of its tone a toast is washed with, over the raised surface. KitToastList.vue writes
- * the same number. Each tone's toast holds its words, and its plain Dismiss button's at rest and
+ * the same number, and KitSaveBar.vue does for a conflict, in the warning tone. Each tone's toast holds its words, and its plain Dismiss button's at rest and
  * on hover, at AAA on the wash, and its icon at 3:1.
  */
 export const TOAST_TINT = 0.1
 
 /**
  * How much of its tone an alert, or a failed load's state, is washed with, over the raised
- * surface. KitAlert.vue and KitErrorState.vue write the same number. It is fainter than a
+ * surface. KitAlert.vue and KitErrorState.vue write the same number, and KitBadge.vue does for
+ * a badge in a tone. It is fainter than a
  * toast's, since an alert may hold muted words and links, which it keeps at AAA, and buttons,
  * whose borders it keeps at 3:1 and a quiet or plain one's hover at AAA.
  */
@@ -92,7 +95,9 @@ export const ALERT_TINT = 0.06
 
 /**
  * How much of the accent the option under the keyboard or pointer, in an open list, is washed
- * with. option-list.css writes the same number.
+ * with. option-list.css writes the same number, KitFileField.vue does for its zone while files
+ * are held over it, and dates.css does for the part of a date being typed in and the days
+ * between a range's ends.
  */
 export const OPTION_HIGHLIGHT = 0.12
 
@@ -251,6 +256,8 @@ const VALUED_TOKENS = [
   'space-lg',
   'space-xl',
   'control-height',
+  'control-height-small',
+  'control-height-large',
   'control-border-width',
   'radius-sm',
   'radius-md',
@@ -259,6 +266,7 @@ const VALUED_TOKENS = [
   'focus-ring-offset',
   'shadow-overlay',
   'scrim',
+  'layer-sticky',
   'layer-cover',
   'layer-dialog',
   'layer-toast',
@@ -266,12 +274,15 @@ const VALUED_TOKENS = [
   'duration-quick',
   'duration-spin',
   'measure-prose',
+  'width-dialog-narrow',
   'width-dialog',
   'width-dialog-wide',
+  'width-dialog-widest',
   'width-menu',
   'width-field',
   'width-number-field',
   'width-color-field',
+  'width-date-part',
   'width-toast',
   'width-option-list',
   'height-option-list',

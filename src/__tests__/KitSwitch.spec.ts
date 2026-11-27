@@ -110,4 +110,22 @@ describe('KitSegmentedControl', () => {
     expect(wrapper.get('[role="switch"]').attributes('labelledby')).toBeUndefined()
     expect(wrapper.find('label').exists()).toBe(true)
   })
+  it('takes several at once given `multiple`, kept in the options’ order, and may hold none', async () => {
+    const { wrapper, state } = field(
+      KitSegmentedControl,
+      ['list'],
+      { label: 'Show', group: true },
+      { options: views.slice(0, 2), multiple: true },
+    )
+    await flushPromises()
+    const [grid, list] = wrapper.findAll('button')
+    await grid?.trigger('click')
+    expect(state.value).toEqual(['grid', 'list'])
+    await nextTick()
+    await list?.trigger('click')
+    await nextTick()
+    await grid?.trigger('click')
+    expect(state.value).toEqual([])
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
 })

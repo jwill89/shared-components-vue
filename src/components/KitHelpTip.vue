@@ -52,5 +52,18 @@ const name = computed(() => `About ${props.topic}`)
   .kit-help-tip__note > :deep(:last-child) {
     margin-bottom: 0;
   }
+
+  /* A short list of terms: each term over what it says, and a little room before the next. */
+  .kit-help-tip__note :deep(dt) {
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-help-tip__note :deep(dd) {
+    margin: 0 0 var(--kit-space-xs);
+  }
+
+  .kit-help-tip__note :deep(dd:last-child) {
+    margin-bottom: 0;
+  }
 }
 </style>

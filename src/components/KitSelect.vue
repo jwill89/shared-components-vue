@@ -4,12 +4,18 @@
 // a KitCombobox. The closed select is a button its label names; Space, Enter or the arrow keys
 // open the list, the arrows move through it, Enter or Space picks, and Escape closes it without
 // a change. The list opens over the page, so its styles are the global option-list ones.
+// Options with a `group` sit under its heading, in the order they come. Any other attribute, such
+// as an `aria-label` where no field's label names it, goes on the button: Reka's root draws
+// nothing to carry it.
+import { computed } from 'vue'
 import {
   SelectContent,
+  SelectGroup,
   SelectIcon,
   SelectItem,
   SelectItemIndicator,
   SelectItemText,
+  SelectLabel,
   SelectPortal,
   SelectRoot,
   SelectTrigger,
@@ -17,9 +23,10 @@ import {
   SelectViewport,
 } from 'reka-ui'
 import KitGlyph from './KitGlyph.vue'
+import { byHeading } from './options'
 import type { KitSelectOption } from './options'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     options: O[]
     id?: string
@@ -39,6 +46,8 @@ withDefaults(
   },
 )
 
+defineOptions({ inheritAttrs: false })
+
 const model = defineModel<O['value']>()
 
 defineSlots<{
@@ -47,11 +56,14 @@ defineSlots<{
   /** The mark beside the chosen option; a drawn check by default. */
   check?: () => unknown
 }>()
+
+const runs = computed(() => byHeading(props.options))
 </script>
 
 <template>
   <SelectRoot v-model="model" :disabled="disabled">
     <SelectTrigger
+      v-bind="$attrs"
       :id="id"
       class="kit-select"
       :class="{ 'is-invalid': invalid }"
@@ -66,18 +78,23 @@ defineSlots<{
     <SelectPortal>
       <SelectContent class="kit-option-list" position="popper" :side-offset="4">
         <SelectViewport class="kit-option-list__viewport">
-          <SelectItem
-            v-for="option in options"
-            :key="option.value"
-            :value="option.value"
-            :disabled="option.disabled"
-            class="kit-option-list__item"
-          >
-            <SelectItemIndicator class="kit-option-list__check">
-              <slot name="check"><KitGlyph name="check" /></slot>
-            </SelectItemIndicator>
-            <SelectItemText>{{ option.label }}</SelectItemText>
-          </SelectItem>
+          <SelectGroup v-for="run in runs" :key="run.heading ?? ''" class="kit-option-list__group">
+            <SelectLabel v-if="run.heading" class="kit-option-list__group-label">
+              {{ run.heading }}
+            </SelectLabel>
+            <SelectItem
+              v-for="option in run.options"
+              :key="option.value"
+              :value="option.value"
+              :disabled="option.disabled"
+              class="kit-option-list__item"
+            >
+              <SelectItemIndicator class="kit-option-list__check">
+                <slot name="check"><KitGlyph name="check" /></slot>
+              </SelectItemIndicator>
+              <SelectItemText>{{ option.label }}</SelectItemText>
+            </SelectItem>
+          </SelectGroup>
         </SelectViewport>
       </SelectContent>
     </SelectPortal>

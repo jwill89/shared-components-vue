@@ -10,6 +10,11 @@
 // `author.name`, `fields[0].value`), as a server that checks the embed reports it. `label` is
 // what the page calls the embed, "Embed 1", which the buttons that add and remove its fields
 // name it by. The app draws the embed's own heading and any button that removes it.
+//
+// Given `v-model:components`, the message's rows of buttons in Discord's shape, it edits the
+// message's link buttons too, under the embed's parts: each button's words, link and emoji, up to
+// `maxButtons`, written back five to a row as Discord lays them out. Their errors go by the same
+// places (`components[0].components[1].url`).
 import { computed, ref, useId, watch } from 'vue'
 import KitButton from '../components/KitButton.vue'
 import KitColorField from '../components/KitColorField.vue'
@@ -21,14 +26,21 @@ import KitSelect from '../components/KitSelect.vue'
 import KitSwitch from '../components/KitSwitch.vue'
 import KitTextField from '../components/KitTextField.vue'
 import {
+  DISCORD_BUTTON_LIMITS,
   DISCORD_COLORS,
   DISCORD_EMBED_LIMITS as LIMITS,
+  actionRows,
   colorHex,
   colorNumber,
   discordEmbedLength,
+  emojiText,
+  linkButtons,
+  readEmoji,
   tidyEmbed,
+  type KitDiscordActionRow,
   type KitDiscordEmbed,
   type KitDiscordEmbedField,
+  type KitDiscordLinkButton,
   type KitDiscordPictureChoice,
 } from '../discord/embed'
 import type { KitDiscordNames } from '../discord/tokens'
@@ -50,8 +62,11 @@ const props = withDefaults(
     suggest?: KitDiscordSuggest
     /** What the color shows while the embed has none of its own. */
     noColorText?: string
+    /** The most link buttons the message may hold, with `v-model:components`: Discord takes 25. */
+    maxButtons?: number
   }>(),
   {
+    maxButtons: DISCORD_BUTTON_LIMITS.perRow,
     label: 'the embed',
     pictures: () => [],
     errors: () => ({}),
@@ -62,6 +77,8 @@ const props = withDefaults(
 )
 
 const model = defineModel<KitDiscordEmbed>({ required: true })
+/** The message's rows of buttons; its Buttons part shows only where the page binds this. */
+const components = defineModel<KitDiscordActionRow[]>('components')
 
 defineSlots<{
   /** The icon of the button that adds a field. */
@@ -109,34 +126,9 @@ function footer(parts: Partial<NonNullable<KitDiscordEmbed['footer']>>): void {
   change({ footer: { text: '', ...latest.footer, ...parts } })
 }
 
-// -- The time in the footer, held as ISO 8601 and shown in the person's own time zone --------------
-const timeDate = ref('')
-const timeClock = ref('')
-
-function twoDigits(value: number): string {
-  return String(value).padStart(2, '0')
-}
-
-watch(
-  () => model.value.timestamp,
-  (timestamp) => {
-    const at = timestamp ? new Date(timestamp) : null
-    if (!at || Number.isNaN(at.getTime())) {
-      timeDate.value = ''
-      timeClock.value = ''
-      return
-    }
-    timeDate.value = `${String(at.getFullYear())}-${twoDigits(at.getMonth() + 1)}-${twoDigits(at.getDate())}`
-    timeClock.value = `${twoDigits(at.getHours())}:${twoDigits(at.getMinutes())}`
-  },
-  { immediate: true },
-)
-
-function setTime(date: string, clock: string): void {
-  timeDate.value = date
-  timeClock.value = clock
-  const at = date ? new Date(`${date}T${clock || '00:00'}`) : null
-  change({ timestamp: at && !Number.isNaN(at.getTime()) ? at.toISOString() : undefined })
+// -- The time in the footer: a moment, as Discord takes it, typed in the person's own time zone --
+function setTime(moment: string): void {
+  change({ timestamp: moment || undefined })
 }
 
 // -- Fields ---------------------------------------------------------------------------------------
@@ -170,6 +162,74 @@ function removeField(index: number): void {
 }
 
 const full = computed(() => fields.value.length >= LIMITS.fields)
+
+// -- The message's link buttons, kept as Discord's rows, five to a row --------------------------
+let latestRows = components.value ?? []
+watch(components, (rows) => {
+  latestRows = rows ?? []
+})
+const buttons = computed(() => linkButtons(components.value))
+let madeButtons = 0
+const buttonKeys = ref<number[]>(buttons.value.map(() => madeButtons++))
+watch(
+  () => buttons.value.length,
+  (count) => {
+    while (buttonKeys.value.length < count) {
+      buttonKeys.value.push(madeButtons++)
+    }
+    buttonKeys.value.length = count
+  },
+)
+
+function setButtons(next: KitDiscordLinkButton[]): void {
+  latestRows = actionRows(next)
+  components.value = latestRows
+}
+
+/** Changes a button, leaving out words or an emoji left empty. */
+function changeButton(
+  index: number,
+  parts: { label?: string; url?: string; emoji?: string },
+): void {
+  setButtons(
+    linkButtons(latestRows).map((button, at) => {
+      if (at !== index) {
+        return button
+      }
+      const { label, emoji, ...rest } = button
+      const words = parts.label ?? label ?? ''
+      const sign = parts.emoji === undefined ? emoji : readEmoji(parts.emoji)
+      return {
+        ...rest,
+        url: parts.url ?? button.url,
+        ...(words ? { label: words } : {}),
+        ...(sign ? { emoji: sign } : {}),
+      }
+    }),
+  )
+}
+
+function addButton(): void {
+  buttonKeys.value.push(madeButtons++)
+  setButtons([...linkButtons(latestRows), { type: 2, style: 5, url: '' }])
+}
+
+function removeButton(index: number): void {
+  buttonKeys.value.splice(index, 1)
+  setButtons(linkButtons(latestRows).filter((_, at) => at !== index))
+}
+
+const buttonsFull = computed(() => buttons.value.length >= props.maxButtons)
+
+/** A button's part's error, by its place among Discord's rows. */
+function buttonError(index: number, part: string): string | undefined {
+  const row = String(Math.floor(index / DISCORD_BUTTON_LIMITS.perRow))
+  const place = String(index % DISCORD_BUTTON_LIMITS.perRow)
+  return error(`components[${row}].components[${place}].${part}`)
+}
+
+/** What a button's emoji box says it takes, bound from here, as vue-tsc reads it (AGENTS.md). */
+const EMOJI_HINT = 'An emoji, or one of the server’s own as <:name:id>.'
 
 // -- The whole embed's count --------------------------------------------------------------------
 const countId = useId()
@@ -436,33 +496,109 @@ const announcement = computed(() => {
       <KitFormField
         v-slot="field"
         label="Time in the footer"
-        hint="Each reader sees it on their own clock."
+        hint="Typed in your own time zone; each reader sees it on their own clock."
         :error="error('timestamp')"
         group
       >
         <KitDatePicker
           v-bind="field"
-          :model-value="timeDate"
-          @update:model-value="setTime($event, timeClock)"
-        />
-      </KitFormField>
-      <KitFormField v-if="timeDate" v-slot="field" label="Time of day">
-        <KitTextField
-          v-bind="field"
-          :model-value="timeClock"
-          type="time"
-          @update:model-value="setTime(timeDate, $event)"
+          :model-value="model.timestamp ?? ''"
+          time
+          @update:model-value="setTime($event)"
         />
       </KitFormField>
       <KitIconButton
-        v-if="timeDate"
+        v-if="model.timestamp"
         class="kit-discord-embed-editor__clear-time"
         :label="`Clear the time of ${label}`"
         variant="plain"
-        @click="setTime('', '')"
+        @click="setTime('')"
       >
         <slot name="remove-icon"><KitGlyph name="cross" /></slot>
       </KitIconButton>
+    </div>
+
+    <div
+      v-if="components !== undefined"
+      class="kit-discord-embed-editor__fields"
+      role="group"
+      :aria-labelledby="`${countId}-buttons`"
+      :aria-describedby="`${countId}-buttons-about`"
+    >
+      <span :id="`${countId}-buttons`" class="kit-discord-embed-editor__caption">Buttons</span>
+      <p :id="`${countId}-buttons-about`" class="kit-discord-embed-editor__note">
+        Links under the message, each opening where it leads.
+      </p>
+      <p v-if="error('components')" class="kit-discord-embed-editor__error">
+        {{ error('components') }}
+      </p>
+      <ol v-if="buttons.length" class="kit-discord-embed-editor__list">
+        <li
+          v-for="(button, at) in buttons"
+          :key="buttonKeys[at]"
+          class="kit-discord-embed-editor__field"
+        >
+          <div class="kit-discord-embed-editor__row">
+            <KitFormField
+              v-slot="field"
+              :label="`Button ${at + 1}’s words`"
+              :error="buttonError(at, 'label')"
+            >
+              <KitTextField
+                v-bind="field"
+                :model-value="button.label ?? ''"
+                :maxlength="DISCORD_BUTTON_LIMITS.label"
+                @update:model-value="changeButton(at, { label: $event })"
+              />
+            </KitFormField>
+            <KitFormField
+              v-slot="field"
+              :label="`Button ${at + 1}’s link`"
+              :error="buttonError(at, 'url')"
+              required
+            >
+              <KitTextField
+                v-bind="field"
+                :model-value="button.url"
+                type="url"
+                :maxlength="DISCORD_BUTTON_LIMITS.url"
+                @update:model-value="changeButton(at, { url: $event })"
+              />
+            </KitFormField>
+            <KitFormField
+              v-slot="field"
+              :label="`Button ${at + 1}’s emoji`"
+              :hint="EMOJI_HINT"
+              :error="buttonError(at, 'emoji')"
+            >
+              <KitTextField
+                v-bind="field"
+                :model-value="emojiText(button.emoji)"
+                @update:model-value="changeButton(at, { emoji: $event })"
+              />
+            </KitFormField>
+          </div>
+          <div class="kit-discord-embed-editor__field-actions">
+            <KitButton variant="quiet" @click="removeButton(at)">
+              <template #icon
+                ><slot name="remove-icon"><KitGlyph name="cross" /></slot
+              ></template>
+              Remove button {{ at + 1 }}
+            </KitButton>
+          </div>
+        </li>
+      </ol>
+      <div class="kit-discord-embed-editor__add">
+        <KitButton :disabled="buttonsFull" @click="addButton">
+          <template #icon
+            ><slot name="add-icon"><KitGlyph name="plus" /></slot
+          ></template>
+          Add a button
+        </KitButton>
+        <span v-if="buttonsFull" class="kit-discord-embed-editor__note">
+          A message holds at most {{ maxButtons }} buttons here.
+        </span>
+      </div>
     </div>
 
     <p class="kit-discord-embed-editor__count" :class="{ 'is-over': over }">{{ count }}</p>

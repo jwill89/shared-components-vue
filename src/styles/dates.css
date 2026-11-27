@@ -1,0 +1,252 @@
+/* What KitDatePicker, KitDateRangePicker and KitTimeField share: the field, a box like a text
+   box's with its parts in a row, and the month's calendar the pickers open. */
+@layer kit {
+  /* The parts wrap among themselves on a narrow screen, and the button stays at the field's end;
+     with the first part's own room, the box's padding sets the digits in as a text box's words. */
+  .kit-date-field {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: var(--kit-control-height);
+    padding-inline-start: var(--kit-space-xs);
+    border: var(--kit-control-border-width) solid var(--kit-control-border);
+    border-radius: var(--kit-radius-md);
+    background: var(--kit-surface-raised);
+    color: var(--kit-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A field with no button at its end keeps the same room after its parts as before them. */
+  .kit-date-field--bare {
+    padding-inline-end: var(--kit-space-xs);
+  }
+
+  .kit-date-field:focus-within {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: var(--kit-focus-ring-offset);
+  }
+
+  .kit-date-field.is-invalid {
+    border-color: var(--kit-danger);
+    box-shadow: inset 0 0 0 1px var(--kit-danger);
+  }
+
+  .kit-date-field[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .kit-date-field__parts {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .kit-date-field > .kit-date-field__parts {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Each part is as wide as its digits, sitting close to the separators as a date is written,
+     and pressed over the box's whole height, lying over its borders as the button at its end does;
+     a part showing one digit is still `--kit-width-date-part` wide. What a part being typed in is
+     marked with, a wash of the accent and a ring inside it as an open list's option has, is drawn
+     by its `::before`, short of the box's top and bottom, so it never meets the field's border, and
+     within the part's own width, so it never covers a separator. */
+  .kit-date-field__part {
+    box-sizing: border-box;
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--kit-width-date-part);
+    min-block-size: var(--kit-control-height);
+    margin-block: calc(-1 * var(--kit-control-border-width));
+    padding: 0 var(--kit-space-2xs);
+  }
+
+  .kit-date-field__part::before {
+    position: absolute;
+    inset: var(--kit-space-xs) 0;
+    z-index: -1;
+    border-radius: var(--kit-radius-sm);
+    content: '';
+  }
+
+  .kit-date-field__part:focus {
+    outline: none;
+  }
+
+  .kit-date-field__part:focus::before {
+    background: color-mix(in srgb, var(--kit-surface-raised) 88%, var(--kit-accent));
+    box-shadow: inset 0 0 0 var(--kit-control-border-width) var(--kit-focus-ring);
+  }
+
+  .kit-date-field__part[data-placeholder] {
+    color: var(--kit-text-muted);
+  }
+
+  .kit-date-field__literal,
+  .kit-date-field__zone {
+    color: var(--kit-text-muted);
+  }
+
+  /* A separator keeps a little room either side, so a marked part's ring stands clear of it. */
+  .kit-date-field__literal {
+    padding-inline: calc(var(--kit-space-2xs) / 2);
+  }
+
+  /* The zone's name follows the time it is the time of: "1:00 PM CST". */
+  .kit-date-field__zone {
+    padding-inline-start: var(--kit-space-xs);
+    font-size: var(--kit-text-size-sm);
+    white-space: nowrap;
+  }
+
+  /* The dash between a range's first and last days. */
+  .kit-date-field__between {
+    padding-inline: var(--kit-space-xs);
+    color: var(--kit-text-muted);
+  }
+
+  .kit-date-field__open,
+  .kit-calendar__step {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--kit-control-height);
+    height: var(--kit-control-height);
+    padding: 0;
+    border: 0;
+    border-radius: var(--kit-radius-md);
+    background: transparent;
+    color: var(--kit-text);
+    cursor: pointer;
+  }
+
+  /* The field's button keeps its full touch target by lying over the box's borders, so the box is
+     the height of a text box beside it rather than a border's width either side taller. */
+  .kit-date-field__open {
+    margin-block: calc(-1 * var(--kit-control-border-width));
+    margin-inline-start: auto;
+  }
+
+  .kit-calendar__step:focus-visible {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: calc(-1 * var(--kit-focus-ring-width));
+  }
+
+  .kit-calendar__step:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .kit-date-field__open:hover:not(:disabled),
+  .kit-calendar__step:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--kit-text) 6%, transparent);
+  }
+
+  /* The open calendar, floating over the page. */
+  .kit-calendar {
+    box-sizing: border-box;
+    z-index: var(--kit-layer-popup);
+    padding: var(--kit-space-sm);
+    border: var(--kit-control-border-width) solid var(--kit-control-border);
+    border-radius: var(--kit-radius-md);
+    background: var(--kit-surface-raised);
+    color: var(--kit-text);
+    font-family: var(--kit-font-body);
+    box-shadow: var(--kit-shadow-overlay);
+  }
+
+  .kit-calendar:focus {
+    outline: none;
+  }
+
+  .kit-calendar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kit-space-xs);
+    margin-bottom: var(--kit-space-xs);
+  }
+
+  .kit-calendar__heading {
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-calendar__grid {
+    border-collapse: collapse;
+  }
+
+  .kit-calendar__weekday {
+    padding-bottom: var(--kit-space-2xs);
+    color: var(--kit-text-muted);
+    font-size: var(--kit-text-size-sm);
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-calendar__cell {
+    padding: 0;
+    text-align: center;
+  }
+
+  /* Each day a 44 px target. Today is underlined; the chosen day filled with the accent. */
+  .kit-calendar__day {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--kit-control-height);
+    height: var(--kit-control-height);
+    border-radius: var(--kit-radius-md);
+    color: var(--kit-text);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .kit-calendar__day:focus-visible {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: calc(-1 * var(--kit-focus-ring-width));
+  }
+
+  .kit-calendar__day:hover:not([data-disabled], [data-unavailable], [data-selected]) {
+    background: color-mix(in srgb, var(--kit-text) 6%, transparent);
+  }
+
+  .kit-calendar__day[data-today] {
+    text-decoration: underline;
+    text-underline-offset: var(--kit-space-2xs);
+  }
+
+  .kit-calendar__day[data-outside-view] {
+    color: var(--kit-text-muted);
+  }
+
+  /* In a range, the days between its ends are washed, as an open list's highlighted option is,
+     and so is the run a pointer would choose; its first and last days are filled. */
+  .kit-calendar__day[data-selected],
+  .kit-calendar__day[data-highlighted] {
+    background: color-mix(in srgb, var(--kit-surface-raised) 88%, var(--kit-accent));
+  }
+
+  .kit-calendar--single .kit-calendar__day[data-selected],
+  .kit-calendar__day[data-selection-start],
+  .kit-calendar__day[data-selection-end],
+  .kit-calendar__day[data-highlighted-start],
+  .kit-calendar__day[data-highlighted-end] {
+    background: var(--kit-accent);
+    color: var(--kit-on-accent);
+    font-weight: var(--kit-font-weight-strong);
+  }
+
+  .kit-calendar__day[data-disabled],
+  .kit-calendar__day[data-unavailable] {
+    cursor: not-allowed;
+    opacity: 0.6;
+    text-decoration: line-through;
+  }
+}

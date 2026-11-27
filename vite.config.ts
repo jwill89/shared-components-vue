@@ -37,6 +37,7 @@ export default defineConfig({
         /^reka-ui(\/|$)/,
         /^@internationalized\//,
         /^@tanstack\//,
+        /^@simplewebauthn\//,
         /^@tiptap\//,
         'marked',
       ],

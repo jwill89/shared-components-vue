@@ -5,6 +5,10 @@
 // one again changes nothing. The chosen option is filled and bold, so it never rests on color
 // alone. An option's icon, from the app's own set, comes from the `icon` slot, given the option.
 // A longer list, or one that may be empty, is a KitSelect.
+//
+// Given `multiple`, several may be chosen at once, each pressed on and off, and the model is the
+// list chosen, in the options' order; it may be empty. Longer words, or more than five options,
+// are a KitCheckboxGroup.
 import { ToggleGroupItem, ToggleGroupRoot } from 'reka-ui'
 import { filled } from './slots'
 
@@ -25,6 +29,8 @@ const props = withDefaults(
     describedBy?: string
     invalid?: boolean
     disabled?: boolean
+    /** Whether several may be chosen at once, the model then the list of them. */
+    multiple?: boolean
   }>(),
   {
     id: undefined,
@@ -32,10 +38,11 @@ const props = withDefaults(
     describedBy: undefined,
     invalid: false,
     disabled: false,
+    multiple: false,
   },
 )
 
-const model = defineModel<T>({ required: true })
+const model = defineModel<T | T[]>({ required: true })
 
 defineSlots<{
   icon?: (props: { option: KitSegmentOption<T> }) => unknown
@@ -44,6 +51,11 @@ defineSlots<{
 // A bare ToggleGroup lets the chosen option be pressed off, leaving nothing chosen; a segmented
 // control always holds one, so only an update naming one of the options is taken.
 function choose(value: unknown): void {
+  if (props.multiple) {
+    const chosen = new Set(Array.isArray(value) ? value : [])
+    model.value = props.options.filter((o) => chosen.has(o.value)).map((o) => o.value)
+    return
+  }
   const option = props.options.find((candidate) => candidate.value === value)
   if (option) {
     model.value = option.value
@@ -54,7 +66,7 @@ function choose(value: unknown): void {
 <template>
   <ToggleGroupRoot
     :id="id"
-    type="single"
+    :type="multiple ? 'multiple' : 'single'"
     class="kit-segmented-control"
     :class="{ 'is-invalid': invalid }"
     :model-value="model"

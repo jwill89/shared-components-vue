@@ -93,4 +93,26 @@ describe('KitColorField', () => {
     expect(trigger.attributes('disabled')).toBeDefined()
     expect(wrapper.find('button[aria-label="Clear the color"]').exists()).toBe(false)
   })
+  it('keeps a see-through color with its opacity, and offers a slider for it', async () => {
+    const { wrapper, state } = color('#5865f2cc', { alpha: true })
+    await nextTick()
+    expect(wrapper.get('.kit-color-field__value').text()).toBe('#5865f2, 80% opaque')
+    const picker = await open(wrapper.element)
+    // The area's thumb, the hues', and the opacity's.
+    expect(picker.querySelectorAll('[role="slider"]').length).toBe(3)
+    const teal = picker.querySelector<HTMLElement>('[aria-label="Teal"]')
+    teal?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }))
+    teal?.click()
+    await flushPromises()
+    expect(state.value).toBe('#1abc9cff')
+    expect(await axeFindings(document.body)).toEqual([])
+  })
+
+  it('reads a whole color as wholly opaque, and drops a see-through part without alpha', async () => {
+    const opaque = color('#1ABC9C', { alpha: true })
+    expect(opaque.wrapper.get('.kit-color-field__value').text()).toBe('#1abc9c')
+    unmountKept()
+    const plain = color('#1abc9c80')
+    expect(plain.wrapper.get('.kit-color-field__value').text()).toBe('None')
+  })
 })

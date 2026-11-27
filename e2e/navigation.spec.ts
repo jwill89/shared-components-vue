@@ -65,7 +65,9 @@ test('tabs move by the arrow keys and choose on Enter', async ({ page }) => {
   await expect(books).toHaveAttribute('aria-selected', 'true')
   await page.keyboard.press('Enter')
   await expect(loans).toHaveAttribute('aria-selected', 'true')
-  await expect(page.getByRole('tabpanel')).toHaveText('Two out on loan, one overdue.')
+  await expect(page.locator('#navigation').getByRole('tabpanel')).toHaveText(
+    'Two out on loan, one overdue.',
+  )
 })
 
 test('a menu runs its item by keyboard and gives focus back', async ({ page }) => {
@@ -119,7 +121,12 @@ test('a date picker stands as tall as a text box beside it', async ({ page }) =>
   await page.goto('/')
   const height = (element: Element): number => element.getBoundingClientRect().height
   const picker = await page.locator('.kit-date-picker').first().evaluate(height)
-  const box = await page.locator('#fields').getByLabel('Title', { exact: true }).evaluate(height)
+  // A text box is drawn by the edge round it and its places.
+  const box = await page
+    .locator('#fields')
+    .getByLabel('Title', { exact: true })
+    .locator('xpath=..')
+    .evaluate(height)
   expect(picker).toBe(box)
 })
 

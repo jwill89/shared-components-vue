@@ -8,6 +8,7 @@
 //
 // Tabs switch parts of one page. A row of links to other pages is navigation, not tabs.
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
+import { formatCount } from '../format'
 import { filled } from './slots'
 import type { KitTab } from './tabs'
 
@@ -44,6 +45,9 @@ function choose(key: string | number): void {
           <slot name="icon" :tab="tab" />
         </span>
         {{ tab.label }}
+        <span v-if="tab.count !== undefined" class="kit-tabs__count">
+          {{ formatCount(tab.count) }}
+        </span>
       </TabsTrigger>
     </TabsList>
     <TabsContent v-for="tab in tabs" :key="tab.key" :value="tab.key" class="kit-tabs__panel">
@@ -113,6 +117,16 @@ function choose(key: string | number): void {
 
   .kit-tabs__icon {
     display: inline-flex;
+  }
+
+  /* A count after a tab's words, on the sunken surface, in the muted color it holds 7:1 on. */
+  .kit-tabs__count {
+    padding: 0 var(--kit-space-xs);
+    border-radius: var(--kit-radius-full);
+    background: var(--kit-surface-sunken);
+    color: var(--kit-text-muted);
+    font-size: var(--kit-text-size-sm);
+    font-variant-numeric: tabular-nums;
   }
 
   .kit-tabs__panel {

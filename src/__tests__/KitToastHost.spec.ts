@@ -6,6 +6,7 @@ import { ANNOUNCE_DELAY } from '../composables/useAnnouncer'
 import {
   dismissAllToasts,
   onToast,
+  setToastDurations,
   showToast,
   toastManager,
   useToast,
@@ -195,6 +196,40 @@ describe('KitToastHost', () => {
     )
     expect(reka.length).toBeGreaterThan(0)
     expect(reka.every((element) => element.getAttribute('aria-hidden') === 'true')).toBe(true)
+  })
+
+  it('keeps a toast with an action until it is used, which does it and closes the toast', async () => {
+    kept(mount(KitToastHost, { attachTo: document.body }))
+    const undo = vi.fn()
+    const add = vi.spyOn(toastManager, 'add')
+    const heard: string[] = []
+    const stop = onToast((toast) => heard.push(toast.action ?? ''))
+    useToast().success('Removed “Emma”', undefined, { action: { label: 'Undo', onClick: undo } })
+    stop()
+    expect(heard).toEqual(['Undo'])
+    expect(add.mock.calls[0]?.[0].duration).toBe(Infinity)
+    expect(add.mock.calls[0]?.[0].actionProps?.altText).toBe(
+      'Undo is in the notifications, which F8 takes you to.',
+    )
+    await settle()
+    const action = [...(toasts()[0]?.querySelectorAll('button') ?? [])].find(
+      (button) => button.textContent.trim() === 'Undo',
+    )
+    expect(action).toBeDefined()
+    expect(await axeFindings(document.body)).toEqual([])
+    action?.click()
+    await settle()
+    expect(undo).toHaveBeenCalledOnce()
+    expect(toasts().every((element) => element.dataset.state === 'closed')).toBe(true)
+  })
+
+  it('stays as long as the app asks, for one toast or for every one of a tone', () => {
+    const add = vi.spyOn(toastManager, 'add').mockReturnValue('toast-id')
+    useToast().info('Copied', undefined, { duration: 3000 })
+    setToastDurations({ success: 6000 })
+    useToast().success('Saved')
+    setToastDurations({ success: 4000 })
+    expect(add.mock.calls.map(([options]) => options.duration)).toEqual([3000, 6000])
   })
 
   it('closes a toast on its Dismiss button', async () => {

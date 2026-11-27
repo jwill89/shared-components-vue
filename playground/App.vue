@@ -5,28 +5,43 @@
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue'
 import { TooltipProvider } from 'reka-ui'
 import {
+  KitButton,
   KitConfirmHost,
+  KitHelpTip,
+  KitLightboxHost,
   KitPageHeader,
   KitPagePanel,
+  KitSkipLink,
   KitToastHost,
+  useToast,
 } from '@jwill89/shared-components-vue'
 import ButtonSection from './sections/ButtonSection.vue'
 import ChoiceSection from './sections/ChoiceSection.vue'
+import ContentSection from './sections/ContentSection.vue'
+import ControlSection from './sections/ControlSection.vue'
 import DialogSection from './sections/DialogSection.vue'
 import EditorSection from './sections/EditorSection.vue'
 import EmbedSection from './sections/EmbedSection.vue'
 import FieldSection from './sections/FieldSection.vue'
+import LayoutSection from './sections/LayoutSection.vue'
 import NavigationSection from './sections/NavigationSection.vue'
 import OverlaySection from './sections/OverlaySection.vue'
 import SpinnerSection from './sections/SpinnerSection.vue'
 import StateSection from './sections/StateSection.vue'
 import TableSection from './sections/TableSection.vue'
 import ToastSection from './sections/ToastSection.vue'
+import WorkSection from './sections/WorkSection.vue'
 import TokenPairs from './TokenPairs.vue'
 
 type Scheme = 'device' | 'light' | 'dark'
 
 const scheme = ref<Scheme>('device')
+
+// The viewer's own button, as an app's would report a picture.
+const toast = useToast()
+function report(alt: string): void {
+  toast.info(`Reported “${alt}”`)
+}
 
 // The device's own scheme, followed while "Device" is picked, so the ratios are measured again
 // when it changes.
@@ -57,6 +72,8 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
 <template>
   <!-- Every tooltip needs Reka's provider, mounted once at the root, as in an app. -->
   <TooltipProvider>
+    <!-- The first thing on the page, as in an app's shell. -->
+    <KitSkipLink />
     <main id="main-content" class="playground">
       <!-- The page's own header and panels are the kit's, as an app's are. -->
       <KitPageHeader
@@ -69,6 +86,16 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
           },
         ]"
       >
+        <template #help>
+          <KitHelpTip topic="the playground">
+            <dl>
+              <dt>Color scheme</dt>
+              <dd>Light, dark, or the device’s own; every pair is measured again.</dd>
+              <dt>Color pairs</dt>
+              <dd>At the end, each with its ratio in the scheme on screen.</dd>
+            </dl>
+          </KitHelpTip>
+        </template>
         <template #actions>
           <label class="playground__scheme">
             Color scheme
@@ -85,11 +112,15 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
       <SpinnerSection />
       <FieldSection />
       <ChoiceSection />
+      <ControlSection />
       <DialogSection />
       <ToastSection />
       <StateSection />
+      <ContentSection />
       <NavigationSection />
+      <LayoutSection />
       <TableSection />
+      <WorkSection />
       <OverlaySection />
       <EditorSection />
       <EmbedSection />
@@ -101,6 +132,12 @@ const shownScheme = computed(() => `${scheme.value}-${String(deviceDark.value)}`
     <!-- Answers confirm() and shows the toasts, once each, at the root, as in an app. -->
     <KitConfirmHost />
     <KitToastHost />
+    <!-- Answers openLightbox(), with a button of the app's own in its bar. -->
+    <KitLightboxHost>
+      <template #actions="{ image }">
+        <KitButton variant="plain" @click="report(image.alt)">Report it</KitButton>
+      </template>
+    </KitLightboxHost>
   </TooltipProvider>
 </template>
 

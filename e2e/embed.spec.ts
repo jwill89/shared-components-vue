@@ -72,3 +72,22 @@ test('at a phone’s width the editor and the preview never send the page sidewa
   }))
   expect(widths.page).toBeLessThanOrEqual(widths.screen)
 })
+
+test('a link button added in the editor shows under the message and in what it posts', async ({
+  page,
+}) => {
+  await page.goto('/#embeds')
+  const preview = embeds(page).locator('.kit-discord-message')
+  await expect(preview.getByRole('link', { name: '📚 Join the club' })).toHaveAttribute(
+    'href',
+    'https://example.com/club',
+  )
+  await embeds(page).getByRole('button', { name: 'Add a button' }).click()
+  await embeds(page).getByLabel('Button 2’s words').fill('The reading list')
+  await embeds(page).getByLabel('Button 2’s link').fill('https://example.com/list')
+  await embeds(page).getByLabel('Button 2’s emoji').fill('📖')
+  const link = preview.getByRole('link', { name: '📖 The reading list' })
+  await expect(link).toHaveAttribute('target', '_blank')
+  await expect(page.getByTestId('buttons-json')).toContainText('"label": "The reading list"')
+  expect(await axeViolations(page, { tags: AAA })).toEqual([])
+})

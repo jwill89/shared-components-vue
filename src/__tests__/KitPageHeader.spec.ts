@@ -66,6 +66,38 @@ describe('KitPageHeader', () => {
     expect(links[1]?.attributes('href')).toBeUndefined()
   })
 
+  it('takes a link back, a line over its title, an icon and a help tip beside it', async () => {
+    const wrapper = kept(
+      mount(KitPageHeader, {
+        props: {
+          title: 'The Dispossessed',
+          eyebrow: 'Book',
+          back: { label: 'Back to the loans', to: '/loans' },
+        },
+        slots: {
+          icon: () => h('svg', { 'data-icon': 'book' }),
+          help: () => h(KitButton, { 'aria-label': 'About this book' }, () => '?'),
+        },
+        attachTo: document.body,
+      }),
+    )
+    const back = wrapper.get('.kit-page-header__back')
+    expect(back.element.tagName).toBe('A')
+    expect(back.attributes('href')).toBe('/loans')
+    expect(back.text()).toBe('Back to the loans')
+    expect(back.find('[data-glyph="previous"]').exists()).toBe(true)
+    // The line is read before the title, and nothing beside the title joins its name.
+    const order = [...wrapper.element.querySelectorAll('.kit-page-header__eyebrow, h1')]
+    expect(order.map((element) => element.tagName)).toEqual(['P', 'H1'])
+    expect(wrapper.get('.kit-page-header__eyebrow').text()).toBe('Book')
+    expect(wrapper.get('h1').text()).toBe('The Dispossessed')
+    expect(wrapper.get('.kit-page-header__icon').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('.kit-page-header__help button').attributes('aria-label')).toBe(
+      'About this book',
+    )
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
   it('takes a status line with markup in place of its description', () => {
     const wrapper = kept(
       mount(KitPageHeader, {
@@ -114,5 +146,25 @@ describe('KitPagePanel', () => {
     expect(untitled.find('header').exists()).toBe(true)
     expect(untitled.find('h2').exists()).toBe(false)
     expect(untitled.attributes('aria-labelledby')).toBeUndefined()
+  })
+
+  it('takes a line over its heading, an icon and a help tip beside it', async () => {
+    const wrapper = kept(
+      mount(KitPagePanel, {
+        props: { title: 'Loans', eyebrow: 'This week' },
+        slots: {
+          default: 'Three books out.',
+          icon: () => h('svg', { 'data-icon': 'clock' }),
+          help: () => h(KitButton, { 'aria-label': 'About the loans' }, () => '?'),
+        },
+        attachTo: document.body,
+      }),
+    )
+    expect(wrapper.get('.kit-page-panel__eyebrow').text()).toBe('This week')
+    expect(wrapper.get('h2').text()).toBe('Loans')
+    expect(wrapper.attributes('aria-labelledby')).toBe(wrapper.get('h2').attributes('id'))
+    expect(wrapper.get('.kit-page-panel__icon').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('.kit-page-panel__help button').exists()).toBe(true)
+    expect(await axeFindings(wrapper)).toEqual([])
   })
 })

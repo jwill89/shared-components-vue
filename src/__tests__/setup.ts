@@ -43,4 +43,8 @@ if (typeof Element !== 'undefined') {
       releasePointerCapture: () => undefined,
     })
   }
+  // A row held near a frame's edge scrolls it, and jsdom lays nothing out to scroll.
+  if (!('scrollBy' in Element.prototype)) {
+    Object.assign(Element.prototype, { scrollBy: () => undefined })
+  }
 }

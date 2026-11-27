@@ -1,0 +1,74 @@
+/*
+ * What KitDisclosure and KitAccordion share: the button that opens a part, as wide as the part
+ * and never shorter than a touch target, its chevron turned while the part is open, and the
+ * part's own content under it. A hover takes a 6% wash of the text color, as a plain button's
+ * does, which contrast.ts measures on every surface. A button inside a heading takes the
+ * heading's size; the heading's own margins are dropped, so the button sits where the heading
+ * would.
+ */
+@layer kit {
+  .kit-disclosure__heading {
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .kit-disclosure__trigger {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--kit-space-sm);
+    width: 100%;
+    min-height: var(--kit-control-height);
+    padding: var(--kit-space-xs) var(--kit-space-sm);
+    border: 0;
+    border-radius: var(--kit-radius-md);
+    background: transparent;
+    color: var(--kit-text);
+    font: inherit;
+    font-weight: var(--kit-font-weight-strong);
+    line-height: var(--kit-line-height-heading);
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--kit-duration-quick) ease;
+  }
+
+  .kit-disclosure__trigger:focus-visible {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: calc(-1 * var(--kit-focus-ring-width));
+  }
+
+  .kit-disclosure__trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .kit-disclosure__trigger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--kit-text) 6%, transparent);
+  }
+
+  .kit-disclosure__chevron {
+    display: inline-flex;
+    flex: none;
+    transition: transform var(--kit-duration-quick) ease;
+  }
+
+  .kit-disclosure__trigger[data-state='open'] .kit-disclosure__chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Closed, a part stays in the page as `hidden="until-found"`, which the browser's find in page
+     reaches into and opens. Such a part keeps its own box, so its space is on the body inside
+     it, which is hidden with the rest. */
+  .kit-disclosure__body {
+    padding: var(--kit-space-2xs) var(--kit-space-sm) var(--kit-space-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kit-disclosure__trigger,
+    .kit-disclosure__chevron {
+      transition: none;
+    }
+  }
+}

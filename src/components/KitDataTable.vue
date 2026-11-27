@@ -31,6 +31,10 @@
 //   it, or by a press in the "Column widths" panel (`v-model:widths`, in pixels).
 // - `stackBelow` turns each row into a card, every cell under its heading's name, where the table
 //   is narrower than that length.
+// - `pageSizes` offers a choice of how many rows a page holds, beside the pages
+//   (`v-model:page-size`); `pagesAbove` repeats the pages over the rows, for a long page, its
+//   navigation named apart from the one under them; and the `toolbar` slot puts the app's own
+//   buttons with the table's, at the toolbar's end.
 import {
   computed,
   onBeforeUnmount,
@@ -67,6 +71,7 @@ import KitTextField from './KitTextField.vue'
 import { compareValues, downloadCsv, fieldOf, textOf, toCsv } from './dataTable'
 import type { KitColumn, KitCsvValue, KitFacet, KitSort } from './dataTable'
 import { filled } from './slots'
+import { formatCount } from '../format'
 
 const props = withDefaults(
   defineProps<{
@@ -76,8 +81,12 @@ const props = withDefaults(
     rowKey: string | ((row: T) => string | number)
     /** What the table holds, which names it: "Books". */
     label: string
-    /** Rows on a page; every row on one page by default. */
-    pageSize?: number
+    /** The page sizes offered beside the pages, which `v-model:page-size` keeps. */
+    pageSizes?: number[]
+    /** What the choice of page size says. */
+    pageSizeLabel?: string
+    /** Whether the pages show over the rows as well as under them. */
+    pagesAbove?: boolean
     /** With a server's page: how many rows there are in all. */
     total?: number
     /** With a server's page: each filtered column's values and their counts, as the server made them. */
@@ -127,7 +136,9 @@ const props = withDefaults(
     countText?: (matching: number, total: number) => string
   }>(),
   {
-    pageSize: undefined,
+    pageSizes: undefined,
+    pageSizeLabel: 'Rows on a page',
+    pagesAbove: false,
     total: undefined,
     facets: undefined,
     searchable: false,
@@ -168,6 +179,8 @@ const emit = defineEmits<{
 const search = defineModel<string>('search', { default: '' })
 const sort = defineModel<KitSort | null>('sort', { default: null })
 const page = defineModel<number>('page', { default: 1 })
+/** Rows on a page; every row on one page by default. */
+const pageSize = defineModel<number | undefined>('pageSize', { default: undefined })
 const selected = defineModel<(string | number)[]>('selected', { default: () => [] })
 /** Each filtered column's choice, by its key; none, or "", is any. */
 const filters = defineModel<Record<string, string>>('filters', { default: () => ({}) })
@@ -196,6 +209,8 @@ defineSlots<
     group?: (props: { value: string; rows: T[] }) => unknown
     /** The CSV button's icon. */
     'csv-icon'?: () => unknown
+    /** The app's own buttons, at the toolbar's end. */
+    toolbar?: () => unknown
   } & Record<string, ((props: { row: T; value: unknown }) => unknown) | undefined>
 >()
 
@@ -402,7 +417,7 @@ const table = useTable<typeof features, T>({
     get pagination() {
       return {
         pageIndex: Math.max(0, page.value - 1),
-        pageSize: props.pageSize ?? Number.MAX_SAFE_INTEGER,
+        pageSize: pageSize.value ?? Number.MAX_SAFE_INTEGER,
       }
     },
   },
@@ -428,7 +443,7 @@ const matching = computed(() => table.getSortedRowModel().rows.map((row) => row.
 const shown = computed(() => table.getRowModel().rows.map((row) => row.original))
 const rowCount = computed(() => props.total ?? matching.value.length)
 const pageCount = computed(() =>
-  props.pageSize ? Math.max(1, Math.ceil(rowCount.value / props.pageSize)) : 1,
+  pageSize.value ? Math.max(1, Math.ceil(rowCount.value / pageSize.value)) : 1,
 )
 
 // A new search, filter, sort or page size starts at page one; otherwise a page past the end comes
@@ -437,7 +452,7 @@ const pageCount = computed(() =>
 // clamped while the list loads or is empty, so a page restored from the address waits for its rows.
 const view = computed(
   () =>
-    `${query.value}|${JSON.stringify(columnFilters.value)}|${sort.value?.key ?? ''}:${sort.value?.direction ?? ''}|${String(props.pageSize)}`,
+    `${query.value}|${JSON.stringify(columnFilters.value)}|${sort.value?.key ?? ''}:${sort.value?.direction ?? ''}|${String(pageSize.value)}`,
 )
 function clamp(count: number): void {
   if (!props.loading && rowCount.value > 0 && page.value > count) {
@@ -731,7 +746,13 @@ const hasToolbar = computed(
     props.searchable ||
     filterColumns.value.length > 0 ||
     props.csv !== undefined ||
-    (props.resizable && !stacked.value),
+    (props.resizable && !stacked.value) ||
+    filled(slots.toolbar),
+)
+
+const pagesName = computed(() => props.pagesLabel ?? `Pages of ${props.label}`)
+const sizeOptions = computed(() =>
+  (props.pageSizes ?? []).map((size) => ({ value: size, label: formatCount(size) })),
 )
 
 /** A table part's role, written out where the rows are cards, which takes the table's own away. */
@@ -762,6 +783,7 @@ function role(name: string): string | undefined {
         />
       </KitFormField>
       <div class="kit-data-table__actions">
+        <slot name="toolbar" />
         <KitButton
           v-if="csv !== undefined"
           :disabled="!fromServer && matching.length === 0"
@@ -803,6 +825,12 @@ function role(name: string): string | undefined {
     <p v-if="reloading" class="kit-data-table__reloading">
       <KitSpinner :label="loadingLabel" />
     </p>
+    <KitPagination
+      v-if="pagesAbove && shows === 'rows' && pageCount > 1"
+      v-model:page="page"
+      :page-count="pageCount"
+      :label="pagesName"
+    />
     <div
       ref="frame"
       class="kit-data-table__frame"
@@ -1001,12 +1029,22 @@ function role(name: string): string | undefined {
         </tfoot>
       </table>
     </div>
-    <KitPagination
-      v-if="shows === 'rows'"
-      v-model:page="page"
-      :page-count="pageCount"
-      :label="pagesLabel ?? `Pages of ${label}`"
-    />
+    <div v-if="shows === 'rows' || (pageSizes && rowCount > 0)" class="kit-data-table__pages">
+      <KitPagination
+        v-if="shows === 'rows'"
+        v-model:page="page"
+        :page-count="pageCount"
+        :label="pagesAbove ? `${pagesName}, under the rows` : pagesName"
+      />
+      <KitFormField
+        v-if="pageSizes"
+        v-slot="field"
+        class="kit-data-table__page-size"
+        :label="pageSizeLabel"
+      >
+        <KitSelect v-model="pageSize" v-bind="field" :options="sizeOptions" />
+      </KitFormField>
+    </div>
   </div>
 </template>
 
@@ -1017,6 +1055,18 @@ function role(name: string): string | undefined {
     flex-direction: column;
     gap: var(--kit-space-sm);
     min-width: 0;
+  }
+
+  .kit-data-table__pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--kit-space-xs) var(--kit-space-md);
+  }
+
+  .kit-data-table__page-size {
+    flex: 0 1 10rem;
   }
 
   .kit-data-table__toolbar {

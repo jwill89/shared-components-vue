@@ -7,6 +7,13 @@
 // "Full size" shows an image at its own size, to scroll round. A bar below holds the caption, the
 // image's place among the rest and a link to its original, on the raised surface, so its words
 // keep their contrast whatever the image is. Icons come from the slots, the kit's own by default.
+//
+// On a touch screen a swipe across the image moves to the next or the previous. At full size the
+// image pans by dragging it, as well as by scrolling and by the arrow keys; a drag is never taken
+// for the press beside the image that closes the viewer. The `actions` slot, given the image on
+// screen and its place, puts the app's own buttons in the bar, such as Report. A page that opens
+// the viewer from anywhere, without a component of its own, calls `openLightbox()`, which a
+// KitLightboxHost at the app's root answers.
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { announce } from '../composables/useAnnouncer'
@@ -14,17 +21,7 @@ import KitAnnouncer from './KitAnnouncer.vue'
 import KitButton from './KitButton.vue'
 import KitGlyph from './KitGlyph.vue'
 import KitIconButton from './KitIconButton.vue'
-
-export interface KitLightboxImage {
-  src: string
-  /** What the image shows, which names the viewer while it is on screen. */
-  alt: string
-  caption?: string
-  /** The original file, for a link that opens it on its own. */
-  href?: string
-  /** Other forms of the image, as a picture's sources: `{ srcset, type: 'image/avif' }`. */
-  sources?: { srcset: string; type: string }[]
-}
+import type { KitLightboxImage } from './lightbox'
 
 const props = withDefaults(
   defineProps<{
@@ -48,6 +45,8 @@ const open = defineModel<boolean>('open', { default: false })
 const index = defineModel<number>('index', { default: 0 })
 
 defineSlots<{
+  /** The app's own buttons in the bar, given the image on screen and its place among the rest. */
+  actions?: (props: { image: KitLightboxImage; index: number }) => unknown
   'close-icon'?: () => unknown
   'previous-icon'?: () => unknown
   'next-icon'?: () => unknown
@@ -90,6 +89,63 @@ function onKeydown(event: KeyboardEvent): void {
   }
 }
 
+// How far a swipe goes, in pixels, before it moves to another image, and how far any press
+// may wander before it is a drag rather than a press.
+const SWIPE = 48
+const WANDER = 4
+
+let swipeFrom: { x: number; y: number } | undefined
+let panFrom: { x: number; y: number; left: number; top: number } | undefined
+// Whether the press under way has moved, so the click it ends in closes nothing.
+let dragged = false
+
+function onPointerDown(event: PointerEvent): void {
+  dragged = false
+  const stage = event.currentTarget as HTMLElement
+  if (fullSize.value && event.pointerType === 'mouse' && event.button === 0) {
+    panFrom = { x: event.clientX, y: event.clientY, left: stage.scrollLeft, top: stage.scrollTop }
+    stage.setPointerCapture(event.pointerId)
+  } else if (!fullSize.value && event.pointerType !== 'mouse' && count.value > 1) {
+    swipeFrom = { x: event.clientX, y: event.clientY }
+  }
+}
+
+function onPointerMove(event: PointerEvent): void {
+  const from = panFrom ?? swipeFrom
+  if (!from) {
+    return
+  }
+  const [dx, dy] = [event.clientX - from.x, event.clientY - from.y]
+  if (Math.hypot(dx, dy) > WANDER) {
+    dragged = true
+  }
+  if (panFrom) {
+    const stage = event.currentTarget as HTMLElement
+    stage.scrollLeft = panFrom.left - dx
+    stage.scrollTop = panFrom.top - dy
+  }
+}
+
+function onPointerUp(event: PointerEvent): void {
+  if (swipeFrom) {
+    const [dx, dy] = [event.clientX - swipeFrom.x, event.clientY - swipeFrom.y]
+    if (Math.abs(dx) > SWIPE && Math.abs(dx) > 2 * Math.abs(dy)) {
+      dragged = true
+      move(dx < 0 ? 1 : -1)
+    }
+  }
+  swipeFrom = undefined
+  panFrom = undefined
+}
+
+/** A press beside the image closes the viewer, unless it was a drag or a swipe. */
+function pressedBeside(): void {
+  if (!dragged) {
+    open.value = false
+  }
+  dragged = false
+}
+
 /** It opens on Close, the way out, rather than on Previous, the first thing it holds. */
 function onOpenAutoFocus(event: Event): void {
   event.preventDefault()
@@ -117,7 +173,11 @@ function onOpenAutoFocus(event: Event): void {
           :tabindex="fullSize ? 0 : undefined"
           :role="fullSize ? 'group' : undefined"
           :aria-label="fullSize ? current?.alt : undefined"
-          @click.self="open = false"
+          @click.self="pressedBeside"
+          @pointerdown="onPointerDown"
+          @pointermove="onPointerMove"
+          @pointerup="onPointerUp"
+          @pointercancel="onPointerUp"
         >
           <picture v-if="current" :key="shown" class="kit-lightbox__picture">
             <source
@@ -153,6 +213,7 @@ function onOpenAutoFocus(event: Event): void {
             <span v-if="count > 1" class="kit-lightbox__place">{{ place }}</span>
           </p>
           <div class="kit-lightbox__actions">
+            <slot v-if="current" name="actions" :image="current" :index="shown" />
             <KitButton
               v-if="current?.href"
               :href="current.href"
@@ -225,11 +286,18 @@ function onOpenAutoFocus(event: Event): void {
     min-height: 0;
     padding: var(--kit-space-md);
     overflow: hidden;
+    touch-action: pan-y pinch-zoom;
   }
 
   .kit-lightbox__stage--full-size {
     place-items: start;
     overflow: auto;
+    cursor: grab;
+    touch-action: auto;
+  }
+
+  .kit-lightbox__stage--full-size:active {
+    cursor: grabbing;
   }
 
   .kit-lightbox__stage--full-size:focus-visible {

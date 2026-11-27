@@ -161,6 +161,55 @@ describe('KitDialog', () => {
     expect(dialog().classList).toContain('kit-dialog--wide')
   })
 
+  it('grows to the width asked for, narrow or widest, and to the default with none', async () => {
+    for (const [width, drawn] of [
+      ['narrow', 'kit-dialog--narrow'],
+      ['widest', 'kit-dialog--widest'],
+    ] as const) {
+      page({ width })
+      button('Open').click()
+      await settle()
+      expect(dialog().classList).toContain(drawn)
+      unmountKept()
+    }
+    page({ width: 'default', wide: true })
+    button('Open').click()
+    await settle()
+    expect([...dialog().classList].filter((name) => name.startsWith('kit-dialog--'))).toEqual([])
+  })
+
+  it('closes only by its own buttons when persistent: no Close, no Escape, no press outside', async () => {
+    const { open } = page(
+      { persistent: true, title: 'Are you over 18?' },
+      { footer: () => h(KitButton, { variant: 'primary' }, () => 'Yes') },
+    )
+    button('Open').click()
+    await settle()
+    expect(dialog().querySelector('.kit-dialog__close')).toBeNull()
+    dialog().dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    )
+    await settle()
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await settle()
+    expect(open.value).toBe(true)
+    expect(await axeFindings(document.body)).toEqual([])
+  })
+
+  it('doesn’t close while busy, by Escape, a press outside, or its Close button', async () => {
+    const { open } = page({ busy: true })
+    button('Open').click()
+    await settle()
+    expect(button('Close').disabled).toBe(true)
+    dialog().dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    )
+    await settle()
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await settle()
+    expect(open.value).toBe(true)
+  })
+
   describe('as a form', () => {
     it('submits by its button, stays open, and has Cancel beside it', async () => {
       const { open, submits } = page(

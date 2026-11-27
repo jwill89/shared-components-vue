@@ -2,14 +2,14 @@
 
 Vue 3 components for jwill89's front ends, built on [Reka UI](https://reka-ui.com)'s headless primitives and styled only through design tokens, so each app keeps its own look. Reka UI supplies the roles, keyboard handling and focus management; each kit component adds a visible focus ring, 44 px touch targets and reduced-motion handling. The kit draws no color of its own: each app sets every color, and holds the pairs the kit names to WCAG AAA contrast in them.
 
-The latest release, v0.13.0, has the first wave and the second, the Markdown editor, Discord's embeds and the table's next features: the buttons, the spinner, the form field and its text, number, tag, date and color fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table, with rows that open, filters, groups, a CSV, column widths and cards, and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; the embed editor and the embed and message previews; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
+The latest release, v0.14.0, has the first wave, the second and the third, the Markdown editor, Discord's embeds and the table's next features: the buttons, the spinner, the form field and its text, number, tag, date and color fields, the dialog with its confirm form, the drawer, and the toast; the page header and panel, the tabs, the alert, and the empty, failed and loading states; the select, the combobox, the switch and the segmented control; the tooltip, the popover and help tip, the menu, the loading overlay, the lightbox and the Turnstile widget; the data table, with rows that open, filters, groups, a CSV, column widths and cards, and its pagination; the Markdown editor, with a dialect for Discord, and the Discord preview; the embed editor and the embed and message previews; the checkbox and radio groups, the badge, the description list, the disclosure and accordion, the file field, the slider, the progress bar, the copy button and the skip link; the list of links, the dialog's widths and age check, `ask()`, a toast's Undo, the buttons' sizes and links, and the lightbox opened from anywhere; the time field, a date with its time and the date range, the reorderable list, the save bar and leave guard, and passkeys; an extension's tools in the editor and a message's link buttons; and the color pairs an app measures its own colors with. [CHANGELOG.md](CHANGELOG.md) lists what each release brought, and [PLAN.md](https://github.com/jwill89/shared-components-vue/blob/main/PLAN.md) the rest and the order they come in.
 
 ## Using it in an app
 
 Install the package a release carries, by its URL. It is already built, so nothing builds or runs on install, and the lockfile pins its hash:
 
 ```bash
-npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.13.0/jwill89-shared-components-vue-0.13.0.tgz
+npm install https://github.com/jwill89/shared-components-vue/releases/download/v0.14.0/jwill89-shared-components-vue-0.14.0.tgz
 ```
 
 To take a later release, install its file the same way.
@@ -123,11 +123,33 @@ Every control sits in a `KitFormField`, whose slot hands it the id its label nam
 </KitFormField>
 ```
 
+Given `time`, it takes a time of day as well, and its model is a moment: RFC 3339 written in UTC (`2026-06-13T20:00:00Z`), which the server compares as it is. It is shown and typed in `time-zone`, the browser's own by default or a venue's, whose short name follows the parts, and `min` and `max` are moments then too. `KitTimeField` is a time of day on its own, as `HH:mm`, or `HH:mm:ss` with `seconds`; `hour-cycle` sets either to 12 or 24 hours where the locale's way won't do. `KitDateRangePicker` takes a run of days, its two ends bound to the two fields a page keeps, each end's parts a group of its own, named `start-label` and `end-label`; its calendar takes a first press and a second. A start and an end with their times are two `KitDatePicker`s with `time`, the end's `min` the start, as two moments don't sit in one box tidily:
+
+```vue
+<KitFormField v-slot="field" label="Report on" group>
+  <KitDateRangePicker v-model:start="range.from" v-model:end="range.to" v-bind="field" />
+</KitFormField>
+<KitFormField v-slot="field" label="Entries open" group>
+  <KitDatePicker v-model="form.opensAt" v-bind="field" time />
+</KitFormField>
+<KitFormField v-slot="field" label="Entries close" group>
+  <KitDatePicker v-model="form.closesAt" v-bind="field" time :min="form.opensAt" />
+</KitFormField>
+```
+
 `KitColorField` takes a color as `#rrggbb`, or `''` for none. Its button shows the color's swatch and hex, and opens a picker with an area for saturation and brightness, a hue slider, the `presets` offered (`DISCORD_COLORS` is Discord's own) and the hex to type; while there is a color, a button beside it clears it. The color is the app's data, a role's or an embed's, never one of the kit's:
 
 ```vue
 <KitFormField v-slot="field" label="Role color">
   <KitColorField v-model="color" v-bind="field" :presets="DISCORD_COLORS" presets-label="Discord’s colors" />
+</KitFormField>
+```
+
+`KitSelect` puts options with a `group` under that heading, and takes an `aria-label` where no field's label names it. `KitCombobox` given `search` leaves the searching to the page: it emits `search` with what was typed, shows the `options` the page hands back, says `loading-text` while `loading`, and keeps each choice's words after the results move on; with `multiple`, `max` is the most that may be chosen, counted under the box. `KitSegmentedControl` given `multiple` takes several at once, its model their list, and `KitColorField` given `alpha` takes a see-through color as `#rrggbbaa`, with an opacity slider:
+
+```vue
+<KitFormField v-slot="field" label="Books">
+  <KitCombobox v-model="books" v-bind="field" :options="found" multiple search :loading="searching" :max="5" @search="lookUp" />
 </KitFormField>
 ```
 
@@ -183,6 +205,76 @@ if (await confirm({ title: 'Delete this shelf?', message: 'Its 12 books go back 
 </KitDrawer>
 ```
 
+A text box takes words or an icon inside its edge, before and after the box (`before`, `after`), which are read with it, a button joined to its end (`button`), and on a password box, a Show password toggle (`revealable`). A box of several lines grows with its text given `grow`, from `rows` lines to `max-rows`:
+
+```vue
+<KitFormField v-slot="field" label="Price">
+  <KitTextField v-model="price" v-bind="field" inputmode="decimal"><template #after>gil</template></KitTextField>
+</KitFormField>
+<KitFormField v-slot="field" label="Password">
+  <KitTextField v-model="password" v-bind="field" type="password" autocomplete="current-password" revealable />
+</KitFormField>
+<KitFormField v-slot="field" label="Notes">
+  <KitTextarea v-model="notes" v-bind="field" grow :rows="2" :max-rows="10" />
+</KitFormField>
+```
+
+A lone `KitCheckbox` is a field of its own: its words are its label, and it takes its `hint` and `error` itself. Several boxes that answer one question are a `KitCheckboxGroup`, its value the list ticked, and one answer of several is a `KitRadioGroup`; each sits in a `group` field, takes `options` with a `hint` under any of them, and gathers options with a `group` under that heading. `KitSlider` sits in a `group` field too, and says its value in words with `value-text`; it changes as it moves and fires `commit` once a move is done:
+
+```vue
+<KitCheckbox v-model="reminders" hint="A day before, and on the day.">Email me when a loan is due back</KitCheckbox>
+<KitFormField v-slot="field" label="Condition" group>
+  <KitRadioGroup v-model="condition" v-bind="field" :options="[{ value: 'new', label: 'As new', hint: 'No marks.' }, { value: 'worn', label: 'Worn' }]" />
+</KitFormField>
+<KitFormField v-slot="field" label="Opacity" group>
+  <KitSlider v-model="opacity" v-bind="field" :min="0" :max="1" :step="0.05" :value-text="(v) => `${Math.round(v * 100)}%`" @commit="save" />
+</KitFormField>
+```
+
+`KitFileField` sends files, in a `group` field: a button opens the device's picker, or with `drop` a wide zone takes dropped files as well. It says under the button what it takes, refuses in words a file of a kind it doesn't take (`accept`, each kind with its name), one over `max-size`, or more than `max-files`, and lists each file with a Remove button that names it, and with `previews`, the picture. The server checks every file again:
+
+```vue
+<KitFormField v-slot="field" label="Scans" group>
+  <KitFileField v-model="scans" v-bind="field" :accept="[{ type: 'image/png', name: 'PNG' }, { type: 'application/pdf', name: 'PDF' }]" :max-size="25 * 1024 * 1024" multiple :max-files="4" drop />
+</KitFormField>
+```
+
+A dialog grows to its `width`: `narrow`, the default, `wide` for a long form, or `widest` for a record shown whole. A `persistent` one closes only by its own buttons, with no Close button, Escape or press outside, as an age check must; and while `busy`, no dialog closes at all. `ask()` puts a question with more than one way to go ahead through the same host as `confirm()`, and resolves to the value of the answer chosen, or `null` for Cancel:
+
+```ts
+const choice = await ask({
+  title: 'This shelf changed while you were editing',
+  message: 'Load theirs to see what changed, or keep yours over it.',
+  answers: [{ value: 'theirs', label: 'Load theirs' }, { value: 'mine', label: 'Keep mine', primary: true }],
+})
+```
+
+### Order, saving and passkeys
+
+`KitReorderList` is a list a person puts in order, its model the rows as they stand. Each row moves by its Up and Down buttons, by the arrow keys on its handle (Home and End to either end), or by a drag of the handle, which carries the row with the pointer while the rows it passes move aside to make its room; the focus goes with the row, each move is read out ("Poetry, 1 of 4"), and `move` says which row went where. `row-label` names a row for its buttons and what is read, and the `row` slot draws it:
+
+```vue
+<KitReorderList v-model="shelves" label="Shelves, in the order they show" row-key="id" row-label="name" />
+```
+
+`KitSaveBar` is the bar a form saves from, held at the foot of the screen while there is something to say: unsaved changes with Save and Discard, then saving, then saved, or a conflict with Reload, the record having changed elsewhere. The page keeps the `state` and acts on each button. `useLeaveGuard()` asks before unsaved work is left, by the browser's own prompt and, given the router's hook, through `confirm()` for a move within the app; the kit never imports Vue Router, so the app hands it over. Its `mayLeave()` asks the same before a leaving of the page's own, such as closing a drawer:
+
+```ts
+import { onBeforeRouteLeave } from 'vue-router'
+const { mayLeave } = useLeaveGuard(() => dirty.value, { onBeforeRouteLeave })
+```
+
+`usePasskeys()` signs in with a passkey, or adds one, through two calls to the app's own server: one fetches WebAuthn's options with the server's challenge, the other sends the browser's answer, which the server checks and keeps. Each resolves to what the server answered, or to nothing when the person closed the browser's prompt, which is no failure; anything else throws, and `passkeyFailure()` says whether the browser's side failed. With `autofill`, a sign-in waits for a passkey picked from a username box that takes `autocomplete="username webauthn"`. `KitPasskeyList` lists an account's passkeys, renames each in a dialog and asks before a remove, then tells the page, which makes the call:
+
+```ts
+const passkeys = usePasskeys()
+const session = await passkeys.signIn({ options: api.passkeyOptions, verify: api.passkeySignIn })
+```
+
+```vue
+<KitPasskeyList :passkeys="keys" :adding="adding" @add="addKey" @rename="renameKey" @remove="removeKey" />
+```
+
 ### Pages, alerts and states
 
 Every page opens with `KitPageHeader` and puts its content in `KitPagePanel`s. A list says it is loading, empty or failed with `KitLoadingState`, `KitEmptyState` and `KitErrorState`, never one for another, and a condition the person must act on is a `KitAlert` where it applies:
@@ -199,6 +291,38 @@ Every page opens with `KitPageHeader` and puts its content in `KitPagePanel`s. A
 </KitPagePanel>
 ```
 
+The header and a panel take a KitHelpTip beside the title in their `help` slot, an icon before it in their `icon` slot, and a short line over it in `eyebrow`; the header also takes `back`, a link to the page someone came from. A KitHelpTip's note may be a short list of terms, as a `<dl>`.
+
+### Badges, details and parts that open
+
+`KitBadge` marks a thing's state or kind in words, in a `tone` an alert takes or none, with the app's icon in its `icon` slot. `KitDescriptionList` lays a record's details out as terms beside what they name, one `KitDescriptionItem` each, and stacks each term over its value where the list is narrow. `KitDisclosure` opens a part under a button, in a heading where given `heading-level`, and `KitAccordion` sets several parts one under another, `multiple` open at once with Open all and Close all where asked (`toggle-all`). A closed part stays in the page, so the browser's find in page reaches into it. `KitProgress` shows how far a long job has got, in words with `value-text`, or a bar that moves while `value` is null:
+
+```vue
+<KitBadge tone="error">Overdue</KitBadge>
+<KitDescriptionList>
+  <KitDescriptionItem term="Author">Ursula K. Le Guin</KitDescriptionItem>
+  <KitDescriptionItem v-if="book.callNumber" term="Call number">{{ book.callNumber }}</KitDescriptionItem>
+</KitDescriptionList>
+<KitDisclosure summary="Older releases" :heading-level="3">…</KitDisclosure>
+<KitAccordion v-model="open" :items="releases" multiple toggle-all>
+  <template #default="{ item }">…what {{ item.title }} holds…</template>
+</KitAccordion>
+<KitProgress label="Looking up covers" :value="done" :max="total" :value-text="(v, max) => `${v} of ${max} covers`" />
+```
+
+### Toggles, copying and the skip link
+
+A button given `pressed` is a toggle: it says whether it is on (`aria-pressed`) and fills with the accent while it is. Its words stay the same either way, naming what it turns on, and its icon slot is told `pressed`, so the app's icon may change with it. `KitCopyButton` copies its `text` and says how it went, in its words and to a screen reader, never that it worked when the browser refused; `copyText()` does the same copy from code and answers whether it worked. `KitSkipLink` goes first in the app's shell, and takes focus to `<main id="main-content">` without putting a hash in the address:
+
+```vue
+<KitIconButton label="Favourite" :pressed="favourite" @click="favourite = !favourite">
+  <template #default="{ pressed }"><font-awesome-icon :icon="pressed ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" /></template>
+</KitIconButton>
+<KitCopyButton :text="link">Copy the link</KitCopyButton>
+```
+
+A button given `size` is drawn `small`, for a dense table's rows, or `large`, for a screen used standing up; a small one is still pressed over 44 px, its fill drawn smaller inside that. Given `to`, a button leads to a page of the app's own, through RouterLink where the app has Vue Router.
+
 ### Toasts
 
 Mount `KitToastHost` once, at the app's root, beside `KitConfirmHost`, and raise a toast after an action from anywhere, the app's global error handler included:
@@ -214,6 +338,13 @@ toast.error('That didn’t save', problem.detail)
 `useToast()` raises a toast in one of four tones, `success`, `error`, `warning` and `info`, each with a title and an optional detail, and gives back its id, which `dismiss()` takes to close it early. `onToast()` hears each toast as it is raised and gives back the call that stops it, for an app's own log or its tests, and `dismissAllToasts()` closes every one, as tests do between cases.
 
 A toast reports how a finished action went and goes; a condition the person must act on is a KitAlert on the page, which stays. An app with a fixed bar along the top maps `--kit-toast-inset-top` to the bar's height.
+
+A toast may carry an action, such as Undo, and stays until it is used or dismissed; `duration` keeps any toast for as long as given, and `setToastDurations()` sets how long each tone's stay across the app:
+
+```ts
+toast.success('Removed “Emma”', undefined, { action: { label: 'Undo', onClick: restore } })
+setToastDurations({ success: 3000, error: 6000 })
+```
 
 ### Tabs, menus and pages
 
@@ -239,6 +370,12 @@ A toast reports how a finished action went and goes; a condition the person must
 
 ```vue
 <KitPagination v-model:page="page" :page-count="pageCount" label="Pages of books" />
+```
+
+A tab's `count` shows after its words. A `KitMenuItem` given `to` or `href` is a link, which opens in a new tab as a link does. `KitNavList` is a list of links to one part of an app's pages, the page on screen marked, its groups folding under their headings with `foldable`, folding away behind a button on a phone, or laid in a row with `horizontal`:
+
+```vue
+<KitNavList label="Settings" :items="[{ label: 'Profile', to: '/settings/profile', group: 'You' }, { label: 'Members', to: '/settings/members', group: 'Server' }]" foldable />
 ```
 
 ### Tables
@@ -277,6 +414,8 @@ The rest is asked for, and a table that asks for none of it is drawn as before:
 </KitDataTable>
 ```
 
+`page-sizes` offers a choice of rows on a page beside the pages, which `v-model:page-size` keeps; `pages-above` shows the pages over the rows as well; and the `toolbar` slot puts the page's own buttons with the table's.
+
 ### Tooltips, covers and pictures
 
 `KitTooltip` puts a short note on the one control in its slot, shown on hover and on focus and gone on Escape. It adds to the control's name and never stands in for it, so an icon-only control still takes its own `label`. Every tooltip needs Reka's `TooltipProvider`, mounted once at the app's root around everything else; without it, a tooltip breaks the whole part of the page it sits in.
@@ -307,6 +446,8 @@ The rest is asked for, and a table that asks for none of it is drawn as before:
 <KitLightbox v-model:open="viewing" v-model:index="at" :images="photos" />
 ```
 
+In `KitLightbox` a swipe moves between images on a touch screen, an image at full size pans by dragging as well as by scrolling, and the `actions` slot puts the app's own buttons in its bar, given the image on screen. `openLightbox(images, start)` opens the app's one viewer from anywhere, which a `KitLightboxHost` at the app's root draws.
+
 ### Markdown and Discord
 
 `KitMarkdownEditor` is the one Markdown editor: formatted text on screen, Markdown in its model. It is the package's `/editor` entry, apart from the rest, so load it on first use and a page with no editor never carries TipTap:
@@ -325,7 +466,7 @@ const KitMarkdownEditor = defineAsyncComponent(() =>
 
 It sits in a `group` field, whose caption names it, since a label's `for` reaches only a form control. A toolbar of what it can write sits above the text, and Markdown typed straight in (a line started with `#`, `>` or `-` and a space, `**bold**`) takes its form as it is typed; pasted text is read as Markdown, and copied text is written as Markdown. Its `limit` counts the Markdown it writes, which is what a server counts. A tool's icon comes through its `tool-<name>` slot (`tool-bold`, `tool-heading-2`, `tool-link`); a tool with none draws a sign of its own.
 
-`dialect` says which Markdown it writes. `commonmark`, the default, is for an app's own pages; its toolbar offers headings 2 and 3 unless `headings` says otherwise. `discord` writes Discord's own: `__` is underline, with a button of its own, and bold is always `**`; spoilers, subtext and a quote to the end of the message; every line is its own. Discord's mentions, channels, roles, emoji, times and commands show by the `names` the app gives, and as `@`, `#`, `:` or `/` is typed the editor asks `suggest(kind, query)` for what matches, so a server's members are searched rather than listed whole; the one chosen goes in as its token. The Time tool puts in a time from a date, a time of day and how Discord should show it. `profile` narrows a dialect for one field: `inline` takes marks only, on one line, for an embed's title or a field's name, and `plain` takes no Markdown at all, for a footer.
+`dialect` says which Markdown it writes. `commonmark`, the default, is for an app's own pages; its toolbar offers headings 2 and 3 unless `headings` says otherwise. `discord` writes Discord's own: `__` is underline, with a button of its own, and bold is always `**`; spoilers, subtext and a quote to the end of the message; every line is its own. Discord's mentions, channels, roles, emoji, times and commands show by the `names` the app gives, and as `@`, `#`, `:` or `/` is typed the editor asks `suggest(kind, query)` for what matches, so a server's members are searched rather than listed whole; the one chosen goes in as its token. The Time tool puts in a time from a date with its time, typed in the person's own zone, and how Discord should show it. `profile` narrows a dialect for one field: `inline` takes marks only, on one line, for an embed's title or a field's name, and `plain` takes no Markdown at all, for a footer.
 
 ```vue
 <KitFormField v-slot="field" label="Announcement" group>
@@ -336,7 +477,17 @@ It sits in a `group` field, whose caption names it, since a label's `for` reache
 </KitFormField>
 ```
 
-An app's own pieces go in `extensions`, each a TipTap extension with its Markdown, and its toolbar tool where it has one; in the CommonMark dialect the editor reads and writes each by its own Markdown. One of the app's that takes a kit piece's name, `paragraph` say, takes its place.
+An app's own pieces go in `extensions`, each a TipTap extension with its Markdown, and its toolbar tools where it has any (`tool`, `tools`); in the CommonMark dialect the editor reads and writes each by its own Markdown. One of the app's that takes a kit piece's name, `paragraph` say, takes its place. An extension's tools stand as a group of their own: one with `applies` shows only while the text at the cursor takes it, as a table's row tools inside a table, and one with a `menu` opens a list of items to choose from, the focus going back to the text once one runs:
+
+```ts
+const widgets: KitEditorExtension = {
+  extension: Widget,
+  tools: [
+    { name: 'add-row', label: 'Add a row', glyph: '+', applies: (e) => e.isActive('table'), run: (e) => e.chain().focus().addRowAfter().run() },
+    { name: 'widget', label: 'Insert a widget', glyph: '▦', menu: () => names.map((name) => ({ label: name, run: (e) => e.chain().focus().insertWidget(name).run() })) },
+  ],
+}
+```
 
 `KitDiscordPreview` draws Discord's Markdown as Discord does, by the same `names`, read by the same grammar as the editor's Discord dialect, so the two agree. `inline` reads marks only, on one line, as Discord does in an embed's title.
 
@@ -353,7 +504,9 @@ An app's own pieces go in `extensions`, each a TipTap extension with its Markdow
 />
 ```
 
-`KitDiscordMessagePreview` draws the message as Discord will: the bot with Discord's App tag, the text, each embed as `KitDiscordEmbedPreview` draws one (its bar of color, its fields in Discord's rows, its pictures and footer), and the pictures under them. Since a URL such as `attachment://file.png` is no browser's, `picture` turns one into what to draw and what it shows; a web address it doesn't know is drawn as it is. An embed with no color takes `accentColor`, the bot's own in the server.
+Given `v-model:components`, the message's rows of buttons in Discord's shape (`KitDiscordActionRow`), it edits the message's link buttons too: each button's words, link and emoji, up to `max-buttons`, five by default, written back five to a row as Discord lays them out.
+
+`KitDiscordMessagePreview` draws the message as Discord will: the bot with Discord's App tag, the text, each embed as `KitDiscordEmbedPreview` draws one (its bar of color, its fields in Discord's rows, its pictures and footer), the pictures under them, and its link buttons (`components`), each opening its link in a new tab. Since a URL such as `attachment://file.png` is no browser's, `picture` turns one into what to draw and what it shows; a web address it doesn't know is drawn as it is. An embed with no color takes `accentColor`, the bot's own in the server.
 
 ```vue
 <KitDiscordMessagePreview

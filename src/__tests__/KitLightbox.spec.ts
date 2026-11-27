@@ -3,7 +3,9 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import KitButton from '../components/KitButton.vue'
 import KitLightbox from '../components/KitLightbox.vue'
-import type { KitLightboxImage } from '../components/KitLightbox.vue'
+import KitLightboxHost from '../components/KitLightboxHost.vue'
+import { lightbox, openLightbox } from '../composables/useLightbox'
+import type { KitLightboxImage } from '../components/lightbox'
 import { soon } from '../../shared/test/web/wait.js'
 import { axeFindings, kept, unmountKept } from './helpers'
 
@@ -162,5 +164,89 @@ describe('KitLightbox', () => {
     expect(viewer().querySelectorAll('.kit-lightbox__step')).toHaveLength(0)
     expect(viewer().textContent).not.toContain('1 of 1')
     expect(viewer().querySelector('a')).toBeNull()
+  })
+
+  it('moves to the next image by a swipe on a touch screen, and closes for none of it', async () => {
+    const { open, index } = await openOn()
+    const stage = viewer().querySelector<HTMLElement>('.kit-lightbox__stage')
+    const touch = (type: string, x: number): void => {
+      stage?.dispatchEvent(
+        new PointerEvent(type, { clientX: x, clientY: 200, pointerType: 'touch', bubbles: true }),
+      )
+    }
+    touch('pointerdown', 300)
+    touch('pointermove', 200)
+    touch('pointerup', 120)
+    stage?.click()
+    await flushPromises()
+    expect(index.value).toBe(1)
+    expect(open.value).toBe(true)
+    // A short one is a tap, which moves nothing.
+    touch('pointerdown', 300)
+    touch('pointerup', 290)
+    await flushPromises()
+    expect(index.value).toBe(1)
+  })
+
+  it('pans an image at full size by dragging, which never closes the viewer', async () => {
+    const { open } = await openOn()
+    button('Full size').click()
+    await nextTick()
+    const stage = viewer().querySelector<HTMLElement>('.kit-lightbox__stage')
+    if (!stage) {
+      throw new Error('No stage.')
+    }
+    stage.setPointerCapture = () => undefined
+    const mouse = (type: string, x: number, y: number): void => {
+      stage.dispatchEvent(
+        new PointerEvent(type, {
+          clientX: x,
+          clientY: y,
+          button: 0,
+          pointerType: 'mouse',
+          bubbles: true,
+        }),
+      )
+    }
+    stage.scrollLeft = 100
+    stage.scrollTop = 100
+    mouse('pointerdown', 200, 200)
+    mouse('pointermove', 150, 170)
+    mouse('pointerup', 150, 170)
+    stage.click()
+    await flushPromises()
+    expect([stage.scrollLeft, stage.scrollTop]).toEqual([150, 130])
+    expect(open.value).toBe(true)
+  })
+
+  it('puts the app’s own buttons in its bar, given the image on screen', async () => {
+    kept(
+      mount(KitLightbox, {
+        props: { images: shelf, open: true, index: 1 },
+        slots: {
+          actions: ({ image, index }: { image: KitLightboxImage; index: number }) =>
+            h(KitButton, null, () => `Report ${String(index + 1)}: ${image.alt}`),
+        },
+        attachTo: document.body,
+      }),
+    )
+    await flushPromises()
+    expect(button('Report 2: The paperbacks, two deep')).toBeDefined()
+  })
+})
+
+describe('openLightbox()', () => {
+  it('opens the app’s one viewer at the image asked for, through its host', async () => {
+    kept(mount(KitLightboxHost, { attachTo: document.body }))
+    await nextTick()
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
+    openLightbox(shelf, 2)
+    await flushPromises()
+    expect(shown()).toBe('/c.jpg')
+    button('Close').click()
+    await flushPromises()
+    expect(lightbox.open).toBe(false)
+    openLightbox([])
+    expect(lightbox.open).toBe(false)
   })
 })

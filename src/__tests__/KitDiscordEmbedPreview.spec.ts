@@ -152,4 +152,57 @@ describe('KitDiscordMessagePreview', () => {
     expect(wrapper.find('.kit-discord-message__tag').exists()).toBe(false)
     expect(wrapper.get('.kit-discord-message__avatar-initial').text()).toBe('?')
   })
+
+  it('draws its link buttons under it, each opening its link in a new tab', async () => {
+    const wrapper = kept(
+      mount(KitDiscordMessagePreview, {
+        props: {
+          sender: 'shelf bot',
+          components: [
+            {
+              type: 1,
+              components: [
+                {
+                  type: 2,
+                  style: 5,
+                  label: 'Read more',
+                  url: 'https://example.com/news',
+                  emoji: { name: '📖' },
+                },
+                {
+                  type: 2,
+                  style: 5,
+                  url: 'https://example.com/shelf',
+                  emoji: { name: 'shelf', id: '42' },
+                },
+                { type: 2, style: 5, label: 'Still being written', url: '' },
+                { type: 2, style: 5, url: 'https://example.com/odd', emoji: { id: '7' } },
+              ],
+            },
+            { type: 1, components: [] },
+          ],
+          names: { emoji: { '42': 'https://cdn.example/shelf.png' } },
+        },
+        attachTo: document.body,
+      }),
+    )
+    expect(wrapper.find('.kit-discord-message__empty').exists()).toBe(false)
+    expect(wrapper.findAll('.kit-discord-message__buttons')).toHaveLength(1)
+    const links = wrapper.findAll('a.kit-discord-message__button')
+    expect(links.map((link) => link.text())).toEqual(['📖Read more', '', ':emoji:'])
+    expect(links[0]?.attributes()).toMatchObject({
+      href: 'https://example.com/news',
+      target: '_blank',
+      rel: 'noreferrer noopener',
+    })
+    expect(links[1]?.get('img').attributes()).toMatchObject({
+      src: 'https://cdn.example/shelf.png',
+      alt: ':shelf:',
+    })
+    expect(wrapper.get('span.kit-discord-message__button').text()).toBe('Still being written')
+    expect(await axeFindings(wrapper)).toEqual([])
+
+    await wrapper.setProps({ names: {} })
+    expect(links[1]?.text()).toBe(':shelf:')
+  })
 })

@@ -1,7 +1,9 @@
 // The toolbar's tools: what each does, in words, the sign drawn when the app gives no icon, and
 // whether the text at the cursor already has it. Each dialect and profile shows only what it can
 // write, so the Discord dialect has underline and spoilers, CommonMark has a divider, and a
-// title's toolbar has its marks alone. An app's own extension brings its own tool.
+// title's toolbar has its marks alone. An app's own extension brings its own tools, as a group
+// of their own: each shown only where it applies, as a table's are inside a table, and any of
+// them a menu of items, as a choice of widgets to insert is.
 import type { AnyExtension, Editor } from '@tiptap/core'
 import type { KitGlyphName } from '../components/KitGlyph.vue'
 import type { KitEditorDialect, KitEditorProfile } from './writer'
@@ -15,17 +17,40 @@ export interface KitEditorTool {
   glyph: string
   /** One of the kit's drawn marks, shown in place of `glyph` when the app gives no icon. */
   icon?: KitGlyphName
-  /** Runs it on the text at the cursor. */
-  run: (editor: Editor) => void
+  /** Runs it on the text at the cursor; a tool with a `menu` runs its items instead. */
+  run?: (editor: Editor) => void
   /** Whether the text at the cursor has it; a tool without one is an action, not a toggle. */
   isActive?: (editor: Editor) => boolean
+  /**
+   * Whether it is shown for the text at the cursor, asked again as the cursor moves: a table's
+   * row tools only inside a table. Without one, it is always shown.
+   */
+  applies?: (editor: Editor) => boolean
+  /** The items of the menu its button opens, asked for as it opens: the widgets to insert. */
+  menu?: (editor: Editor) => KitEditorMenuItem[]
 }
 
-/** One of the app's own pieces, with its tool where it has one. */
+/** One item of a tool's menu. */
+export interface KitEditorMenuItem {
+  /** Its words, which name it: "Opening hours". */
+  label: string
+  /** Runs it on the text at the cursor. */
+  run: (editor: Editor) => void
+}
+
+/** One of the app's own pieces, with its tools where it has any. */
 export interface KitEditorExtension {
   /** The TipTap extension, and with it, in the CommonMark dialect, its Markdown. */
   extension: AnyExtension
+  /** Its one tool. */
   tool?: KitEditorTool
+  /** Its tools, as a group of their own in the toolbar, after `tool` where it has both. */
+  tools?: KitEditorTool[]
+}
+
+/** An extension's tools, in the order the toolbar shows them. */
+export function toolsOf(piece: KitEditorExtension): KitEditorTool[] {
+  return [...(piece.tool ? [piece.tool] : []), ...(piece.tools ?? [])]
 }
 
 const mark = (

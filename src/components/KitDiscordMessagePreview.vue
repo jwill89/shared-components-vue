@@ -1,13 +1,23 @@
 <script setup lang="ts">
 // A message as Discord will show it from a bot: the bot's picture and name with Discord's App tag,
 // the text, each embed as KitDiscordEmbedPreview draws it, and the pictures sent with it that no
-// embed shows (`attachments`), laid out as Discord lays a message out, in the app's own colors.
+// embed shows (`attachments`), and its link buttons (`components`, Discord's rows of them), laid
+// out as Discord lays a message out, in the app's own colors. A button with a web address opens
+// it in a new tab, as the embeds' links do.
 // It shows `emptyText` while there is nothing to show. The names, the accent color and `picture`
 // go to every part, so the text and the embeds read alike.
 import { computed } from 'vue'
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui'
-import type { KitDiscordEmbed, KitDiscordPicture } from '../discord/embed'
+import { isWebAddress } from '../discord/embed'
+import type {
+  KitDiscordActionRow,
+  KitDiscordButtonEmoji,
+  KitDiscordEmbed,
+  KitDiscordPicture,
+} from '../discord/embed'
+import { lookUp } from '../discord/tokens'
 import type { KitDiscordNames } from '../discord/tokens'
+import KitGlyph from './KitGlyph.vue'
 import KitDiscordEmbedPreview from './KitDiscordEmbedPreview.vue'
 import KitDiscordPreview from './KitDiscordPreview.vue'
 
@@ -24,6 +34,8 @@ const props = withDefaults(
     embeds?: readonly KitDiscordEmbed[]
     /** The pictures sent with the message that no embed shows. */
     attachments?: readonly KitDiscordPicture[]
+    /** Its rows of link buttons, as Discord's API takes them. */
+    components?: readonly KitDiscordActionRow[]
     names?: KitDiscordNames
     /** The bar's color for an embed with none of its own: the bot's accent, as Discord's number. */
     accentColor?: number
@@ -38,6 +50,7 @@ const props = withDefaults(
     content: '',
     embeds: () => [],
     attachments: () => [],
+    components: () => [],
     names: () => ({}),
     accentColor: undefined,
     picture: undefined,
@@ -46,9 +59,25 @@ const props = withDefaults(
 )
 
 const initial = computed(() => Array.from(props.sender.trim())[0]?.toUpperCase() ?? '?')
+const rows = computed(() => props.components.filter((row) => row.components.length))
 const empty = computed(
-  () => !props.content.trim() && !props.embeds.length && !props.attachments.length,
+  () =>
+    !props.content.trim() &&
+    !props.embeds.length &&
+    !props.attachments.length &&
+    !rows.value.length,
 )
+
+/** A custom emoji's picture, where the app gives one; a Unicode emoji, or one without, is words. */
+function emojiImage(emoji: KitDiscordButtonEmoji): string | undefined {
+  return emoji.id ? lookUp(props.names.emoji, emoji.id) : undefined
+}
+
+function emojiWords(emoji: KitDiscordButtonEmoji): string {
+  return emoji.id ? `:${emoji.name ?? 'emoji'}:` : (emoji.name ?? '')
+}
+
+const NEW_TAB = { target: '_blank', rel: 'noreferrer noopener' } as const
 </script>
 
 <template>
@@ -85,6 +114,31 @@ const empty = computed(
           :height="attachment.height"
           :alt="attachment.alt ?? ''"
         />
+      </div>
+      <div
+        v-for="(row, at) in rows"
+        :key="`row-${String(at)}`"
+        class="kit-discord-message__buttons"
+      >
+        <component
+          :is="isWebAddress(button.url) ? 'a' : 'span'"
+          v-for="(button, place) in row.components"
+          :key="place"
+          class="kit-discord-message__button"
+          v-bind="isWebAddress(button.url) ? { href: button.url, ...NEW_TAB } : {}"
+        >
+          <template v-if="button.emoji">
+            <img
+              v-if="emojiImage(button.emoji)"
+              class="kit-discord-message__emoji"
+              :src="emojiImage(button.emoji)"
+              :alt="emojiWords(button.emoji)"
+            />
+            <span v-else>{{ emojiWords(button.emoji) }}</span>
+          </template>
+          <span v-if="button.label">{{ button.label }}</span>
+          <KitGlyph name="external" />
+        </component>
       </div>
     </div>
   </div>
@@ -162,6 +216,44 @@ const empty = computed(
     gap: var(--kit-space-2xs);
     justify-items: start;
     max-width: 32.5rem;
+  }
+
+  /* Each row of link buttons, as Discord lays them out: side by side, wrapping on a narrow screen. */
+  .kit-discord-message__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kit-space-xs);
+  }
+
+  .kit-discord-message__button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kit-space-xs);
+    min-height: var(--kit-control-height);
+    padding: 0 var(--kit-space-md);
+    border: var(--kit-control-border-width) solid var(--kit-control-border);
+    border-radius: var(--kit-radius-md);
+    background: var(--kit-surface-sunken);
+    color: var(--kit-text);
+    font-weight: var(--kit-font-weight-strong);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  a.kit-discord-message__button:hover {
+    text-decoration: underline;
+  }
+
+  a.kit-discord-message__button:focus-visible {
+    outline: var(--kit-focus-ring-width) solid var(--kit-focus-ring);
+    outline-offset: var(--kit-focus-ring-offset);
+  }
+
+  .kit-discord-message__emoji {
+    width: 1.25em;
+    height: 1.25em;
+    object-fit: contain;
   }
 
   .kit-discord-message__attachment {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { h } from 'vue'
+import { h, reactive } from 'vue'
 import { flushPromises } from '@vue/test-utils'
 import KitCombobox from '../components/KitCombobox.vue'
 import { axeFindings, field, openOptions, option, unmountKept } from './helpers'
@@ -137,5 +137,57 @@ describe('KitCombobox', () => {
     await wrapper.get('input').trigger('click')
     await flushPromises()
     expect(option('Fantasy').querySelector('i')?.textContent).toBe('Fantasy')
+  })
+  it('hands the search to the app, shows what it gives back, and keeps a choice’s words', async () => {
+    // The app's own props, which it changes as its search answers.
+    const app = reactive({
+      options: genres.slice(0, 1),
+      multiple: true,
+      search: true,
+      loading: true,
+    })
+    const { wrapper, state } = field(KitCombobox, ['fantasy'], { label: 'Genres' }, app)
+    const combobox = wrapper.findComponent(KitCombobox)
+    const input = wrapper.get('input')
+    await input.trigger('click')
+    await flushPromises()
+    expect(
+      document.querySelector('.kit-option-list__empty[role="status"]')?.textContent.trim(),
+    ).toBe('Searching…')
+    await input.setValue('his')
+    expect(combobox.emitted('search')?.at(-1)).toEqual(['his'])
+    // The app hands back its results, which the list shows as they are, unfiltered.
+    app.options = genres.slice(1, 3)
+    app.loading = false
+    await flushPromises()
+    expect(openOptions()).toEqual(['Mystery', 'History'])
+    // The chosen genre is no longer among the results, and its chip keeps its words.
+    expect(wrapper.findAll('.kit-chip__label').map((chip) => chip.text())).toEqual(['Fantasy'])
+    option('History').click()
+    await flushPromises()
+    expect(state.value).toEqual(['fantasy', 'history'])
+  })
+
+  it('counts its choices against its most, and holds the rest back once it is reached', async () => {
+    const { wrapper, state } = field(
+      KitCombobox,
+      ['fantasy'],
+      { label: 'Genres', hint: 'Two at most.' },
+      { options: genres, multiple: true, max: 2 },
+    )
+    const input = wrapper.get('input')
+    const count = wrapper.get('.kit-combobox__count')
+    expect(count.text()).toBe('1 of 2 chosen')
+    expect(input.attributes('aria-describedby')).toContain(String(count.attributes('id')))
+    await input.trigger('click')
+    await flushPromises()
+    option('Mystery').click()
+    await flushPromises()
+    expect(state.value).toEqual(['fantasy', 'mystery'])
+    expect(wrapper.get('.kit-combobox__count').text()).toBe(
+      '2 of 2 chosen; remove one to choose another',
+    )
+    expect(option('History').getAttribute('data-disabled')).toBe('')
+    expect(option('Fantasy').hasAttribute('data-disabled')).toBe(false)
   })
 })

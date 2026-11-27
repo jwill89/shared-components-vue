@@ -2,11 +2,21 @@
 // The toasts themselves, for KitToastHost: it reads the list from the provider the host sets
 // up, so it sits inside it. Reka draws each toast inside the stack, outside this component's
 // tree, where scoped styles can't reach, so the styles below are unscoped, and still in the
-// kit's layer. Each new toast is read out through the kit's announcer (KitAnnouncer.vue).
+// kit's layer. Each new toast is read out through the kit's announcer (KitAnnouncer.vue), with
+// how to reach its action where it has one. The action is a plain button, as Dismiss is, whose
+// colors contrast.ts measures on the toast's wash.
 import { watch } from 'vue'
-import { ToastClose, ToastDescription, ToastRoot, ToastTitle, useToastManager } from 'reka-ui'
+import {
+  ToastAction,
+  ToastClose,
+  ToastDescription,
+  ToastRoot,
+  ToastTitle,
+  useToastManager,
+} from 'reka-ui'
 import { announce } from '../composables/useAnnouncer'
 import type { KitToastTone } from '../composables/useToast'
+import KitButton from './KitButton.vue'
 import KitGlyph from './KitGlyph.vue'
 import KitIconButton from './KitIconButton.vue'
 import KitToneIcon from './KitToneIcon.vue'
@@ -32,7 +42,9 @@ watch(
       }
       heard.add(toast.id)
       const tone = toneOf(toast.status)
-      const words = [toast.title, toast.description].filter(Boolean).join('. ')
+      const words = [toast.title, toast.description, toast.actionProps?.altText]
+        .filter(Boolean)
+        .join('. ')
       announce(words, tone === 'error' || tone === 'warning' ? 'assertive' : 'polite')
     }
   },
@@ -57,6 +69,9 @@ watch(
       <ToastTitle class="kit-toast__title" />
       <ToastDescription v-if="toast.description" class="kit-toast__detail" />
     </div>
+    <ToastAction v-if="toast.actionProps" as-child>
+      <KitButton variant="plain" class="kit-toast__action">{{ toast.actionProps.label }}</KitButton>
+    </ToastAction>
     <ToastClose as-child>
       <KitIconButton class="kit-toast__close" label="Dismiss" variant="plain"
         ><KitGlyph name="cross"
@@ -140,6 +155,11 @@ watch(
 
   .kit-toast__detail {
     margin-block-start: var(--kit-space-2xs);
+  }
+
+  .kit-toast__action {
+    flex: none;
+    margin-block: calc(-1 * var(--kit-space-xs));
   }
 
   /* The Dismiss button sits in the corner, its touch target reaching into the padding. */

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { h } from 'vue'
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import KitSelect from '../components/KitSelect.vue'
-import { axeFindings, field, openOptions, option, unmountKept } from './helpers'
+import { axeFindings, field, kept, openOptions, option, unmountKept } from './helpers'
 
 afterEach(unmountKept)
 
@@ -66,5 +66,30 @@ describe('KitSelect', () => {
     const trigger = wrapper.get('[role="combobox"]')
     expect(trigger.find('[data-icon="caret"]').exists()).toBe(true)
     expect(trigger.attributes('disabled')).toBeDefined()
+  })
+  it('puts its options under their headings, and an aria-label on its button', async () => {
+    const wrapper = kept(
+      mount(KitSelect, {
+        props: {
+          modelValue: undefined,
+          options: [
+            { value: 'hall', label: 'Hall', group: 'Downstairs' },
+            { value: 'attic', label: 'Attic', group: 'Upstairs' },
+          ],
+        },
+        attrs: { 'aria-label': 'Room' },
+        attachTo: document.body,
+      }),
+    )
+    const trigger = wrapper.get('button')
+    expect(trigger.attributes('aria-label')).toBe('Room')
+    await trigger.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(
+      [...document.querySelectorAll('.kit-option-list__group-label')].map((g) =>
+        g.textContent.trim(),
+      ),
+    ).toEqual(['Downstairs', 'Upstairs'])
+    expect(openOptions()).toEqual(['Hall', 'Attic'])
   })
 })

@@ -33,11 +33,14 @@ test('each control fits inside its field, with no reset stylesheet to lean on', 
 
 test('a text box and a box of several lines show the focus ring', async ({ page }) => {
   await page.goto('/')
-  for (const label of ['Title', 'Notes']) {
-    const box = page.locator('#fields').getByLabel(label, { exact: true })
-    await box.focus()
-    expect(await outline(box)).toEqual(RING)
-  }
+  // A text box draws its ring on the edge it shares with its places, a box of several lines on
+  // itself.
+  const title = page.locator('#fields').getByLabel('Title', { exact: true })
+  await title.focus()
+  expect(await outline(title.locator('xpath=..'))).toEqual(RING)
+  const notes = page.locator('#fields').getByLabel('Notes', { exact: true })
+  await notes.focus()
+  expect(await outline(notes)).toEqual(RING)
 })
 
 test('a number box draws its ring round the whole box, and its buttons step it', async ({

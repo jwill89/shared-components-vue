@@ -14,6 +14,10 @@
 // writes, which is what a server and Discord count. Icons come in through the `tool-<name>`
 // slots (`tool-bold`, `tool-heading-2`); a tool with none shows a sign of its own.
 //
+// An app's own pieces come in through `extensions`, each with its Markdown and its tools, which
+// stand as a group of their own: each shown only while it applies to the text at the cursor, and
+// any of them a menu of items to choose from, where focus goes back to the text once one runs.
+//
 // It is the package's `/editor` entry, which an app loads on first use, so a page with no editor
 // never carries TipTap.
 import {
@@ -28,12 +32,21 @@ import {
   watch,
 } from 'vue'
 import type { Editor } from '@tiptap/core'
-import { Toggle, ToolbarButton, ToolbarRoot, ToolbarSeparator } from 'reka-ui'
+import {
+  DropdownMenuContent,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+  Toggle,
+  ToolbarButton,
+  ToolbarRoot,
+  ToolbarSeparator,
+} from 'reka-ui'
 import KitButton from '../components/KitButton.vue'
 import KitDatePicker from '../components/KitDatePicker.vue'
 import KitFormField from '../components/KitFormField.vue'
 import KitGlyph from '../components/KitGlyph.vue'
 import KitIconButton from '../components/KitIconButton.vue'
+import KitMenuItem from '../components/KitMenuItem.vue'
 import KitPopover from '../components/KitPopover.vue'
 import KitSelect from '../components/KitSelect.vue'
 import KitTextField from '../components/KitTextField.vue'
@@ -54,7 +67,14 @@ import {
   type KitDiscordSuggestion,
   type SuggestionList,
 } from './suggest'
-import { POPOVER_TOOLS, kitTools, type KitEditorExtension, type KitEditorTool } from './tools'
+import {
+  POPOVER_TOOLS,
+  kitTools,
+  toolsOf,
+  type KitEditorExtension,
+  type KitEditorMenuItem,
+  type KitEditorTool,
+} from './tools'
 import type { KitEditorDialect, KitEditorProfile } from './writer'
 
 const props = withDefaults(
@@ -273,13 +293,27 @@ const suggestions = discordSuggestions({
 const headingLevels = computed(
   () => props.headings ?? (props.dialect === 'discord' ? [1, 2, 3] : [2, 3]),
 )
-const appTools = props.extensions.flatMap((piece) => (piece.tool ? [piece.tool] : []))
-const groups = computed(() =>
-  [...kitTools(props.dialect, props.profile, headingLevels.value), appTools].filter(
+const appGroups = props.extensions.map(toolsOf)
+/** Every tool, shown or not, in its group. */
+const allGroups = computed(() =>
+  [...kitTools(props.dialect, props.profile, headingLevels.value), ...appGroups].filter(
     (group) => group.length,
   ),
 )
-const tools = computed(() => groups.value.flat())
+const allTools = computed(() => allGroups.value.flat())
+/** Which tools that ask apply to the text at the cursor, refreshed with `pressed`. */
+const applying = ref<Record<string, boolean>>({})
+// Each group keyed by its place among them all, so a tool that comes or goes at a group's start
+// leaves the rest of its group's buttons, and the focus on one, where they were.
+const groups = computed(() =>
+  allGroups.value
+    .map((group, at) => ({
+      key: String(at),
+      tools: group.filter((tool) => !tool.applies || applying.value[tool.name] === true),
+    }))
+    .filter((group) => group.tools.length),
+)
+const tools = computed(() => groups.value.flatMap((group) => group.tools))
 
 /**
  * A tool's sign where the app gives no icon: one of the kit's drawn marks, or its letters drawn in
@@ -305,14 +339,32 @@ function sync(): void {
     return
   }
   pressed.value = Object.fromEntries(
-    tools.value.map((tool) => [tool.name, tool.isActive?.(editor) ?? false]),
+    allTools.value.map((tool) => [tool.name, tool.isActive?.(editor) ?? false]),
+  )
+  applying.value = Object.fromEntries(
+    allTools.value.map((tool) => [tool.name, tool.applies?.(editor) ?? true]),
   )
 }
 
 function use(tool: KitEditorTool | undefined): void {
   const editor = engine.value?.editor
   if (tool && editor && !props.disabled) {
-    tool.run(editor)
+    tool.run?.(editor)
+  }
+}
+
+/** A menu tool's items, asked for as its menu opens. */
+function menuOf(tool: KitEditorTool): KitEditorMenuItem[] {
+  const editor = engine.value?.editor
+  return editor ? (tool.menu?.(editor) ?? []) : []
+}
+
+/** Runs a menu's item, focus going back to the text as the menu closes. */
+function choose(item: KitEditorMenuItem): void {
+  const editor = engine.value?.editor
+  if (editor && !props.disabled) {
+    doneInPopover = true
+    item.run(editor)
   }
 }
 
@@ -394,30 +446,27 @@ function removeLink(): void {
 }
 
 // -- Times --------------------------------------------------------------------------------------
+// The moment as KitDatePicker keeps it, typed in the person's own time zone: it starts at the
+// top of the hour now.
 const timeOpen = ref(false)
-const timeDate = ref('')
-const timeClock = ref('')
+const timeMoment = ref('')
 const timeStyle = ref<KitDiscordTimeStyle>('f')
 const timeError = ref('')
-
-function twoDigits(value: number): string {
-  return String(value).padStart(2, '0')
-}
 
 watch(timeOpen, (open) => {
   if (open) {
     use(tools.value.find((tool) => tool.name === 'time'))
-    const now = new Date()
-    timeDate.value = `${String(now.getFullYear())}-${twoDigits(now.getMonth() + 1)}-${twoDigits(now.getDate())}`
-    timeClock.value = `${twoDigits(now.getHours())}:00`
+    const hour = new Date()
+    hour.setMinutes(0, 0, 0)
+    timeMoment.value = hour.toISOString()
     timeError.value = ''
   }
 })
 
-/** The moment chosen, in seconds, in the person's own time zone. */
+/** The moment chosen, in seconds. */
 const timeChosen = computed(() => {
-  const at = new Date(`${timeDate.value}T${timeClock.value || '00:00'}`)
-  return Number.isNaN(at.getTime()) ? null : Math.floor(at.getTime() / 1000)
+  const at = Date.parse(timeMoment.value)
+  return Number.isNaN(at) ? null : Math.floor(at / 1000)
 })
 
 const TIME_STYLES: readonly [KitDiscordTimeStyle, string][] = [
@@ -441,7 +490,7 @@ const timeStyles = computed(() =>
 function insertTime(): void {
   const editor = engine.value?.editor
   if (!editor || timeChosen.value === null) {
-    timeError.value = 'Choose a date.'
+    timeError.value = 'Choose a date and a time.'
     return
   }
   const raw = `<t:${String(timeChosen.value)}:${timeStyle.value}>`
@@ -600,9 +649,9 @@ function role(item: KitDiscordSuggestion): string | undefined {
         :aria-label="toolbarLabel"
         :aria-controls="textId"
       >
-        <template v-for="(group, at) in groups" :key="group[0]?.name">
+        <template v-for="(group, at) in groups" :key="group.key">
           <ToolbarSeparator v-if="at > 0" class="kit-markdown-editor__separator" />
-          <template v-for="tool in group" :key="tool.name">
+          <template v-for="tool in group.tools" :key="tool.name">
             <KitPopover
               v-if="tool.name === 'link'"
               v-model:open="linkOpen"
@@ -661,15 +710,14 @@ function role(item: KitDiscordSuggestion): string | undefined {
                 </ToolbarButton>
               </template>
               <form class="kit-markdown-editor__form" novalidate @submit.prevent="insertTime">
-                <KitFormField v-slot="field" label="Date" group :error="timeError">
-                  <KitDatePicker v-bind="field" v-model="timeDate" />
-                </KitFormField>
                 <KitFormField
                   v-slot="field"
-                  label="Time"
+                  label="Date and time"
                   hint="In your own time zone; each reader sees it in theirs."
+                  :error="timeError"
+                  group
                 >
-                  <KitTextField v-bind="field" v-model="timeClock" type="time" />
+                  <KitDatePicker v-bind="field" v-model="timeMoment" time />
                 </KitFormField>
                 <KitFormField v-slot="field" label="Shown as">
                   <KitSelect v-bind="field" v-model="timeStyle" :options="timeStyles" />
@@ -679,6 +727,39 @@ function role(item: KitDiscordSuggestion): string | undefined {
                 </div>
               </form>
             </KitPopover>
+            <DropdownMenuRoot v-else-if="tool.menu" :modal="false">
+              <DropdownMenuTrigger as-child>
+                <ToolbarButton as-child>
+                  <KitIconButton
+                    class="kit-markdown-editor__tool"
+                    :label="tool.label"
+                    variant="plain"
+                    :disabled="disabled"
+                    @mousedown.prevent
+                  >
+                    <slot :name="`tool-${tool.name}`"><ToolSign :tool="tool" /></slot>
+                  </KitIconButton>
+                </ToolbarButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                class="kit-option-list kit-menu"
+                :aria-label="tool.label"
+                align="start"
+                :side-offset="4"
+                :collision-padding="8"
+                @close-auto-focus="backToText"
+              >
+                <div class="kit-option-list__viewport">
+                  <KitMenuItem
+                    v-for="item in menuOf(tool)"
+                    :key="item.label"
+                    @select="choose(item)"
+                  >
+                    {{ item.label }}
+                  </KitMenuItem>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenuRoot>
             <ToolbarButton v-else-if="tool.isActive && !POPOVER_TOOLS.has(tool.name)" as-child>
               <Toggle
                 as-child

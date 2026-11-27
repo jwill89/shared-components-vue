@@ -16,7 +16,7 @@ function editorBox(page: Page, caption: string): Locator {
   return page.getByRole('textbox', { name: caption, exact: true })
 }
 
-function stored(page: Page, which: 'about' | 'announcement'): Locator {
+function stored(page: Page, which: 'about' | 'announcement' | 'notes'): Locator {
   return page.getByTestId(`${which}-markdown`)
 }
 
@@ -141,4 +141,29 @@ test('at a phone’s width the toolbars wrap and the page never scrolls sideways
     screen: window.innerWidth,
   }))
   expect(widths.page).toBeLessThanOrEqual(widths.screen)
+})
+
+test('an extension’s tool shows only where it applies, and a menu tool’s item goes in where the cursor was', async ({
+  page,
+}) => {
+  await page.goto('/#editor')
+  const box = editorBox(page, 'Shelf notes')
+  const toolbar = page.locator('#editor').getByRole('toolbar').last()
+  await box.getByText('Ask at the desk.').click()
+  await expect(toolbar.getByRole('button', { name: 'Leave the list' })).toHaveCount(0)
+  await box.getByText('Signed copies on the left').click()
+  await expect(toolbar.getByRole('button', { name: 'Leave the list' })).toBeVisible()
+
+  await box.getByText('Ask at the desk.').click()
+  await page.keyboard.press('End')
+  await toolbar.getByRole('button', { name: 'Insert a snippet' }).click()
+  const menu = page.getByRole('menu', { name: 'Insert a snippet' })
+  await expect(menu.getByRole('menuitem')).toHaveText(['Opening hours', 'Lending rules'])
+  expect(await axeViolations(page, { tags: AAA })).toEqual([])
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(menu).toBeHidden()
+  await expect(stored(page, 'notes')).toContainText('Ask at the desk.Three weeks a loan')
+  await expect(box).toBeFocused()
 })

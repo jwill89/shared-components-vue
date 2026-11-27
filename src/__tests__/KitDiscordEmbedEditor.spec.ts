@@ -7,11 +7,17 @@ import KitSelect from '../components/KitSelect.vue'
 import KitSwitch from '../components/KitSwitch.vue'
 import KitTextField from '../components/KitTextField.vue'
 import {
+  actionRows,
   colorHex,
   colorNumber,
   discordEmbedLength,
+  emojiText,
+  linkButtons,
+  readEmoji,
   tidyEmbed,
+  type KitDiscordActionRow,
   type KitDiscordEmbed,
+  type KitDiscordLinkButton,
 } from '../discord/embed'
 import KitDiscordEmbedEditor from '../editor/KitDiscordEmbedEditor.vue'
 import KitMarkdownEditor from '../editor/KitMarkdownEditor.vue'
@@ -210,25 +216,145 @@ describe('KitDiscordEmbedEditor', () => {
     )
   })
 
-  it('takes a time for the footer from a date and a time of day, and clears it', async () => {
-    const { wrapper, state } = await embedEditor({ timestamp: 'not a time' })
-    expect(() => byLabel(wrapper, 'Time of day')).toThrow()
-    byLabel(wrapper, 'Time in the footer')
-      .findComponent(KitDatePicker)
-      .vm.$emit('update:modelValue', '2026-11-27')
+  it('takes a time for the footer as a date with its time, and clears it', async () => {
+    const { wrapper, state } = await embedEditor({})
+    const picker = byLabel(wrapper, 'Time in the footer').findComponent(KitDatePicker)
+    expect(picker.props('time')).toBe(true)
+    expect(wrapper.find('button[aria-label="Clear the time of Embed 1"]').exists()).toBe(false)
+    picker.vm.$emit('update:modelValue', '2026-11-27T19:30:00Z')
     await nextTick()
-    const local = new Date('2026-11-27T00:00')
-    expect(state.embed.timestamp).toBe(local.toISOString())
-    byLabel(wrapper, 'Time of day')
-      .findComponent(KitTextField)
-      .vm.$emit('update:modelValue', '19:30')
-    await nextTick()
-    expect(state.embed.timestamp).toBe(new Date('2026-11-27T19:30').toISOString())
-    expect(byLabel(wrapper, 'Time of day').findComponent(KitTextField).props('modelValue')).toBe(
-      '19:30',
-    )
+    expect(state.embed.timestamp).toBe('2026-11-27T19:30:00Z')
+    expect(picker.props('modelValue')).toBe('2026-11-27T19:30:00Z')
     await wrapper.get('button[aria-label="Clear the time of Embed 1"]').trigger('click')
     expect(state.embed.timestamp).toBeUndefined()
+    expect(picker.props('modelValue')).toBe('')
+  })
+
+  it('edits no buttons unless the page binds the message’s rows of them', async () => {
+    const { wrapper } = await embedEditor({ title: 'News' })
+    expect(wrapper.text()).not.toContain('Add a button')
+  })
+})
+
+/** An editor with the message's buttons bound too, both models kept as a page keeps them. */
+async function withButtons(
+  rows: KitDiscordActionRow[],
+  props: Record<string, unknown> = {},
+): Promise<{ wrapper: VueWrapper; state: { rows: KitDiscordActionRow[] } }> {
+  const state = { rows }
+  const wrapper = kept(
+    mount(KitDiscordEmbedEditor, {
+      props: {
+        modelValue: {},
+        components: rows,
+        'onUpdate:components': (next: KitDiscordActionRow[] | undefined) => {
+          state.rows = next ?? []
+          void wrapper.setProps({ components: next })
+        },
+        label: 'Embed 1',
+        ...props,
+      },
+      attachTo: document.body,
+    }),
+  )
+  await flushPromises()
+  return { wrapper, state }
+}
+
+function buttonAdder(wrapper: VueWrapper): DOMWrapper<HTMLButtonElement> {
+  const found = wrapper
+    .findAll('button')
+    .find((candidate) => candidate.text().includes('Add a button'))
+  if (!found) {
+    throw new Error('No Add a button.')
+  }
+  return found
+}
+
+describe('KitDiscordEmbedEditor’s buttons', () => {
+  it('adds a link button and writes its words, link and emoji in Discord’s shape', async () => {
+    const { wrapper, state } = await withButtons([])
+    await buttonAdder(wrapper).trigger('click')
+    await nextTick()
+    expect(state.rows).toEqual([{ type: 1, components: [{ type: 2, style: 5, url: '' }] }])
+    await byLabel(wrapper, 'Button 1’s words').get('input').setValue('Read more')
+    await byLabel(wrapper, 'Button 1’s link').get('input').setValue('https://example.com/news')
+    await byLabel(wrapper, 'Button 1’s emoji').get('input').setValue('📖')
+    expect(state.rows).toEqual([
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 5,
+            url: 'https://example.com/news',
+            label: 'Read more',
+            emoji: { name: '📖' },
+          },
+        ],
+      },
+    ])
+    await byLabel(wrapper, 'Button 1’s emoji').get('input').setValue('<a:party:123>')
+    expect(linkButtons(state.rows)[0]?.emoji).toEqual({ name: 'party', id: '123', animated: true })
+    await byLabel(wrapper, 'Button 1’s words').get('input').setValue('')
+    await byLabel(wrapper, 'Button 1’s emoji').get('input').setValue(' ')
+    expect(linkButtons(state.rows)[0]).toEqual({
+      type: 2,
+      style: 5,
+      url: 'https://example.com/news',
+    })
+    expect(byLabel(wrapper, 'Button 1’s words').get('input').attributes('maxlength')).toBe('80')
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('holds no more than its most, shows each error by its place, and removes a button', async () => {
+    const button = (label: string): KitDiscordLinkButton => ({
+      type: 2,
+      style: 5,
+      label,
+      url: `https://example.com/${label}`,
+    })
+    const { wrapper, state } = await withButtons(
+      [{ type: 1, components: [button('one'), button('two')] }],
+      { maxButtons: 2, errors: { 'components[0].components[1].url': 'Discord can’t open that.' } },
+    )
+    expect(buttonAdder(wrapper).element.disabled).toBe(true)
+    expect(wrapper.text()).toContain('A message holds at most 2 buttons here.')
+    expect(byLabel(wrapper, 'Button 2’s link').text()).toContain('Discord can’t open that.')
+    const remove = wrapper
+      .findAll('button')
+      .find((candidate) => candidate.text() === 'Remove button 1')
+    await remove?.trigger('click')
+    expect(state.rows).toEqual([{ type: 1, components: [button('two')] }])
+    const last = wrapper
+      .findAll('button')
+      .find((candidate) => candidate.text() === 'Remove button 1')
+    await last?.trigger('click')
+    expect(state.rows).toEqual([])
+  })
+
+  it('lays more than five buttons out five to a row, as Discord does', async () => {
+    const { wrapper, state } = await withButtons([], { maxButtons: 25 })
+    for (let made = 0; made < 6; made++) {
+      await buttonAdder(wrapper).trigger('click')
+    }
+    expect(state.rows.map((row) => row.components.length)).toEqual([5, 1])
+    await byLabel(wrapper, 'Button 6’s words').get('input').setValue('Sixth')
+    expect(state.rows[1]?.components[0]?.label).toBe('Sixth')
+  })
+})
+
+describe('a message’s buttons’ helpers', () => {
+  it('read and write an emoji as it is typed, and rows of buttons both ways', () => {
+    expect(readEmoji('')).toBeUndefined()
+    expect(readEmoji('<:shelf:42>')).toEqual({ name: 'shelf', id: '42' })
+    expect(emojiText({ name: 'shelf', id: '42' })).toBe('<:shelf:42>')
+    expect(emojiText({ name: '📖' })).toBe('📖')
+    expect(emojiText(undefined)).toBe('')
+    expect(emojiText({})).toBe('')
+    expect(emojiText({ id: '42', animated: true })).toBe('<a::42>')
+    expect(actionRows([])).toEqual([])
+    expect(linkButtons(undefined)).toEqual([])
   })
 })
 

@@ -5,8 +5,13 @@
 // action runs and close it after; while busy, nothing closes it. A page asks through
 // `confirm()`, which KitConfirmHost answers with this dialog; it uses the component itself
 // only when the dialog must stay open while the action runs.
+//
+// Given `answers`, it offers more than one way to go ahead (Load theirs, Keep mine), each a
+// button after Cancel that emits `choose` with its value: the dialog `ask()` asks with.
 import { AlertDialogCancel } from 'reka-ui'
+import type { KitAnswer } from '../composables/useConfirmQueue'
 import KitButton from './KitButton.vue'
+import type { KitButtonVariant } from './KitButton.vue'
 import KitDialog from './KitDialog.vue'
 
 const props = withDefaults(
@@ -16,14 +21,16 @@ const props = withDefaults(
     /** What going ahead does, and how much it removes: "Its 12 books go back to unshelved." */
     message: string
     /** The button that goes ahead, named for what it does: "Delete". */
-    confirmLabel: string
+    confirmLabel?: string
+    /** The ways to go ahead, in place of the one confirm button. */
+    answers?: KitAnswer[]
     cancelLabel?: string
     /** Whether going ahead can't be undone, which the button's color says too. */
     danger?: boolean
     /** Whether the action is running, so the buttons wait. */
     busy?: boolean
   }>(),
-  { cancelLabel: 'Cancel', danger: false, busy: false },
+  { confirmLabel: '', answers: undefined, cancelLabel: 'Cancel', danger: false, busy: false },
 )
 
 const emit = defineEmits<{
@@ -31,7 +38,17 @@ const emit = defineEmits<{
   confirm: []
   /** The person backed out, by Cancel or Escape; the dialog has closed. */
   cancel: []
+  /** The person chose one of the `answers`, by its value. */
+  choose: [value: string]
 }>()
+
+/** An answer's button: filled where it is the one most take, red where it can't be undone. */
+function variantOf(answer: KitAnswer): KitButtonVariant {
+  if (answer.danger) {
+    return 'danger'
+  }
+  return answer.primary ? 'primary' : 'secondary'
+}
 
 const open = defineModel<boolean>('open', { default: false })
 
@@ -52,7 +69,23 @@ function backOut(): void {
       <AlertDialogCancel as-child>
         <KitButton :disabled="busy">{{ cancelLabel }}</KitButton>
       </AlertDialogCancel>
-      <KitButton :variant="danger ? 'danger' : 'primary'" :loading="busy" @click="emit('confirm')">
+      <template v-if="answers">
+        <KitButton
+          v-for="answer in answers"
+          :key="answer.value"
+          :variant="variantOf(answer)"
+          :disabled="busy"
+          @click="emit('choose', answer.value)"
+        >
+          {{ answer.label }}
+        </KitButton>
+      </template>
+      <KitButton
+        v-else
+        :variant="danger ? 'danger' : 'primary'"
+        :loading="busy"
+        @click="emit('confirm')"
+      >
         {{ confirmLabel }}
       </KitButton>
     </template>

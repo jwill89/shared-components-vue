@@ -325,6 +325,93 @@ describe('KitMarkdownEditor in the CommonMark dialect', () => {
     await press(tool(wrapper.element, 'Shout'))
     expect(run).toHaveBeenCalledOnce()
   })
+
+  it('shows an extension’s tools as their own group, each only where it applies', async () => {
+    const inHeading = (e: Editor): boolean => e.isActive('heading')
+    const { wrapper, tiptap } = await editor('## Opening hours\n\nTen until six.', {
+      extensions: [
+        {
+          extension: Extension.create({ name: 'outline' }),
+          tools: [
+            { name: 'anchor', label: 'Link to this heading', glyph: '#', applies: inHeading },
+            {
+              name: 'outline',
+              label: 'Insert an outline',
+              glyph: '≡',
+              run: vi.fn(),
+              applies: (e: Editor) => !inHeading(e),
+            },
+          ],
+        },
+        {
+          extension: Extension.create({ name: 'quiet' }),
+          tool: { name: 'hush', label: 'Hush', glyph: 'h' },
+        },
+      ],
+    })
+    const separators = (): number => wrapper.findAll('.kit-markdown-editor__separator').length
+    tiptap.commands.setTextSelection(3)
+    await nextTick()
+    expect(toolNames(wrapper.element).slice(-2)).toEqual(['Link to this heading', 'Hush'])
+    const withHeading = separators()
+
+    tiptap.commands.setTextSelection(tiptap.state.doc.content.size - 1)
+    await nextTick()
+    expect(toolNames(wrapper.element)).not.toContain('Link to this heading')
+    expect(toolNames(wrapper.element).slice(-2)).toEqual(['Insert an outline', 'Hush'])
+    expect(separators()).toBe(withHeading)
+    expect(await axeFindings(wrapper)).toEqual([])
+  })
+
+  it('opens a menu tool’s items, runs the one chosen, and gives the text its focus back', async () => {
+    const chosen: string[] = []
+    const { wrapper } = await editor('A note', {
+      extensions: [
+        {
+          extension: Extension.create({ name: 'widget' }),
+          tool: {
+            name: 'widget',
+            label: 'Insert a widget',
+            glyph: '+',
+            menu: () =>
+              ['Opening hours', 'The menu'].map((label) => ({
+                label,
+                run: () => {
+                  chosen.push(label)
+                },
+              })),
+          },
+        },
+      ],
+    })
+    const button = tool(wrapper.element, 'Insert a widget')
+    expect(button.getAttribute('aria-haspopup')).toBe('menu')
+    await press(button)
+    const menu = await soon(() => {
+      const found = document.querySelector<HTMLElement>('[role="menu"]')
+      if (!found) {
+        throw new Error('No menu is open.')
+      }
+      return found
+    })
+    expect(menu.getAttribute('aria-label')).toBe('Insert a widget')
+    const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+    expect(items.map((item) => item.textContent.trim())).toEqual(['Opening hours', 'The menu'])
+    expect(await axeFindings(wrapper)).toEqual([])
+
+    items[1]?.click()
+    await flushPromises()
+    await nextTick()
+    expect(chosen).toEqual(['The menu'])
+    await soon(() => {
+      if (document.querySelector('[role="menu"]')) {
+        throw new Error('The menu is still open.')
+      }
+    })
+    // The menu leaves focus off its button, for the text, which jsdom can't focus (the browser
+    // run, e2e/editor.spec.ts, sees it land there).
+    expect(document.activeElement).not.toBe(button)
+  })
 })
 
 describe('KitMarkdownEditor’s profiles', () => {
@@ -534,7 +621,7 @@ describe('KitMarkdownEditor’s tools', () => {
     expect(state.value).toBe('here')
   })
 
-  it('refuses a time with no date', async () => {
+  it('refuses a time with no date and time', async () => {
     const { wrapper } = await editor('', { dialect: 'discord' })
     await press(tool(wrapper.element, 'Time'))
     const form = await soon(() => {
@@ -548,7 +635,7 @@ describe('KitMarkdownEditor’s tools', () => {
     await nextTick()
     form.requestSubmit()
     await nextTick()
-    expect(form.textContent).toContain('Choose a date.')
+    expect(form.textContent).toContain('Choose a date and a time.')
   })
 })
 
@@ -682,7 +769,7 @@ describe('KitMarkdownEditor’s smaller paths', () => {
     expect(document.querySelector('.kit-popover')?.textContent).toContain('or an email address')
   })
 
-  it('puts in a time at midnight with no time of day, in the style chosen', async () => {
+  it('puts in the moment chosen, from the top of the hour now, in the style chosen', async () => {
     const { wrapper, state } = await editor('', { dialect: 'discord' })
     await press(tool(wrapper.element, 'Time'))
     const form = await soon(() => {
@@ -690,18 +777,14 @@ describe('KitMarkdownEditor’s smaller paths', () => {
       expect(found?.textContent).toContain('Shown as')
       return found!
     })
-    const clock = form.querySelector<HTMLInputElement>('input[type="time"]')
-    if (!clock) {
-      throw new Error('No time of day.')
-    }
-    clock.value = ''
-    clock.dispatchEvent(new Event('input'))
+    const picker = wrapper.findComponent({ name: 'KitDatePicker' })
+    expect(picker.props('time')).toBe(true)
+    expect(new Date(String(picker.props('modelValue'))).getMinutes()).toBe(0)
+    picker.vm.$emit('update:modelValue', '2026-12-03T19:30:00Z')
     wrapper.findComponent({ name: 'KitSelect' }).vm.$emit('update:modelValue', 'R')
     await nextTick()
     form.requestSubmit()
     await flushPromises()
-    expect(state.value).toMatch(/^<t:\d+:R>$/)
-    const unix = Number(/\d+/.exec(String(state.value))?.[0])
-    expect(new Date(unix * 1000).getHours()).toBe(0)
+    expect(state.value).toBe(`<t:${String(Date.parse('2026-12-03T19:30:00Z') / 1000)}:R>`)
   })
 })

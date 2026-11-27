@@ -3,7 +3,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import KitConfirmDialog from '../components/KitConfirmDialog.vue'
 import KitConfirmHost from '../components/KitConfirmHost.vue'
-import { confirm, registerConfirmHost, useConfirmQueue } from '../composables/useConfirmQueue'
+import { ask, confirm, registerConfirmHost, useConfirmQueue } from '../composables/useConfirmQueue'
 import { axeFindings, kept, unmountKept } from './helpers'
 
 afterEach(unmountKept)
@@ -175,7 +175,55 @@ describe('confirm()', () => {
 
   it('leaves the queue alone when a question is answered with none waiting', () => {
     const { current, answer } = useConfirmQueue()
-    answer(true)
+    answer('confirm')
     expect(current.value).toBeUndefined()
+  })
+})
+
+describe('ask()', () => {
+  const conflict = {
+    title: 'This shelf changed while you were editing',
+    message: 'Load theirs to see what changed, or keep yours over it.',
+    answers: [
+      { value: 'theirs', label: 'Load theirs' },
+      { value: 'mine', label: 'Keep mine', primary: true },
+      { value: 'neither', label: 'Leave the form', danger: true },
+    ],
+  } as const
+
+  it('offers each answer after Cancel, and resolves to the one chosen', async () => {
+    kept(mount(KitConfirmHost, { attachTo: document.body }))
+    const answered = ask({ ...conflict, answers: [...conflict.answers] })
+    await settle()
+    const dialog = alertDialog()
+    const buttons = [...(dialog?.querySelectorAll('button') ?? [])]
+    expect(buttons.map((b) => b.textContent.trim())).toEqual([
+      'Cancel',
+      'Load theirs',
+      'Keep mine',
+      'Leave the form',
+    ])
+    expect(buttons.map((b) => /kit-button--(\w+)/.exec(b.className)?.[1])).toEqual([
+      'secondary',
+      'secondary',
+      'primary',
+      'danger',
+    ])
+    expect(document.activeElement).toBe(button('Cancel'))
+    expect(await axeFindings(document.body)).toEqual([])
+    button('Keep mine').click()
+    expect(await answered).toBe('mine')
+  })
+
+  it('resolves to null when the person backs out, or when its last host goes', async () => {
+    const host = kept(mount(KitConfirmHost, { attachTo: document.body }))
+    const backedOut = ask({ ...conflict, answers: [...conflict.answers] })
+    await settle()
+    button('Cancel').click()
+    expect(await backedOut).toBeNull()
+
+    const waiting = ask({ ...conflict, answers: [...conflict.answers] })
+    host.unmount()
+    expect(await waiting).toBeNull()
   })
 })

@@ -3,7 +3,9 @@
 // and gives focus back to what opened it. Scroll is locked behind it, nested dialogs counted.
 // Open it with `v-model:open`, or put the button that opens it in the `trigger` slot. The
 // body is the default slot and the buttons the `footer` slot; the header and footer stay put
-// while a long body scrolls between them. A dialog holding a long form is `wide`.
+// while a long body scrolls between them. `width` sets how wide it grows: `narrow` for a short
+// question, the default, `wide` for a long form (or `wide` alone), and `widest` for a record shown
+// whole; each is a token the app may change.
 //
 // Given `submitLabel`, it is a form: the body sits in a <form>, so Enter in any field submits,
 // it opens with focus on its first field, and the footer holds Cancel beside the submit button,
@@ -23,6 +25,11 @@
 // `alert` is its form for a question before an irreversible action (KitConfirmDialog asks
 // with it): a screen reader announces it as an alert, it has no Close button, and nothing but
 // Escape or a button closes it. Otherwise a click outside closes it too.
+//
+// A `persistent` dialog closes only by a button of its own, such as an age check's Yes and No:
+// it has no Close button, and neither Escape nor a click outside closes it. While `busy`, no
+// dialog closes at all, by its Close button, Escape or a click outside, so a save or a roll
+// that is running is never left behind.
 import { computed, useId, useTemplateRef } from 'vue'
 import {
   AlertDialogContent,
@@ -47,13 +54,20 @@ import KitGlyph from './KitGlyph.vue'
 import KitIconButton from './KitIconButton.vue'
 import { filled } from './slots'
 
+/** How wide a dialog grows, each step a token: `--kit-width-dialog-narrow` and so on. */
+export type KitDialogWidth = 'narrow' | 'default' | 'wide' | 'widest'
+
 const props = withDefaults(
   defineProps<{
     title: string
     /** A line under the title on what the dialog is for. */
     description?: string
-    /** Whether it is as wide as a record page, for a long form. */
+    /** How wide it grows: `narrow`, the default, `wide` for a long form, or `widest`. */
+    width?: KitDialogWidth
+    /** The same as `width="wide"`. */
     wide?: boolean
+    /** Whether only its own buttons close it: no Close button, no Escape, no click outside. */
+    persistent?: boolean
     /** The alert-dialog form, for a question before an irreversible action. */
     alert?: boolean
     /** The submit button's words, which make the dialog a form: "Add the book". */
@@ -66,7 +80,9 @@ const props = withDefaults(
   }>(),
   {
     description: undefined,
+    width: undefined,
     wide: false,
+    persistent: false,
     alert: false,
     submitLabel: undefined,
     cancelLabel: 'Cancel',
@@ -123,10 +139,20 @@ const parts = computed(() =>
 const formId = useId()
 const isForm = computed(() => props.submitLabel !== undefined)
 const form = useTemplateRef<HTMLFormElement>('form')
+const shownWidth = computed(() => props.width ?? (props.wide ? 'wide' : 'default'))
 
-/** A form keeps what was typed: a press outside it doesn't close it. */
+/** A persistent dialog, and any dialog while it is busy, closes only by its own buttons. */
+const held = computed(() => props.persistent || props.busy)
+
+/** A form keeps what was typed: a press outside it doesn't close it, nor one outside a held one. */
 function onPointerDownOutside(event: Event): void {
-  if (isForm.value) {
+  if (isForm.value || held.value) {
+    event.preventDefault()
+  }
+}
+
+function onEscapeKeyDown(event: KeyboardEvent): void {
+  if (held.value) {
     event.preventDefault()
   }
 }
@@ -186,16 +212,17 @@ function onOpenAutoFocus(event: Event): void {
       <component
         :is="parts.Content"
         class="kit-dialog"
-        :class="{ 'kit-dialog--wide': wide }"
+        :class="shownWidth === 'default' ? undefined : `kit-dialog--${shownWidth}`"
         aria-modal="true"
         v-bind="description ? {} : { 'aria-describedby': undefined }"
+        @escape-key-down="onEscapeKeyDown"
         @pointer-down-outside="onPointerDownOutside"
         @open-auto-focus="onOpenAutoFocus"
       >
         <header class="kit-dialog__header">
           <component :is="parts.Title" class="kit-dialog__title">{{ title }}</component>
-          <DialogClose v-if="!alert" as-child>
-            <KitIconButton class="kit-dialog__close" label="Close" variant="plain">
+          <DialogClose v-if="!alert && !persistent" as-child>
+            <KitIconButton class="kit-dialog__close" label="Close" variant="plain" :disabled="busy">
               <slot name="close-icon"><KitGlyph name="cross" /></slot>
             </KitIconButton>
           </DialogClose>
@@ -274,8 +301,16 @@ function onOpenAutoFocus(event: Event): void {
     transform: translate(-50%, -50%);
   }
 
+  .kit-dialog--narrow {
+    width: min(calc(100% - 2 * var(--kit-space-md)), var(--kit-width-dialog-narrow));
+  }
+
   .kit-dialog--wide {
     width: min(calc(100% - 2 * var(--kit-space-md)), var(--kit-width-dialog-wide));
+  }
+
+  .kit-dialog--widest {
+    width: min(calc(100% - 2 * var(--kit-space-md)), var(--kit-width-dialog-widest));
   }
 
   /* Reka focuses the panel itself only when it holds nothing to focus; the ring belongs on

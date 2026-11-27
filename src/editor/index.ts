@@ -9,12 +9,15 @@
 // kit's one stylesheet, with every other component's.
 export { default as KitDiscordEmbedEditor } from './KitDiscordEmbedEditor.vue'
 export { default as KitMarkdownEditor } from './KitMarkdownEditor.vue'
-export type { KitEditorExtension, KitEditorTool } from './tools'
+export type { KitEditorExtension, KitEditorMenuItem, KitEditorTool } from './tools'
 export type { KitEditorDialect, KitEditorProfile } from './writer'
 export type { KitDiscordSuggest, KitDiscordSuggestion, KitDiscordSuggestionKind } from './suggest'
 export type { KitDiscordLookup, KitDiscordNames, KitDiscordRole } from '../discord/tokens'
 export type {
+  KitDiscordActionRow,
+  KitDiscordButtonEmoji,
   KitDiscordEmbed,
   KitDiscordEmbedField,
+  KitDiscordLinkButton,
   KitDiscordPictureChoice,
 } from '../discord/embed'

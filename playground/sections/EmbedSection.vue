@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // KitDiscordEmbedEditor on one embed, in Discord's own shape, beside KitDiscordMessagePreview
-// drawing the message it belongs to as Discord will; and KitColorField on its own. The pictures
+// drawing the message it belongs to as Discord will, with the message's link buttons; and
+// KitColorField on its own. The pictures
 // are the playground's: uploads named as Discord names them (`attachment://…`), which the preview
 // is shown as drawn pictures, as an app shows its own uploads.
 import { computed, defineAsyncComponent, ref } from 'vue'
@@ -12,6 +13,7 @@ import {
   KitPagePanel,
 } from '@jwill89/shared-components-vue'
 import type {
+  KitDiscordActionRow,
   KitDiscordEmbed,
   KitDiscordNames,
   KitDiscordPicture,
@@ -70,6 +72,22 @@ const embed = ref<KitDiscordEmbed>({
 
 const json = computed(() => JSON.stringify(embed.value, null, 2))
 
+const buttons = ref<KitDiscordActionRow[]>([
+  {
+    type: 1,
+    components: [
+      {
+        type: 2,
+        style: 5,
+        label: 'Join the club',
+        url: 'https://example.com/club',
+        emoji: { name: '📚' },
+      },
+    ],
+  },
+])
+const buttonsJson = computed(() => JSON.stringify(buttons.value, null, 2))
+
 const shelfColor = ref('#1abc9c')
 </script>
 
@@ -82,6 +100,7 @@ const shelfColor = ref('#1abc9c')
     <div class="embed-pair">
       <KitDiscordEmbedEditor
         v-model="embed"
+        v-model:components="buttons"
         label="the embed"
         :pictures="pictures"
         :names="names"
@@ -93,6 +112,7 @@ const shelfColor = ref('#1abc9c')
             sender="Shelf bot"
             content="This week’s **book club**:"
             :embeds="[embed]"
+            :components="buttons"
             :names="names"
             :picture="picture"
           />
@@ -100,6 +120,10 @@ const shelfColor = ref('#1abc9c')
         <figure class="embed-figure">
           <figcaption>What it posts</figcaption>
           <pre data-testid="embed-json">{{ json }}</pre>
+        </figure>
+        <figure class="embed-figure">
+          <figcaption>Its buttons</figcaption>
+          <pre data-testid="buttons-json">{{ buttonsJson }}</pre>
         </figure>
       </div>
     </div>

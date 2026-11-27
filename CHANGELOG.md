@@ -4,6 +4,56 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-11-27
+
+### Added
+
+- KitCheckbox, a box to tick with its words as its label, a `hint` and an `error` under them, and a dash while it is partly ticked (`'indeterminate'`).
+- KitCheckboxGroup, the boxes that answer one question, its value the list ticked in the options' order; and KitRadioGroup, one answer of several, which may start with none chosen. Each sits in a `group` KitFormField, takes `options` (`KitChoiceOption`) with a `hint` under any of them, gathers options with a `group` under that heading, and lays them side by side with `inline`.
+- KitSlider, a number chosen along a track in a `group` KitFormField, its value said in words with `valueText`, changing as it moves and firing `commit` once a move is done.
+- KitFileField, files chosen through the device's picker or dropped on a zone (`drop`), in a `group` KitFormField: what it takes (`accept`, as `KitFileKind`s; `maxSize`; `maxFiles`) said under its button, a file refused in words saying why, each file listed with its size and a Remove button that names it, and pictures shown small with `previews`.
+- KitTextField's places: words or an icon before and after the box, read with it (`before`, `after`), and a button joined to its end (`button`); and `revealable`, a Show password toggle on a password box. Its `class` and `style` go to its edge, and every other attribute to the box.
+- KitTextarea's `grow`, which grows the box with its text from `rows` lines to `maxRows`.
+- `pressed` on KitButton and KitIconButton, which makes either a toggle that says whether it is on and fills with the accent while it is; their icon slots are given `pressed`.
+- KitBadge, a word on a thing's state or kind, in an alert's tone (`KitBadgeTone`) or none, with an icon from the app.
+- KitDescriptionList and KitDescriptionItem, a record's details as terms beside what they name, each term over its value where the list is narrow.
+- KitDisclosure, a part that opens under a button, in a heading where asked; and KitAccordion, parts one under another (`KitAccordionItem`), several open at once with `multiple`, with Open all and Close all (`toggleAll`). A closed part stays in the page, for the browser's find in page.
+- KitProgress, how far a long job has got, in words with `valueText`, or a bar that moves while it can't say.
+- KitCopyButton, which copies its text and says how it went; and `copyText()`, which copies text, and markup beside it, and answers whether it did.
+- KitSkipLink, the link past an app's header to its main content.
+- KitNavList, a list of links to one part of an app's pages (`KitNavItem`), the page on screen marked, its groups folding under their headings with `foldable`, folding away behind a button on a phone, or laid in a row with `horizontal`.
+- KitPageHeader's and KitPagePanel's `help` slot for a KitHelpTip beside the title, `icon` slot before it, and `eyebrow`, a short line over it; and the header's `back`, a link to the page someone came from. KitHelpTip lays out a short list of terms (`<dl>`).
+- KitDialog's `width`, from `narrow` to `widest` (`KitDialogWidth`), with `--kit-width-dialog-narrow` and `--kit-width-dialog-widest`; and `persistent`, a dialog that closes only by its own buttons.
+- `ask()`, a question with more than one way to go ahead (`KitQuestion`, `KitAnswer`), through the same host as `confirm()`; and KitConfirmDialog's `answers`.
+- A toast's `action`, such as Undo, on a toast that stays until it is used or dismissed, and its own `duration` (`KitToastOptions`, `KitToastAction`); and `setToastDurations()`, how long each tone's toasts stay.
+- KitCombobox's `search`, a search the page runs, with `loading` and `loadingText`; and its `max`, the most that may be chosen, counted under the box.
+- KitSelect's options under their headings (`group`), and an `aria-label` on its button.
+- `size` on KitButton and KitIconButton, `small` or `large` (`KitButtonSize`), with `--kit-control-height-small` and `--kit-control-height-large`; a small button is still pressed over 44 px. KitButton's `to`, a link to a page of the app's own.
+- KitMenuItem's `to` and `href`, which make it a link.
+- KitDataTable's `pageSizes`, a choice of rows on a page (`v-model:page-size`), with `pageSizeLabel`; `pagesAbove`, its pages over the rows as well; and the `toolbar` slot.
+- KitLightbox's swipe between images on a touch screen, its image panned by dragging at full size, and the `actions` slot; and `openLightbox()`, `closeLightbox()` and KitLightboxHost, the app's one viewer opened from anywhere.
+- KitSegmentedControl's `multiple`, several chosen at once.
+- A tab's `count`, shown after its words.
+- KitColorField's `alpha`, a see-through color as `#rrggbbaa`.
+- KitTimeField, a time of day typed in its parts, as `HH:mm`, or `HH:mm:ss` with `seconds`, in a `group` KitFormField.
+- KitDatePicker's `time`, a date with a time of day, its model then a moment in RFC 3339 written in UTC, shown and typed in `timeZone`, the browser's by default, whose short name follows its parts; and `hourCycle`, on KitTimeField too.
+- KitDateRangePicker, a run of days typed or picked from a calendar, its ends `v-model:start` and `v-model:end`, each end's parts a group of its own (`startLabel`, `endLabel`). A start and an end with their times are two KitDatePickers with `time`, the end's `min` the start.
+- KitReorderList, a list put in order by each row's Up and Down buttons, the arrow keys, Home and End on its handle, or a drag of the handle, the row in hand following the pointer and the rows it passes moving aside to make its room; the focus goes with the row, and each move is read out (`move`).
+- KitSaveBar, the bar a form saves from, held at the screen's foot, through unsaved, saving, saved and a conflict with Reload (`KitSaveState`), with `--kit-layer-sticky`; and `useLeaveGuard()`, which asks before unsaved work is left, by the browser's prompt and, given the router's `onBeforeRouteLeave`, through `confirm()` (`KitLeaveGuardOptions`, `KitLeaveGuard`).
+- `usePasskeys()`, a passkey's sign-in and adding through the app's own two calls to its server, a closed prompt resolving to nothing (`KitPasskeySignIn`, `KitPasskeyAdd`), and `passkeyFailure()`, why the browser's side failed (`KitPasskeyFailure`); and KitPasskeyList, an account's passkeys (`KitPasskey`), renamed in a dialog and removed once asked. They run on `@simplewebauthn/browser`, now a dependency.
+- KitMarkdownEditor's extensions bring `tools` as well as a `tool`, standing as a group of their own, each shown only where it `applies`, and any a `menu` of items (`KitEditorMenuItem`), after which the focus goes back to the text.
+- A message's link buttons: KitDiscordEmbedEditor's `v-model:components`, each button's words, link and emoji, up to `maxButtons`, and KitDiscordMessagePreview's `components`, in Discord's shape (`KitDiscordActionRow`, `KitDiscordLinkButton`, `KitDiscordButtonEmoji`), with `DISCORD_BUTTON_LIMITS`, `actionRows()` and `linkButtons()`.
+
+### Changed
+
+- KitTextField is drawn as an edge round its box, where it was the box alone: its focus ring and its error's mark are on the edge.
+- KitLightbox's Full size button fills with the accent while it is on, as every toggle now does.
+- A dialog doesn't close while it is `busy`, by its Close button, Escape or a press outside, where only Cancel waited before.
+- KitConfirmDialog's `confirmLabel` may be left out where `answers` are given.
+- KitDatePicker's parts are each pressed over the field's whole height and at least 24 px wide (`--kit-width-date-part`), where a one-digit part was narrower; the part being typed in is marked within it, clear of the field's border and the separators.
+- An editor tool's `run` may be left out where it has a `menu`, and each extension's tools stand in a group of their own, where they shared one.
+- KitMarkdownEditor's Time tool and KitDiscordEmbedEditor's time in the footer each take a date with its time in one KitDatePicker, where a date picker stood beside a browser's own time box.
+
 ## [0.13.0] - 2026-11-26
 
 The table's next features: rows that open, filters with their counts, groups, a CSV of the rows matching, columns to resize, and rows as cards.
@@ -210,6 +260,7 @@ The first release: the jobs the apps repeat most, and the pieces the rest build 
 - `confirm()`, which asks through the app's one KitConfirmHost and resolves to the answer, one question at a time. It refuses to ask while no host is mounted, rather than waiting for an answer that can't come.
 - Toasts, raised with `useToast()` and shown by the app's one KitToastHost: success, error, warning and info, at the screen's top edge and above any dialog, each for a few seconds and held while hovered or focused. A screen reader hears each one, errors and warnings at once, including while a dialog is open. A press on a toast leaves an open dialog open.
 
+[0.14.0]: https://github.com/jwill89/shared-components-vue/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/jwill89/shared-components-vue/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/jwill89/shared-components-vue/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/jwill89/shared-components-vue/compare/v0.10.0...v0.11.0

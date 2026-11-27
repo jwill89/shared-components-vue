@@ -2,4 +2,6 @@
 export interface KitTab {
   key: string
   label: string
+  /** How many things its part holds, shown after its words and read with them. */
+  count?: number
 }
